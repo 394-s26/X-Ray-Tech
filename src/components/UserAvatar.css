@@ -1,0 +1,37 @@
+@reference "../index.css";
+
+.user-avatar {
+  @apply rounded-full object-cover flex-shrink-0;
+}
+
+.user-avatar-bordered {
+  @apply border-2 border-white;
+}
+
+.user-avatar-border-custom {
+  @apply border-2;
+}
+
+.user-avatar-xs {
+  @apply w-4 h-4;
+}
+
+.user-avatar-sm {
+  @apply w-6 h-6;
+}
+
+.user-avatar-md {
+  @apply w-9 h-9;
+}
+
+.user-avatar-lg {
+  @apply w-10 h-10;
+}
+
+.user-avatar-xl {
+  @apply w-12 h-12;
+}
+
+.user-avatar-default {
+  @apply bg-gray-400 flex items-center justify-center text-white;
+}
