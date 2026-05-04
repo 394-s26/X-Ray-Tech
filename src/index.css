@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #2D5A27;
-  --color-primary-light: #3d7a35;
-  --color-secondary: #98FB98;
-  --color-tertiary: #8A9A5B;
-  --color-neutral: #F8FAF8;
-  --color-brand: #178F96;
+  --color-primary: #1e40af;
+  --color-primary-light: #2563eb;
+  --color-secondary: #bfdbfe;
+  --color-tertiary: #60a5fa;
+  --color-neutral: #f0f5ff;
+  --color-brand: #3b82f6;
 
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -46,15 +46,51 @@ body, #root {
 }
 
 .overlay-panel--lg {
-  @apply w-full md:w-1/2;
+  @apply w-full md:w-3/4;
 }
 
 .overlay-panel--md {
-  @apply w-full max-w-lg;
+  @apply w-full max-w-2xl;
 }
 
 .overlay-panel--sm {
-  @apply w-full max-w-sm;
+  @apply w-full max-w-lg;
+}
+
+
+
+/* ── Cards ───────────────────────────────────────────────── */
+
+.card {
+  @apply bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-200;
+}
+
+.card:hover {
+  @apply shadow-md -translate-y-0.5;
+}
+
+.card--sm {
+  @apply p-3;
+}
+
+.card--md {
+  @apply p-5;
+}
+
+.card--lg {
+  @apply p-7;
+}
+
+.card--primary {
+  @apply bg-primary/10 border-primary/20;
+}
+
+.card--orange {
+  @apply bg-orange-50 border-orange-100;
+}
+
+.card--red {
+  @apply bg-red-50 border-red-100;
 }
 
 
@@ -67,15 +103,31 @@ body, #root {
 }
 
 .default-btn {
+  --btn-color: var(--color-primary);
+  --btn-color-hover: var(--color-primary-light);
   @apply text-white bg-primary hover:bg-primary-light;
 }
 
 .red-btn {
+  --btn-color: var(--color-red-500);
+  --btn-color-hover: var(--color-red-600);
   @apply text-white bg-red-500 hover:bg-red-600;
 }
 
 .orange-btn {
+  --btn-color: var(--color-orange-500);
+  --btn-color-hover: var(--color-orange-600);
   @apply text-white bg-orange-500 hover:bg-orange-600;
+}
+
+.global-btn.outline {
+  background-color: transparent;
+  border: 1px solid var(--btn-color);
+  color: var(--btn-color);
+}
+
+.global-btn.outline:hover {
+  background-color: color-mix(in srgb, var(--btn-color) 10%, transparent);
 }
 
 .global-btn:disabled {
@@ -83,7 +135,7 @@ body, #root {
 }
 
 .cancel-btn {
-  @apply text-gray-500 hover:text-gray-700 hover:bg-gray-100;
+  @apply text-gray-500 hover:text-gray-700 hover:bg-gray-200;
 }
 
 .cancel-btn:disabled {

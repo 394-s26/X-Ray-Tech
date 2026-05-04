@@ -35,6 +35,7 @@ Additional conventions:
 - When creating a style, put it into the `styles/components/` folder (for components) or `styles/pages` (for pages)
 - For all overlays, use the pre-defined classes in `src/index.css` to create the overlay background and cards. Use the pre-defined sizing as well. In addition, use createPortal to ensure the overlay remains over top of all elements in the site when open.
 - For all Submit/Cancel buttons, use the pre-defined classes in `src/index.css` to style the buttons. Add additional tags (e.g. `flex-1`, `mt-2`) as needed manually in-line. Only deviate from this styling when the look of the button is too drastically different to justify using the pre-defined style.
+- For all cards that need to be added to the site, use pre-defined classes in `src/index.css` to style the buttons. Add optional styling (e.g. colors that ARE NOT primary/red/orange, custom changes to hover effects, internal styling etc.) inline as needed.
 - For all user avatar profile pictures, use the `src/components/UserAvatar.tsx` component, along with its predefined sizing.
 
 ---
