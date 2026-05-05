@@ -9,7 +9,7 @@
 }
 
 .time-select-options {
-  @apply bg-white border border-gray-100 rounded-xl shadow-lg py-1 max-h-60 overflow-y-auto;
+  @apply bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-lg py-1 max-h-60 overflow-y-auto;
 }
 
 .time-select-options::-webkit-scrollbar {
@@ -17,15 +17,15 @@
 }
 
 .time-select-options::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
+  @apply bg-gray-300 dark:bg-slate-600 rounded-full;
 }
 
 .time-select-option {
-  @apply flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors;
+  @apply flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors;
 }
 
 .time-select-option--selected {
-  @apply bg-green-50 text-primary font-medium;
+  @apply bg-green-50 dark:bg-primary/20 text-primary font-medium;
 }
 
 .time-select-option-label {
@@ -33,7 +33,7 @@
 }
 
 .time-select-option-hint {
-  @apply text-xs text-gray-400 ml-3;
+  @apply text-xs text-gray-400 dark:text-slate-500 ml-3;
 }
 
 .time-select-option--selected .time-select-option-hint {
@@ -47,7 +47,7 @@
 }
 
 .time-select-chip-input {
-  @apply bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-800 text-center cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary;
+  @apply bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full text-sm text-gray-800 dark:text-slate-100 text-center cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary;
   width: 6.25rem;
   padding: 0.5rem 0.75rem;
   transition: background-color 100ms;
