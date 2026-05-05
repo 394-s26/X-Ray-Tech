@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppUser } from '../types/auth';
+import type { AppUser } from '../types/auth';
 import { UserIcon } from '../services/svgIcons';
 import './UserAvatar.css';
 
