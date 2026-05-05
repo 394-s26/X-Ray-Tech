@@ -1,0 +1,38 @@
+/* Keyframes — cannot be expressed in Tailwind */
+
+.login-grid {
+  animation: login-grid-scroll 22s linear infinite;
+}
+
+@keyframes login-grid-scroll {
+  from { background-position: 0 0; }
+  to   { background-position: 50px 50px; }
+}
+
+.login-glow {
+  animation: login-glow-pulse 5s ease-in-out infinite;
+}
+
+@keyframes login-glow-pulse {
+  0%, 100% {
+    opacity: 0.65;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+}
+
+/* :hover:not(:disabled) cannot be expressed cleanly in Tailwind */
+.login-ms-btn:hover:not(:disabled) {
+  background-color: #efefef; /* smoke dark grey */
+}
+
+.arrow-right {
+  transition: transform 150ms ease;
+}
+
+.login-ms-btn:hover:not(:disabled) .arrow-right {
+  transform: translateX(6px);
+}
