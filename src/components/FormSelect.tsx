@@ -16,7 +16,7 @@ interface FormSelectProps {
 
 const Chevron = ({ open }: { open: boolean }) => (
   <svg
-    className={`size-3 text-gray-400 flex-shrink-0 ${open ? 'rotate-180' : ''}`}
+    className={`size-3 text-gray-400 dark:text-slate-500 flex-shrink-0 ${open ? 'rotate-180' : ''}`}
     viewBox="0 0 12 12"
     fill="currentColor"
   >
@@ -71,7 +71,7 @@ export function FormSelect({
               {opt.label}
             </li>
           ))
-        : <li className="form-select-option text-gray-400 cursor-default">No results</li>
+        : <li className="form-select-option text-gray-400 dark:text-slate-500 cursor-default">No results</li>
       }
     </ul>
   )
@@ -83,7 +83,7 @@ export function FormSelect({
           <input
             ref={inputRef}
             type="text"
-            className="flex-1 outline-none bg-transparent text-gray-800 placeholder:text-gray-400 min-w-0"
+            className="flex-1 outline-none bg-transparent text-gray-800 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 min-w-0"
             placeholder={selected ? selected.label : placeholder}
             value={query}
             disabled={disabled}
@@ -94,7 +94,7 @@ export function FormSelect({
             <button
               type="button"
               onMouseDown={() => handleSelect('')}
-              className="text-gray-300 hover:text-gray-500 transition-colors"
+              className="text-gray-300 dark:text-slate-600 hover:text-gray-500 dark:hover:text-slate-400 transition-colors"
             >
               <svg className="size-3" viewBox="0 0 12 12" fill="currentColor">
                 <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -116,7 +116,7 @@ export function FormSelect({
         onClick={() => setOpen(o => !o)}
         className="form-select text-left flex items-center justify-between w-full"
       >
-        <span className={selected ? 'text-gray-800' : 'text-gray-400'}>
+        <span className={selected ? 'text-gray-800 dark:text-slate-100' : 'text-gray-400 dark:text-slate-500'}>
           {selected ? selected.label : placeholder}
         </span>
         <Chevron open={open} />
