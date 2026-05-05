@@ -33,7 +33,7 @@ export default function ThemeToggle() {
     <button
       onClick={handleToggle}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="p-3 rounded-full border-2 border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10 transition-colors overflow-hidden"
+      className="p-3 cursor-pointer rounded-full border-2 border-slate-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10 transition-colors overflow-hidden"
     >
       <span className={phaseClass} onAnimationEnd={handleAnimationEnd}>
         <Icon size={20} />

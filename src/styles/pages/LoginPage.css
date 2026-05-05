@@ -1,7 +1,26 @@
-/* Keyframes — cannot be expressed in Tailwind */
+@reference "../index.css";
+
+/* ── Layout ──────────────────────────────────────────────── */
+
+.login-page {
+  @apply fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-slate-900 overflow-hidden;
+}
+
+/* ── Animated diagonal grid ──────────────────────────────── */
 
 .login-grid {
+  @apply absolute inset-0;
+  background-image:
+    linear-gradient(to right, rgba(59, 130, 246, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
+  background-size: 50px 50px;
   animation: login-grid-scroll 22s linear infinite;
+}
+
+.dark .login-grid {
+  background-image:
+    linear-gradient(to right, rgba(96, 165, 250, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(96, 165, 250, 0.1) 1px, transparent 1px);
 }
 
 @keyframes login-grid-scroll {
@@ -9,8 +28,16 @@
   to   { background-position: 50px 50px; }
 }
 
+/* ── Pulsing radial glow ─────────────────────────────────── */
+
 .login-glow {
+  @apply absolute top-1/2 left-1/2 w-[720px] h-[720px] pointer-events-none;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0.08) 45%, transparent 70%);
   animation: login-glow-pulse 5s ease-in-out infinite;
+}
+
+.dark .login-glow {
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.2) 0%, rgba(96, 165, 250, 0.05) 45%, transparent 70%);
 }
 
 @keyframes login-glow-pulse {
@@ -24,9 +51,44 @@
   }
 }
 
-/* :hover:not(:disabled) cannot be expressed cleanly in Tailwind */
+/* ── Card ────────────────────────────────────────────────── */
+
+.login-card {
+  @apply relative z-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-lg w-full max-w-[440px] overflow-hidden mx-4;
+}
+
+.login-card-header {
+  @apply flex items-center gap-2.5 px-7 py-[1.125rem] border-b border-slate-200 dark:border-slate-700;
+}
+
+.login-logo-text {
+  @apply text-[0.9375rem] font-semibold text-slate-900 dark:text-slate-100 tracking-tight;
+}
+
+.login-card-body {
+  @apply px-7 pt-8 pb-9;
+}
+
+.login-heading {
+  @apply text-[1.625rem] font-bold text-slate-900 dark:text-slate-100 leading-tight mb-7;
+}
+
+/* ── Microsoft sign-in button ────────────────────────────── */
+
+.login-ms-btn {
+  @apply flex items-center justify-between w-full px-5 py-[0.9rem] text-slate-900 dark:text-slate-100 border border-slate-700 dark:border-slate-600 rounded-xl text-[0.9375rem] font-semibold cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
 .login-ms-btn:hover:not(:disabled) {
-  background-color: #efefef; /* smoke dark grey */
+  background-color: #efefef;
+}
+
+.dark .login-ms-btn:hover:not(:disabled) {
+  background-color: #334155; /* slate-700 */
+}
+
+.login-ms-btn-label {
+  @apply flex items-center gap-3;
 }
 
 .arrow-right {
@@ -35,4 +97,10 @@
 
 .login-ms-btn:hover:not(:disabled) .arrow-right {
   transform: translateX(6px);
+}
+
+/* ── Error message ───────────────────────────────────────── */
+
+.login-error {
+  @apply mt-4 px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm;
 }
