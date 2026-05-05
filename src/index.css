@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #102E4A;
   --color-primary-light: #1A4975;
+  --color-primary-extra-light: #245582;
   --color-secondary: #8490CC;
   --color-tertiary: #60a5fa;
   --color-neutral: #F0F2EF;
@@ -13,7 +16,7 @@
 
 
 body, #root {
-  @apply bg-gray-50;
+  @apply bg-gray-50 dark:bg-slate-900;
   height: 100%;
 }
 
@@ -42,7 +45,7 @@ body, #root {
 }
 
 .overlay-panel {
-  @apply relative bg-white;
+  @apply relative bg-white dark:bg-slate-800;
 }
 
 .overlay-panel--lg {
@@ -63,12 +66,12 @@ body, #root {
 
 .card {
   --card-p: 1.25rem;
-  @apply bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-200 overflow-hidden;
+  @apply bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm transition-all duration-200 overflow-hidden text-gray-800 dark:text-slate-50;
   padding: var(--card-p);
 }
 
 .card:hover {
-  @apply shadow-md -translate-y-0.5;
+  @apply shadow-md -translate-y-0.25;
 }
 
 .card--sm { --card-p: 0.75rem; }
@@ -76,15 +79,15 @@ body, #root {
 .card--lg { --card-p: 1.75rem; }
 
 .card--primary {
-  @apply bg-primary/10 border-primary/20;
+  @apply bg-primary/10 border-primary/10 dark:border-primary/80 text-primary dark:text-slate-50;
 }
 
 .card--orange {
-  @apply bg-orange-50 border-orange-100;
+  @apply bg-orange-50 border-orange-100 text-orange-800 dark:bg-orange-700 dark:border-orange-900 dark:text-orange-50;
 }
 
 .card--red {
-  @apply bg-red-50 border-red-100;
+  @apply bg-red-50 border-red-100 text-red-800 dark:bg-red-700 dark:border-red-900 dark:text-red-50;
 }
 
 .card--row {
@@ -98,7 +101,7 @@ body, #root {
 }
 
 .card-header {
-  @apply text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1;
+  @apply text-xs font-semibold text-gray-400 dark:text-slate-200 uppercase tracking-wide mb-1;
 }
 
 /* Image flush to a card edge — breaks out of card padding on that side */
@@ -136,16 +139,21 @@ body, #root {
 
 
 
-/* Buttons */
+/* ── Buttons ─────────────────────────────────────────────── */
 
 .global-btn {
-  @apply cursor-pointer py-2 rounded-xl font-medium text-sm transition-colors w-full;
+  @apply cursor-pointer py-2 rounded-lg font-medium text-sm transition-colors w-full;
 }
 
 .default-btn {
   --btn-color: var(--color-primary);
   --btn-color-hover: var(--color-primary-light);
-  @apply text-white bg-primary hover:bg-primary-light;
+  @apply text-white bg-primary hover:bg-primary-light dark:bg-primary-light dark:hover:bg-primary-extra-light;
+}
+
+.dark .default-btn {
+  --btn-color: var(--color-primary-light);
+  --btn-color-hover: var(--color-primary-extra-light);
 }
 
 .red-btn {
@@ -175,7 +183,7 @@ body, #root {
 }
 
 .cancel-btn {
-  @apply text-gray-500 hover:text-gray-700 hover:bg-gray-200;
+  @apply text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700;
 }
 
 .cancel-btn:disabled {
@@ -186,13 +194,13 @@ body, #root {
 /* ── Forms ───────────────────────────────────────────────── */
 
 .form-label {
-  @apply block text-sm font-medium text-gray-700 mb-1;
+  @apply block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1;
 }
 
 .form-input,
 .form-textarea,
 .form-number {
-  @apply w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 outline-none transition-colors;
+  @apply w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-800 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 outline-none transition-colors;
 }
 
 .form-input:focus,
@@ -222,7 +230,7 @@ body, #root {
 }
 
 .form-select {
-  @apply w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-colors cursor-pointer;
+  @apply w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-800 dark:text-slate-100 outline-none transition-colors cursor-pointer;
 }
 
 .form-select:focus,
@@ -235,15 +243,15 @@ body, #root {
 }
 
 .form-select-panel {
-  @apply absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden;
+  @apply absolute left-0 right-0 top-[calc(100%+4px)] z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg overflow-hidden;
 }
 
 .form-select-option {
-  @apply px-3 py-2 text-sm text-gray-700 cursor-pointer transition-colors;
+  @apply px-3 py-2 text-sm text-gray-700 dark:text-slate-300 cursor-pointer transition-colors;
 }
 
 .form-select-option:hover {
-  @apply bg-gray-50;
+  @apply bg-gray-50 dark:bg-slate-700;
 }
 
 .form-select-option--active {
@@ -265,5 +273,5 @@ body, #root {
 }
 
 .form-check-row {
-  @apply flex items-center gap-2 text-sm text-gray-700 cursor-pointer;
+  @apply flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300 cursor-pointer;
 }

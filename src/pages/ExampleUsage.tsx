@@ -19,11 +19,11 @@ function App() {
   return (
     <div className="min-h-screen p-8 font-sans">
       <h1 className="text-2xl font-bold text-primary mb-1">UI Component Demo</h1>
-      <p className="text-gray-500 mb-10 text-sm">Showcasing buttons and overlays from index.css</p>
+      <p className="text-gray-500 dark:text-slate-400 mb-10 text-sm">Showcasing buttons and overlays from index.css</p>
 
       {/* Buttons */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Buttons</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 mb-4">Buttons</h2>
         <div className="grid grid-cols-2 gap-4 max-w-sm">
           <button className="global-btn default-btn">Primary</button>
           <button className="global-btn red-btn">Destructive</button>
@@ -39,61 +39,61 @@ function App() {
 
       {/* Cards */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Cards — Sizes</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 mb-4">Cards — Sizes</h2>
         <div className="flex flex-col gap-4 max-w-sm">
           <div className="card card--sm">
             <p className="card-header">Small</p>
-            <p className="text-gray-700 text-sm">Compact card for tight layouts or inline info.</p>
+            <p className="text-gray-700 dark:text-slate-300 text-sm">Compact card for tight layouts or inline info.</p>
           </div>
           <div className="card card--md">
             <p className="card-header">Medium</p>
-            <p className="text-gray-700 text-sm">Standard card size — good for most content blocks.</p>
+            <p className="text-gray-700 dark:text-slate-300 text-sm">Standard card size — good for most content blocks.</p>
           </div>
           <div className="card card--lg">
             <p className="card-header">Large</p>
-            <p className="text-gray-700 text-sm">Spacious card for featured or detail-heavy content.</p>
+            <p className="text-gray-700 dark:text-slate-300 text-sm">Spacious card for featured or detail-heavy content.</p>
           </div>
         </div>
 
-        <h2 className="text-lg font-semibold text-gray-700 mt-8 mb-4">Cards — Colors</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 mt-8 mb-4">Cards — Colors</h2>
         <div className="flex flex-col gap-4 max-w-sm">
           <div className="card card--md card--primary">
             <p className="card-header">Primary</p>
-            <p className="text-primary text-sm">Tinted with the brand's primary color.</p>
+            <p className="text-sm">Tinted with the brand's primary color.</p>
           </div>
           <div className="card card--md card--orange">
             <p className="card-header">Orange</p>
-            <p className="text-orange-800 text-sm">Warm orange tint for warnings or highlights.</p>
+            <p className="text-sm">Orange tint for warnings or highlights.</p>
           </div>
           <div className="card card--md card--red">
             <p className="card-header">Red</p>
-            <p className="text-red-800 text-sm">Red tint for errors or destructive context.</p>
+            <p className="text-sm">Red tint for errors or destructive context.</p>
           </div>
         </div>
 
-        <h2 className="text-lg font-semibold text-gray-700 mt-8 mb-4">Cards — Image positions</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 mt-8 mb-4">Cards — Image positions</h2>
         <div className="flex flex-col gap-4 max-w-sm">
           <div className="card card--md">
             <img className="card-img card-img--top h-32" src="https://picsum.photos/seed/top/400/200" alt="" />
             <p className="card-header">Image top</p>
-            <p className="text-gray-700 text-sm">Image is flush against the top edge.</p>
+            <p className="text-gray-700 dark:text-slate-300 text-sm">Image is flush against the top edge.</p>
           </div>
           <div className="card card--md">
             <p className="card-header">Image bottom</p>
-            <p className="text-gray-700 text-sm">Image is flush against the bottom edge.</p>
+            <p className="text-gray-700 dark:text-slate-300 text-sm">Image is flush against the bottom edge.</p>
             <img className="card-img card-img--bottom h-32" src="https://picsum.photos/seed/bottom/400/200" alt="" />
           </div>
           <div className="card card--md card--row">
             <img className="card-img card-img--left w-24" src="https://picsum.photos/seed/left/200/300" alt="" />
             <div className="card-body">
               <p className="card-header">Image left</p>
-              <p className="text-gray-700 text-sm">Image is flush against the left edge.</p>
+              <p className="text-gray-700 dark:text-slate-300 text-sm">Image is flush against the left edge.</p>
             </div>
           </div>
           <div className="card card--md card--row">
             <div className="card-body">
               <p className="card-header">Image right</p>
-              <p className="text-gray-700 text-sm">Image is flush against the right edge.</p>
+              <p className="text-gray-700 dark:text-slate-300 text-sm">Image is flush against the right edge.</p>
             </div>
             <img className="card-img card-img--right w-24" src="https://picsum.photos/seed/right/200/300" alt="" />
           </div>
@@ -102,7 +102,7 @@ function App() {
 
       {/* Forms */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Form Inputs</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 mb-4">Form Inputs</h2>
         <div className="flex flex-col gap-5 max-w-sm">
 
           <div className="form-field">
@@ -169,7 +169,7 @@ function App() {
             <label className="form-label">Time range</label>
             <div className="flex items-center gap-2">
               <TimeSelect value={startTime} onChange={setStartTime} />
-              <span className="text-gray-400 text-sm">to</span>
+              <span className="text-gray-400 dark:text-slate-500 text-sm">to</span>
               <TimeSelect value={endTime} onChange={setEndTime} />
             </div>
           </div>
@@ -211,7 +211,7 @@ function App() {
 
       {/* Bottom sheet overlays */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Bottom Sheet Overlays</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 mb-4">Bottom Sheet Overlays</h2>
         <div className="grid grid-cols-3 gap-4 max-w-sm">
           <button className="global-btn default-btn" onClick={() => openOverlay('bottom', 'sm')}>Small</button>
           <button className="global-btn default-btn" onClick={() => openOverlay('bottom', 'md')}>Medium</button>
@@ -221,7 +221,7 @@ function App() {
 
       {/* Center overlays */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Center Overlays</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-slate-300 mb-4">Center Overlays</h2>
         <div className="grid grid-cols-3 gap-4 max-w-sm">
           <button className="global-btn orange-btn" onClick={() => openOverlay('center', 'sm')}>Small</button>
           <button className="global-btn orange-btn" onClick={() => openOverlay('center', 'md')}>Medium</button>
@@ -234,8 +234,8 @@ function App() {
         <div className="overlay-bottom">
           <div className="overlay-scrim" onClick={() => setOverlay(null)} />
           <div className={`overlay-panel overlay-panel--${overlaySize} animate-slide-up rounded-t-2xl p-6`}>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Bottom Sheet — {overlaySize.toUpperCase()}</h3>
-            <p className="text-gray-500 text-sm mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-2">Bottom Sheet — {overlaySize.toUpperCase()}</h3>
+            <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">
               This panel slides up from the bottom. The scrim behind it is clickable to dismiss.
             </p>
             <div className="flex gap-3">
@@ -253,8 +253,8 @@ function App() {
             className={`overlay-panel overlay-panel--${overlaySize} rounded-2xl p-6`}
             onClick={e => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Center Dialog — {overlaySize.toUpperCase()}</h3>
-            <p className="text-gray-500 text-sm mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-2">Center Dialog — {overlaySize.toUpperCase()}</h3>
+            <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">
               This dialog is centered on screen with a dark scrim. Click outside to close.
             </p>
             <div className="flex gap-3">
