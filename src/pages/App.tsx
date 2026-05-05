@@ -1,15 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import type { User } from 'firebase/auth'
 import { FormSelect } from '../components/FormSelect'
 import TimeSelect from '../components/TimeSelect'
 import { currentTimeRounded } from '../components/timeUtils'
+import { subscribeToAuthState } from '../services/authService'
+import { LoginPage } from './LoginPage'
 
 type OverlayType = 'bottom' | 'center' | null
 
 function App() {
+  const [user, setUser] = useState<User | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [overlay, setOverlay] = useState<OverlayType>(null)
   const [overlaySize, setOverlaySize] = useState<'lg' | 'md' | 'sm'>('md')
   const [startTime, setStartTime] = useState(currentTimeRounded)
   const [endTime, setEndTime] = useState(currentTimeRounded)
+
+  useEffect(() => {
+    return subscribeToAuthState((u) => {
+      setUser(u)
+      setAuthLoading(false)
+    })
+  }, [])
+
+  if (authLoading) return null
+  if (!user) return <LoginPage />
 
   function openOverlay(type: OverlayType, size: 'lg' | 'md' | 'sm' = 'md') {
     setOverlaySize(size)
