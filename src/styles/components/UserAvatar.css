@@ -5,7 +5,7 @@
 }
 
 .user-avatar-bordered {
-  @apply border-2 border-white;
+  @apply border-2 border-white dark:border-slate-800;
 }
 
 .user-avatar-border-custom {

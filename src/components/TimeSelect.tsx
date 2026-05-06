@@ -87,7 +87,7 @@ const TimeSelect = ({ id, value, onChange, disabled, ariaLabel }: TimeSelectProp
   return (
     <div className="time-select" ref={wrapRef}>
       <div className="form-select flex items-center gap-2">
-        <ClockIcon size={15} className="text-gray-400 flex-shrink-0" />
+        <ClockIcon size={15} className="text-gray-400 dark:text-slate-500 flex-shrink-0" />
         <input
           ref={inputRef}
           id={id}
@@ -95,7 +95,7 @@ const TimeSelect = ({ id, value, onChange, disabled, ariaLabel }: TimeSelectProp
           disabled={disabled}
           aria-label={ariaLabel}
           autoComplete="off"
-          className="flex-1 outline-none bg-transparent text-sm text-gray-800 min-w-0"
+          className="flex-1 outline-none bg-transparent text-sm text-gray-800 dark:text-slate-100 min-w-0"
           value={displayText}
           onFocus={(e) => { setFocused(true); setDraft(formatTime12h(value)); openDropdown(); e.target.select(); }}
           onBlur={(e) => { commit(e.target.value); setFocused(false); setOpen(false); }}
@@ -106,7 +106,7 @@ const TimeSelect = ({ id, value, onChange, disabled, ariaLabel }: TimeSelectProp
           }}
         />
         <svg
-          className={`size-3 text-gray-400 transition-transform duration-150 flex-shrink-0 cursor-pointer ${open ? 'rotate-180' : ''}`}
+          className={`size-3 text-gray-400 dark:text-slate-500 transition-transform duration-150 flex-shrink-0 cursor-pointer ${open ? 'rotate-180' : ''}`}
           viewBox="0 0 12 12" fill="currentColor"
           onMouseDown={handleChevronMouseDown}
         >
