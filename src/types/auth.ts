@@ -1,22 +1,23 @@
-// This file defines TypeScript interfaces for user authentication data.
+import type { Timestamp } from 'firebase/firestore';
 
-// Mirrors the Firebase Auth user object.
-export interface User {
-  uid: string;
-  displayName: string | null;
-  email: string | null;
-  photoURL: string | null;
-  providerIds: string[];
-}
+// This file defines TypeScript interfaces for user authentication data.
 
 // Stored in Firestore at users/{uid}. Extends the Firebase Auth identity
 // with profile fields that Auth does not natively support.
 export interface AppUser {
   uid: string;        // Same as Firebase Auth uid — used as the Firestore document ID
   email: string | null;
-  firstName: string;
-  lastName: string;
   username: string;
+  accountCreatedDate: Timestamp;
+
+  setupCompleted: boolean;   // The below fields should no longer be null after setup is completed.
+
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  birthday?: string | null;  // "MM-DD", e.g. "03-24"
+  teamCode?: string | null;
+  hospitalAddress?: string | null;
   photoURL?: string | null;
 }
 

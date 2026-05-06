@@ -1,30 +1,22 @@
-import { useState, useEffect } from 'react'
-import type { User } from 'firebase/auth'
+import { useState } from 'react'
+import type { AppUser } from '../types/auth'
+import { AccountSetupFlow } from '../components/AccountSetupFlow'
 import { FormSelect } from '../components/FormSelect'
 import TimeSelect from '../components/TimeSelect'
 import { currentTimeRounded } from '../components/timeUtils'
-import { subscribeToAuthState } from '../services/authService'
-import { LoginPage } from './LoginPage'
 
 type OverlayType = 'bottom' | 'center' | null
 
-function App() {
-  const [user, setUser] = useState<User | null>(null)
-  const [authLoading, setAuthLoading] = useState(true)
+interface AppProps {
+  appUser: AppUser;
+  onSetupComplete: (updated: AppUser) => void;
+}
+
+function App({ appUser, onSetupComplete }: AppProps) {
   const [overlay, setOverlay] = useState<OverlayType>(null)
   const [overlaySize, setOverlaySize] = useState<'lg' | 'md' | 'sm'>('md')
   const [startTime, setStartTime] = useState(currentTimeRounded)
   const [endTime, setEndTime] = useState(currentTimeRounded)
-
-  useEffect(() => {
-    return subscribeToAuthState((u) => {
-      setUser(u)
-      setAuthLoading(false)
-    })
-  }, [])
-
-  if (authLoading) return null
-  if (!user) return <LoginPage />
 
   function openOverlay(type: OverlayType, size: 'lg' | 'md' | 'sm' = 'md') {
     setOverlaySize(size)
@@ -33,6 +25,9 @@ function App() {
 
   return (
     <div className="min-h-screen p-8 font-sans">
+      {!appUser.setupCompleted && (
+        <AccountSetupFlow user={appUser} onComplete={onSetupComplete} />
+      )}
       <h1 className="text-2xl font-bold text-primary mb-1">UI Component Demo</h1>
       <p className="text-gray-500 mb-10 text-sm">Showcasing buttons and overlays from index.css</p>
 
