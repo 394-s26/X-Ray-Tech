@@ -1,11 +1,18 @@
 import { useState } from 'react'
+import type { AppUser } from '../types/auth'
+import { AccountSetupFlow } from '../components/AccountSetupFlow'
 import { FormSelect } from '../components/FormSelect'
 import TimeSelect from '../components/TimeSelect'
 import { currentTimeRounded } from '../components/timeUtils'
 
 type OverlayType = 'bottom' | 'center' | null
 
-function App() {
+interface AppProps {
+  appUser: AppUser;
+  onSetupComplete: (updated: AppUser) => void;
+}
+
+function App({ appUser, onSetupComplete }: AppProps) {
   const [overlay, setOverlay] = useState<OverlayType>(null)
   const [overlaySize, setOverlaySize] = useState<'lg' | 'md' | 'sm'>('md')
   const [startTime, setStartTime] = useState(currentTimeRounded)
@@ -18,6 +25,9 @@ function App() {
 
   return (
     <div className="min-h-screen p-8 font-sans">
+      {!appUser.setupCompleted && (
+        <AccountSetupFlow user={appUser} onComplete={onSetupComplete} />
+      )}
       <h1 className="text-2xl font-bold text-primary mb-1">UI Component Demo</h1>
       <p className="text-gray-500 dark:text-slate-400 mb-10 text-sm">Showcasing buttons and overlays from index.css</p>
 

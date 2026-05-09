@@ -1,7 +1,7 @@
 import React from 'react';
 import type { AppUser } from '../types/auth';
 import { UserIcon } from '../services/svgIcons';
-import './UserAvatar.css';
+import '../styles/components/UserAvatar.css';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 

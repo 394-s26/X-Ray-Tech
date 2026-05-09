@@ -1,0 +1,120 @@
+@reference "../index.css";
+
+.setup-flow__overlay {
+  @apply bg-white fixed inset-0 z-50 flex items-center justify-center overflow-hidden;
+}
+
+.setup-flow__panel {
+  @apply w-full h-full max-w-2xl p-8 flex flex-col gap-6 overflow-y-auto overflow-x-hidden;
+}
+
+.setup-flow__header {
+  @apply flex flex-col items-center gap-2;
+}
+
+.setup-flow__steps {
+  @apply flex items-center gap-2;
+}
+
+.setup-flow__step-pip {
+  @apply w-2.5 h-2.5 rounded-full bg-gray-200 transition-colors duration-200;
+}
+
+.setup-flow__step-pip--active {
+  @apply bg-primary;
+}
+
+.setup-flow__step-label {
+  @apply text-xs text-gray-400 font-medium;
+}
+
+.setup-flow__title {
+  @apply text-2xl font-bold text-primary -mb-3;
+}
+
+.setup-flow__mini-title {
+  @apply text-lg font-bold text-primary;
+}
+
+.setup-flow__subtitle {
+  @apply text-gray-500;
+}
+
+.setup-flow__body {
+  @apply flex flex-col gap-4;
+}
+
+.setup-flow__photo-row {
+  @apply flex items-center gap-4;
+}
+
+.setup-flow__photo-preview {
+  @apply w-16 h-16 rounded-full object-cover border-2 border-gray-200 shrink-0;
+}
+
+.setup-flow__actions {
+  @apply flex justify-between mt-auto pt-4;
+}
+
+@media (max-width: 640px) {
+  .setup-flow__panel {
+    @apply p-4;
+  }
+
+  .setup-flow__name-row {
+    @apply flex-col;
+  }
+
+  .setup-flow__name-row .form-field {
+    @apply w-full;
+  }
+
+  .setup-flow__birthday-field {
+    @apply max-w-full;
+  }
+
+  .setup-flow__actions {
+    @apply gap-3;
+  }
+
+  .setup-flow__actions-back {
+    flex: 1 1 0;
+  }
+
+  .setup-flow__actions-back .global-btn {
+    @apply w-full min-w-0;
+  }
+
+  .setup-flow__actions-next {
+    @apply flex-col gap-3;
+    flex: 1 1 0;
+  }
+
+  .setup-flow__actions-next .global-btn {
+    @apply w-full min-w-0;
+  }
+}
+
+.setup-flow__team-preview {
+  @apply flex items-center justify-between border border-gray-300 rounded-xl px-4 py-3;
+}
+
+.setup-flow__team-name {
+  @apply text-sm font-semibold text-gray-800;
+}
+
+.setup-flow__team-code {
+  @apply text-xs text-gray-400;
+}
+
+.setup-flow__team-manager {
+  @apply text-sm text-gray-500;
+}
+
+.setup-flow__error {
+  @apply text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2;
+}
+
+.setup-flow__field-error {
+  @apply text-xs text-red-500 mt-0.5 px-1 h-1;
+}
