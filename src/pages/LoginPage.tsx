@@ -42,15 +42,11 @@ export const LoginPage = () => {
       <div className="relative z-10 bg-white rounded-2xl border border-slate-200/90 shadow-lg w-full max-w-[440px] overflow-hidden mx-4">
         <div className="flex items-center gap-2.5 px-7 py-[1.125rem] border-b border-slate-200">
           <AppLogoIcon size={28} />
-          <span className="text-[0.9375rem] font-semibold text-slate-900 tracking-tight">
-            X-Ray Tech
-          </span>
+          <span className="login-logo-text">X-Ray Tech</span>
         </div>
 
-        <div className="px-7 pt-8 pb-9">
-          <h1 className="text-[1.625rem] font-bold text-slate-900 leading-tight mb-7">
-            Welcome back.
-          </h1>
+        <div className="login-card-body">
+          <h1 className="login-heading">Welcome back.</h1>
 
           <form onSubmit={handleEmailSignIn} className="flex flex-col gap-3 mb-5">
             <input
@@ -101,11 +97,11 @@ export const LoginPage = () => {
           </div>
 
           <button
-            className="login-ms-btn flex items-center justify-between w-full px-5 py-[0.9rem] bg-smoke-900 text-slate-900 border border-slate-700 rounded-xl text-[0.9375rem] font-semibold cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="login-ms-btn"
             onClick={handleMicrosoftSignIn}
             disabled={loading}
           >
-            <span className="flex items-center gap-3">
+            <span className="login-ms-btn-label">
               <MicrosoftIcon size={20} />
               Sign in with Microsoft
             </span>
