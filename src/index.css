@@ -275,3 +275,12 @@ body, #root {
 .form-check-row {
   @apply flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300 cursor-pointer;
 }
+
+
+@media (max-width: 640px) {
+  .form-input,
+  .form-textarea,
+  .form-number {
+    @apply py-4 text-lg;
+  }
+}

@@ -6,6 +6,7 @@ import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../servic
 import App from './App';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
+import { AccountSetupPage } from './AccountSetupPage';
 
 const Router = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -17,6 +18,7 @@ const Router = () => {
       return subscribeToAuthState(async (u) => {
         setUser(u);
         if (u) {
+          setAppUserLoading(true);
           // Auth fires before the Firestore doc is written (signup race condition).
           // Retry once after a short delay if the doc isn't ready yet.
           let profile = await fetchAppUser(u.uid);
@@ -45,22 +47,44 @@ const Router = () => {
             path="/"
             element={
               user && appUser
-                ? <App appUser={appUser} onSetupComplete={(updated) => setAppUser(updated)} />
+                ? appUser.setupCompleted
+                  ? <App />
+                  : <Navigate to="/setup" replace />
                 : <Navigate to="/login" replace />
             }
           />
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/" replace /> : <LoginPage />}
-        />
-        <Route
-          path="/signup"
-          element={user ? <Navigate to="/" replace /> : <SignupPage />}
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
+          <Route
+            path="/setup"
+            element={
+              !user ? <Navigate to="/login" replace /> :
+              !appUser ? null :
+              !appUser.setupCompleted
+                ? <AccountSetupPage appUser={appUser} onComplete={(updated) => setAppUser(updated)} />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              !user ? <LoginPage /> :
+              !appUser ? null :
+              !appUser.setupCompleted ? <Navigate to="/setup" replace /> :
+              <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              !user ? <SignupPage /> :
+              !appUser ? null :
+              !appUser.setupCompleted ? <Navigate to="/setup" replace /> :
+              <Navigate to="/" replace />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    );
 };
 
 export default Router;

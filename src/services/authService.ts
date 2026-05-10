@@ -9,6 +9,7 @@ import {
 import type { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import type { AppUser } from '../types/auth';
+import type { Team } from '../types/team';
 import { auth, db } from './firebase';
 
 const microsoftProvider = new OAuthProvider('microsoft.com');
@@ -93,9 +94,8 @@ export const createStubAppUser = async (firebaseUser: User): Promise<AppUser> =>
     uid: firebaseUser.uid,
     email: firebaseUser.email,
     username,
-    accountCreatedDate: null as never,
+    accountCreatedDate: null,
     setupCompleted: false,
-    photoURL: firebaseUser.photoURL ?? null,
   };
 };
 
@@ -111,3 +111,7 @@ export const subscribeToAuthState = (
 ): (() => void) => {
   return onAuthStateChanged(auth, callback);
 };
+
+export async function createTeam(team: Team): Promise<void> {
+  await setDoc(doc(db, 'teams', team.id), team);
+}

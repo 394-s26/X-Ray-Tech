@@ -35,3 +35,7 @@
 .user-avatar-default {
   @apply bg-gray-400 flex items-center justify-center text-white;
 }
+
+.user-avatar-initials {
+  @apply flex items-center justify-center text-white font-semibold select-none;
+}

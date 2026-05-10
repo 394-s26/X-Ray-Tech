@@ -1,4 +1,5 @@
 import ThemeToggle from './ThemeToggle';
+import '../styles/components/NavBar.css';
 
 export default function Navbar() {
   return (

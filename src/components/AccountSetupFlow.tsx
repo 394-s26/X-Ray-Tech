@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useState, useEffect } from 'react';
 import type { AppUser } from '../types/auth';
-import { updateUserProfile } from '../services/authService';
-import { storage } from '../services/firebase';
+import { updateUserProfile, createTeam } from '../services/authService';
 import UserAvatar from './UserAvatar';
+import Navbar from './Navbar';
+import { CopyIcon, RotateCwIcon } from '../services/svgIcons';
+import { COLORS } from '../utils/colors';
 import '../styles/components/AccountSetupFlow.css';
 
 interface AccountSetupFlowProps {
@@ -18,12 +19,52 @@ interface SetupFormData {
   birthday: string;
   teamCode: string;
   hospitalAddress: string;
-  photoFile: File | null;
-  photoPreviewUrl: string | null;
+  colorCode: string | null;
 }
+
+
+const generateTeamId = (existingIds: Set<string>): string => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const digits = '0123456789';
+  let id: string;
+  do {
+    id =
+      letters[Math.floor(Math.random() * 26)] +
+      letters[Math.floor(Math.random() * 26)] +
+      Array.from({ length: 5 }, () => digits[Math.floor(Math.random() * 10)]).join('');
+  } while (existingIds.has(id));
+  return id;
+};
+
+interface TeamCardProps {
+  name: string;
+  code: string;
+  manager: string;
+  color: string;
+}
+
+const TeamCard = ({ name, code, manager, color }: TeamCardProps) => (
+  <div className="setup-flow__team-card">
+    <div className="setup-flow__team-card-stripe" style={{ backgroundColor: color }} />
+    <div className="setup-flow__team-card-body">
+      <div className="flex flex-col gap-0.5">
+        <span className="setup-flow__team-name">{name}</span>
+        <span className="setup-flow__team-code">{code}</span>
+      </div>
+      <span className="setup-flow__team-manager">{manager}</span>
+    </div>
+  </div>
+);
 
 export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [teamMode, setTeamMode] = useState<'join' | 'create'>('join');
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamId, setNewTeamId] = useState(() => generateTeamId(new Set(Object.keys({ 'AB12345': 1, 'AA11111': 1 }))));
+  const [newTeamColor, setNewTeamColor] = useState<string | null>(null);
+  const [newTeamErrors, setNewTeamErrors] = useState<Record<string, string>>({});
+  const [regenerateSpin, setRegenerateSpin] = useState(false);
+  const [teamIdCopied, setTeamIdCopied] = useState(false);
   const [formData, setFormData] = useState<SetupFormData>({
     firstName: user.firstName ?? '',
     middleName: user.middleName ?? '',
@@ -31,32 +72,17 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     birthday: user.birthday ?? '',
     teamCode: user.teamCode ?? '',
     hospitalAddress: user.hospitalAddress ?? '',
-    photoFile: null,
-    photoPreviewUrl: user.photoURL ?? null,
+    colorCode: user.colorCode ?? '#99a1af',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewUrlRef = useRef<string | null>(formData.photoPreviewUrl);
-
-  useEffect(() => {
-    previewUrlRef.current = formData.photoPreviewUrl;
-  }, [formData.photoPreviewUrl]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prev;
-    };
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current?.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrlRef.current);
-      }
     };
   }, []);
 
@@ -85,44 +111,54 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     return Object.keys(errs).length === 0;
   };
 
-  const DUMMY_TEAMS: Record<string, { name: string; manager: string }> = {
-    'AB12345': { name: 'X-Ray Team', manager: 'Michelle Ramirez' },
-    'AA11111': { name: 'Northwestern Team', manager: 'Adnan Alhabian' },
+  const DUMMY_TEAMS: Record<string, { name: string; manager: string; color: string }> = {
+    'AB12345': { name: 'X-Ray Team', manager: 'Michelle Ramirez', color: '#3b82f6' },
+    'AA11111': { name: 'Northwestern Team', manager: 'Adnan Alhabian', color: '#a855f7' },
   };
 
   const validatePage2 = (): boolean => {
-    const code = formData.teamCode.trim();
-    if (!code) {
-      setErrors({ teamCode: 'Team code is required.' });
-      return false;
+    if (teamMode === 'join') {
+      const code = formData.teamCode.trim();
+      if (!code) {
+        setErrors({ teamCode: 'Team code is required.' });
+        return false;
+      }
+      if (!DUMMY_TEAMS[code]) {
+        setErrors({ teamCode: 'No team found with that code.' });
+        return false;
+      }
+      return true;
+    } else {
+      const errs: Record<string, string> = {};
+      if (!newTeamName.trim()) errs.newTeamName = 'Team name is required.';
+      setNewTeamErrors(errs);
+      return Object.keys(errs).length === 0;
     }
-    if (!DUMMY_TEAMS[code]) {
-      setErrors({ teamCode: 'No team found with that code.' });
-      return false;
-    }
-    return true;
   };
 
   const handleFinish = async (skip = false) => {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      let photoURL = user.photoURL ?? null;
-      if (!skip && formData.photoFile) {
-        const storageRef = ref(storage, `avatars/${user.uid}`);
-        await uploadBytes(storageRef, formData.photoFile);
-        photoURL = await getDownloadURL(storageRef);
-      }
       const update: Partial<AppUser> = {
         firstName: formData.firstName.trim(),
         middleName: formData.middleName.trim() || null,
         lastName: formData.lastName.trim(),
         birthday: formData.birthday,
-        teamCode: formData.teamCode.trim(),
+        teamCode: teamMode === 'create' ? newTeamId : formData.teamCode.trim(),
         hospitalAddress: skip ? user.hospitalAddress ?? null : formData.hospitalAddress.trim() || null,
-        photoURL: skip ? user.photoURL ?? null : photoURL,
+        colorCode: formData.colorCode,
         setupCompleted: true,
       };
+      if (teamMode === 'create') {
+        await createTeam({
+          id: newTeamId,
+          name: newTeamName,
+          color: newTeamColor ?? '',
+          teamLead: user.uid,
+          members: [],
+        });
+      }
       await updateUserProfile(user.uid, update);
       onComplete({ ...user, ...update });
     } catch {
@@ -132,20 +168,10 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (!file) return;
-    if (formData.photoPreviewUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(formData.photoPreviewUrl);
-    }
-    const url = URL.createObjectURL(file);
-    setFormData(prev => ({ ...prev, photoFile: file, photoPreviewUrl: url }));
-  };
-
   const renderPage1 = () => (
     <>
       <h2 className="setup-flow__title">Let's set up your profile</h2>
-      <p className="setup-flow__subtitle">Tell us a bit about yourself.</p>
+      <p className="setup-flow__subtitle">What should we call you?</p>
       <div className="setup-flow__body">
         <div className="setup-flow__name-row flex gap-4 justify-between">
           <div className="form-field">
@@ -217,36 +243,146 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   const renderPage2 = () => (
     <>
-      <h2 className="setup-flow__title">Join your team</h2>
-      <p className="setup-flow__subtitle">Enter the code provided by your team administrator.</p>
-      <div className="setup-flow__body">
-        <div className="form-field">
-          <label className="form-label">Team code</label>
-          <input
-            className="form-input"
-            type="text"
-            placeholder="AB12345"
-            value={formData.teamCode}
-            onChange={e => setField('teamCode', e.target.value)}
-          />
-          <p className="setup-flow__field-error">{errors.teamCode}</p>
-        </div>
-
-
-        {formData.teamCode.trim() && (
-          DUMMY_TEAMS[formData.teamCode.trim()] ? (
-            <div className="setup-flow__team-preview">
-              <div className="flex flex-col gap-0.5">
-                <span className="setup-flow__team-name">{DUMMY_TEAMS[formData.teamCode.trim()].name}</span>
-                <span className="setup-flow__team-code">{formData.teamCode.trim()}</span>
-              </div>
-              <span className="setup-flow__team-manager">{DUMMY_TEAMS[formData.teamCode.trim()].manager}</span>
-            </div>
-          ) : (
-            <p className="setup-flow__field-error">No matching team found for that code.</p>
-          )
-        )}
+      <div className="setup-flow__mode-toggle">
+        <button
+          type="button"
+          className={`setup-flow__mode-btn${teamMode === 'join' ? ' setup-flow__mode-btn--active' : ''}`}
+          onClick={() => { setTeamMode('join'); setNewTeamErrors({}); setErrors({}); }}
+        >
+          Join a team
+        </button>
+        <button
+          type="button"
+          className={`setup-flow__mode-btn${teamMode === 'create' ? ' setup-flow__mode-btn--active' : ''}`}
+          onClick={() => { setTeamMode('create'); setErrors({}); setNewTeamErrors({}); }}
+        >
+          Create a team
+        </button>
       </div>
+
+      <h2 className="setup-flow__title">
+        {teamMode === 'join' ? 'Join your team' : 'Create a team'}
+      </h2>
+      <p className="setup-flow__subtitle">
+        {teamMode === 'join'
+          ? 'Enter the code provided by your team administrator.'
+          : 'Set up a new team and invite others with the generated code.'}
+      </p>
+
+      {teamMode === 'join' ? (
+        <div className="setup-flow__body">
+          <div className="form-field">
+            <label className="form-label">Team code</label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="AB12345"
+              value={formData.teamCode}
+              onChange={e => setField('teamCode', e.target.value)}
+            />
+            <p className="setup-flow__field-error">{errors.teamCode}</p>
+          </div>
+
+          {formData.teamCode.trim() && (
+            DUMMY_TEAMS[formData.teamCode.trim()] ? (
+              <TeamCard
+                name={DUMMY_TEAMS[formData.teamCode.trim()].name}
+                code={formData.teamCode.trim()}
+                manager={DUMMY_TEAMS[formData.teamCode.trim()].manager}
+                color={DUMMY_TEAMS[formData.teamCode.trim()].color}
+              />
+            ) : (
+              <p className="setup-flow__field-error">No matching team found for that code.</p>
+            )
+          )}
+        </div>
+      ) : (
+        <div className="setup-flow__body">
+          <div className="form-field">
+            <label className="form-label">Team name</label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="e.g. Northwestern Radiology"
+              value={newTeamName}
+              onChange={e => { setNewTeamName(e.target.value); setNewTeamErrors(prev => ({ ...prev, newTeamName: '' })); }}
+            />
+            <p className="setup-flow__field-error">{newTeamErrors.newTeamName}</p>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Team ID</label>
+            <div className="setup-flow__team-id-row">
+              <input
+                className="form-input"
+                type="text"
+                value={newTeamId}
+                readOnly
+              />
+              <button
+                type="button"
+                className="setup-flow__team-code-btn"
+                onClick={() => {
+                  setNewTeamId(generateTeamId(new Set(Object.keys(DUMMY_TEAMS))));
+                  setRegenerateSpin(true);
+                }}
+                onAnimationEnd={() => setRegenerateSpin(false)}
+              >
+                <RotateCwIcon
+                  size={18}
+                  className={regenerateSpin ? 'setup-flow__regenerate-spin' : ''}
+                />
+              </button>
+              <div className="relative group">
+                <button
+                  type="button"
+                  className={`setup-flow__team-code-btn${teamIdCopied ? ' setup-flow__team-code-btn--copied' : ''}`}
+                  onClick={() => {
+                    navigator.clipboard.writeText(newTeamId);
+                    setTeamIdCopied(true);
+                    setTimeout(() => setTeamIdCopied(false), 2000);
+                  }}
+                >
+                  <CopyIcon size={18} />
+                </button>
+                <span className="setup-flow__copy-tooltip">
+                  {teamIdCopied ? 'Copied!' : 'Copy'}
+                </span>
+              </div>
+            </div>
+            <p className="setup-flow__field-hint">Auto-generated — share this with your team members.</p>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Team color <span className="text-gray-400 font-normal">(optional)</span></label>
+            <div className="setup-flow__color-swatches">
+              <button
+                type="button"
+                className={`setup-flow__color-swatch setup-flow__color-swatch--none${newTeamColor === null ? ' setup-flow__color-swatch--selected' : ''}`}
+                title="No color"
+                onClick={() => setNewTeamColor(null)}
+              >
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2" />
+                  <line x1="9" y1="9" x2="23" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+              {COLORS.map(c => (
+                <button
+                  key={c.value}
+                  type="button"
+                  className={`setup-flow__color-swatch${newTeamColor === c.value ? ' setup-flow__color-swatch--selected' : ''}`}
+                  style={{ backgroundColor: c.value }}
+                  title={c.label}
+                  onClick={() => setNewTeamColor(prev => prev === c.value ? null : c.value)}
+                />
+              ))}
+            </div>
+          </div>
+
+
+        </div>
+      )}
     </>
   );
 
@@ -255,48 +391,40 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
       <h2 className="setup-flow__title">Almost done!</h2>
       <p className="setup-flow__subtitle">These fields are optional — you can always update them later.</p>
       <div className="setup-flow__body">
-        <div className="form-field">
-          <label className="form-label">Profile photo</label>
-          <div className="setup-flow__photo-row">
-            {formData.photoPreviewUrl ? (
-              <img className="setup-flow__photo-preview" src={formData.photoPreviewUrl} alt="Preview" />
-            ) : (
-              <UserAvatar user={user} size="lg" />
-            )}
-            <div className="flex flex-col gap-1">
-              <button
-                className="global-btn default-btn outline"
-                style={{ width: 'auto', padding: '0.4rem 1rem' }}
-                onClick={() => fileInputRef.current?.click()}
-                type="button"
-              >
-                {formData.photoFile ? 'Change photo' : 'Upload photo'}
-              </button>
-              {formData.photoFile && (
+
+        <div className="w-full">
+          <p className="setup-flow__mini-title">Customize your user avatar</p>
+        </div>
+
+
+        <div className="flex gap-12">
+          <div className="form-field">
+            <label className="form-label">Preview</label>
+            <UserAvatar user={{ ...user, colorCode: formData.colorCode }} size="xl" />
+          </div>
+          <div className="form-field">
+            <label className="form-label">Avatar color</label>
+            <div className="setup-flow__color-swatches">
+              {COLORS.map(c => (
                 <button
-                  className="global-btn cancel-btn"
-                  style={{ width: 'auto', padding: '0.4rem 1rem' }}
-                  onClick={() => {
-                    if (formData.photoPreviewUrl?.startsWith('blob:')) {
-                      URL.revokeObjectURL(formData.photoPreviewUrl);
-                    }
-                    setFormData(prev => ({ ...prev, photoFile: null, photoPreviewUrl: user.photoURL ?? null }));
-                  }}
+                  key={c.value}
                   type="button"
-                >
-                  Remove
-                </button>
-              )}
+                  className={`setup-flow__color-swatch${formData.colorCode === c.value ? ' setup-flow__color-swatch--selected' : ''}`}
+                  style={{ backgroundColor: c.value }}
+                  title={c.label}
+                  onClick={() => setField('colorCode', c.value)}
+                />
+              ))}
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoChange}
-            />
           </div>
         </div>
+
+        <div className="w-full mt-10">
+          <p className="setup-flow__mini-title">Where do you work?</p>
+          <p className="setup-flow__subtitle">This helps team leaders keep track of their members.</p>
+        </div>
+
+
         <div className="form-field">
           <label className="form-label">Hospital address</label>
           <input
@@ -313,6 +441,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   return (
     <div className="setup-flow__overlay">
+      <Navbar />
       <div className="setup-flow__panel">
         <div className="setup-flow__header">
           <div className="setup-flow__steps">

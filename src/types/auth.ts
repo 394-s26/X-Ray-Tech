@@ -8,7 +8,7 @@ export interface AppUser {
   uid: string;        // Same as Firebase Auth uid — used as the Firestore document ID
   email: string | null;
   username: string;
-  accountCreatedDate: Timestamp;
+  accountCreatedDate: Timestamp | null;
 
   setupCompleted: boolean;   // The below fields should no longer be null after setup is completed.
 
@@ -18,7 +18,7 @@ export interface AppUser {
   birthday?: string | null;  // "MM-DD", e.g. "03-24"
   teamCode?: string | null;
   hospitalAddress?: string | null;
-  photoURL?: string | null;
+  colorCode?: string | null;
 }
 
 export interface EmailRegistrationInput {
