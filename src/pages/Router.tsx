@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
+import CertList from '../pages/CertList.tsx';
+import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs.ts'
 import App from './App';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
@@ -53,6 +55,30 @@ const Router = () => {
                 : <Navigate to="/login" replace />
             }
           />
+
+          <Route
+            path="/arrt"
+            element={
+              <CertList
+                name="ARRT"
+                fullName="American Registry of Radiologic Technologists"
+                accent="#1A4975"
+                records={ARRT_RECORDS}
+              />
+            }
+          />
+          <Route
+            path="/iema"
+            element={
+              <CertList
+                name="IEMA"
+                fullName="Illinois Emergency Management Agency"
+                accent="#0EA37E"
+                records={IEMA_RECORDS}
+              />
+            }
+          />
+
           <Route
             path="/setup"
             element={
