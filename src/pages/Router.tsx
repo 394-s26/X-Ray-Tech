@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
-import App from './App';
+import Dashboard from './Dashboard';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
@@ -48,7 +48,7 @@ const Router = () => {
             element={
               user && appUser
                 ? appUser.setupCompleted
-                  ? <App />
+                  ? <Dashboard />
                   : <Navigate to="/setup" replace />
                 : <Navigate to="/login" replace />
             }
