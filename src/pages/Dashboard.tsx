@@ -396,7 +396,7 @@ export default function Dashboard() {
         </p>
       </section>
 
-      <section className="mt-10 w-full lg:max-w-4xl lg:mx-auto grid grid-cols-2 gap-3 lg:gap-4">
+      <section className="mt-10 w-full lg:max-w-3xl lg:mx-auto grid grid-cols-2 gap-3 lg:gap-4">
         <CertCard
           name="ARRT"
           fullName="American Registry of Radiologic Technologists"
@@ -413,7 +413,7 @@ export default function Dashboard() {
         />
       </section>
 
-      <section className="hidden lg:grid lg:grid-cols-2 lg:gap-4 mt-8">
+      <section className="hidden lg:grid lg:grid-cols-2 lg:gap-4 mt-8 lg:max-w-3xl lg:mx-auto">
         <UpcomingExpirations />
         <BrowseCourses />
       </section>

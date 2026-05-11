@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import ThemeToggle from './ThemeToggle';
-import UserAvatar from './UserAvatar';
-import { PlusIcon, TeamIcon } from '../services/svgIcons';
+import { PlusIcon, TeamIcon, UserIcon } from '../services/svgIcons';
 
 const PROFILE_MENU = ['Requirements', 'Team', 'Settings'];
 
@@ -17,9 +16,9 @@ function ProfileMenu() {
       <button
         aria-label="Profile"
         aria-expanded={open}
-        className="w-10 h-10 rounded-full border-2 border-[#7C49D5] dark:border-[#A876FF] overflow-hidden bg-white dark:bg-slate-800 flex items-center justify-center hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-[#7C49D5]/40"
+        className="w-10 h-10 rounded-full border-2 border-[#7C49D5] dark:border-[#A876FF] bg-white dark:bg-slate-800 flex items-center justify-center text-[#7C49D5] dark:text-[#A876FF] hover:bg-[#7C49D5]/10 dark:hover:bg-[#A876FF]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7C49D5]/40"
       >
-        <UserAvatar user={null} size="md" />
+        <UserIcon size={18} />
       </button>
 
       {open && (
