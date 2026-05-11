@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { preprocess } from '../services/imagePreprocessing';
 import { runOCR } from '../services/ocr';
 import { loadImageFileToCanvas, renderPdfToCanvases, PdfTooLongError } from '../services/pdfRender';
-import { defaultPreprocessingOptions } from '../types/ocr';
+import { defaultPreprocessingOptions, type PreprocessingOptions } from '../types/ocr';
 
 export type PipelineStatus = 'idle' | 'loading' | 'recognizing' | 'done' | 'error';
 
@@ -18,7 +18,7 @@ interface UseOcrPipelineResult {
   status: PipelineStatus;
   progress: number;
   error: string | null;
-  processFile: (file: File) => Promise<OcrResult>;
+  processFile: (file: File, options?: PreprocessingOptions) => Promise<OcrResult>;
   reset: () => void;
 }
 
@@ -33,7 +33,10 @@ export const useOcrPipeline = (): UseOcrPipelineResult => {
     setError(null);
   };
 
-  const processFile = async (file: File): Promise<OcrResult> => {
+  const processFile = async (
+    file: File,
+    options: PreprocessingOptions = defaultPreprocessingOptions,
+  ): Promise<OcrResult> => {
     setStatus('loading');
     setError(null);
     setProgress(0);
@@ -53,7 +56,7 @@ export const useOcrPipeline = (): UseOcrPipelineResult => {
       const pageTexts: string[] = [];
       let confidenceSum = 0;
       for (let i = 0; i < canvases.length; i++) {
-        const processed = preprocess(canvases[i], defaultPreprocessingOptions);
+        const processed = preprocess(canvases[i], options);
         const { text, confidence } = await runOCR(processed, p => {
           setProgress((i + p) / canvases.length);
         });

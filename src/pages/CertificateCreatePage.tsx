@@ -5,6 +5,19 @@ import {
   describeCertificateSaveError,
   type CertificateCategory,
 } from '../services/certificateService';
+import { useOcrPipeline } from '../hooks/useOcrPipeline';
+import { parseCertificateText } from '../services/certificateParser';
+import type { PreprocessingOptions } from '../types/ocr';
+
+// All preprocessing steps on so the OCR has its best chance at the text. We
+// intentionally don't expose these as toggles on this page.
+const ALL_PREPROCESSING_OPTIONS: PreprocessingOptions = {
+  grayscale: true,
+  stretchContrast: true,
+  otsuThreshold: true,
+  deskew: true,
+  upscale2x: true,
+};
 
 export const CertificateCreatePage = () => {
   const categoryOptions: CertificateCategory[] = ['IEMA', 'ARRT'];
@@ -20,14 +33,66 @@ export const CertificateCreatePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [badFileType, setBadFileType] = useState(false);
+  const [noTextDetected, setNoTextDetected] = useState(false);
+
+  const pipeline = useOcrPipeline();
+  const isReadingFile =
+    pipeline.status === 'loading' || pipeline.status === 'recognizing';
+  const formDisabled = loading || isReadingFile;
+
+  const UNSUPPORTED_IMAGE_TYPES = ['image/heic', 'image/heif', 'image/avif', 'image/tiff', 'image/bmp', 'image/svg+xml'];
+
+  const clearForm = () => {
+    setCertificateName('');
+    setCompanyName('');
+    setCompletedDate('');
+    setExpiresDate('');
+    setPoints('');
+    setCategories([]);
+    setBadFileType(false);
+    setNoTextDetected(false);
+  };
+
+  const runOcrOnFile = async (file: File) => {
+    clearForm();
+    setNoTextDetected(false);
+    try {
+      const { text } = await pipeline.processFile(file, ALL_PREPROCESSING_OPTIONS);
+      if (text.trim().length < 15) {
+        setNoTextDetected(true);
+        return;
+      }
+      const parsed = parseCertificateText(text);
+      if (parsed.examName) setCertificateName(parsed.examName);
+      if (parsed.providerName) setCompanyName(parsed.providerName);
+      if (parsed.completedDate) setCompletedDate(parsed.completedDate);
+      if (parsed.expirationDate) setExpiresDate(parsed.expirationDate);
+      if (parsed.ceCredits !== null) setPoints(String(parsed.ceCredits));
+    } catch {
+      // pipeline.error is already set; user can still fill the form manually
+    }
+  };
+
+  const acceptFile = (file: File | null | undefined) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    setBadFileType(false);
+    setNoTextDetected(false);
+    if (UNSUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      setBadFileType(true);
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    void runOcrOnFile(file);
+  };
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setPhotoFile(file ?? null);
-    setPhotoPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return file ? URL.createObjectURL(file) : null;
-    });
+    acceptFile(file);
   };
 
   const clearPhoto = () => {
@@ -36,6 +101,10 @@ export const CertificateCreatePage = () => {
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
+    setBadFileType(false);
+    setNoTextDetected(false);
+    pipeline.reset();
+    clearForm();
   };
 
   const toggleCategory = (selected: CertificateCategory) => {
@@ -81,13 +150,13 @@ export const CertificateCreatePage = () => {
         categories,
       });
       setSuccessId(id);
-      setCertificateName('');
-      setCompanyName('');
-      setCompletedDate('');
-      setExpiresDate('');
-      setPoints('');
-      setCategories([]);
-      clearPhoto();
+      clearForm();
+      setPhotoFile(null);
+      setPhotoPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+      pipeline.reset();
       e.currentTarget.reset();
     } catch (err) {
       console.error(err);
@@ -99,13 +168,7 @@ export const CertificateCreatePage = () => {
 
   const handleOverlayDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-    setPhotoFile(file);
-    setPhotoPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(file);
-    });
+    acceptFile(e.dataTransfer.files?.[0]);
   };
 
   const openFilePicker = () => {
@@ -123,7 +186,7 @@ export const CertificateCreatePage = () => {
             Add certificate
           </h1>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            Log continuing education credits with a photo of your certificate.
+            Upload a photo and we'll pre-fill the details from the certificate text.
           </p>
         </div>
       </header>
@@ -141,7 +204,7 @@ export const CertificateCreatePage = () => {
               name="photo"
               type="file"
               accept="image/*"
-              disabled={loading}
+              disabled={formDisabled}
               onChange={handlePhotoChange}
               className="sr-only"
             />
@@ -175,7 +238,7 @@ export const CertificateCreatePage = () => {
                 </p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/80">
+              <div className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/80">
                 {photoPreview ? (
                   <img
                     src={photoPreview}
@@ -183,10 +246,27 @@ export const CertificateCreatePage = () => {
                     className="max-h-56 w-full object-contain"
                   />
                 ) : null}
+
+                {isReadingFile && (
+                  <div className="absolute inset-0 grid place-items-center bg-white/75 dark:bg-slate-900/70 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-2 text-primary dark:text-secondary">
+                      <span
+                        className="inline-block w-6 h-6 rounded-full border-2 border-current border-t-transparent animate-spin"
+                        aria-hidden="true"
+                      />
+                      <p className="text-sm font-semibold">
+                        {pipeline.status === 'loading'
+                          ? 'Reading image…'
+                          : `Extracting text… ${Math.round(pipeline.progress * 100)}%`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex justify-end border-t border-gray-200 dark:border-slate-600 p-3">
                   <button
                     type="button"
-                    disabled={loading}
+                    disabled={formDisabled}
                     onClick={(ev) => {
                       ev.stopPropagation();
                       clearPhoto();
@@ -198,9 +278,33 @@ export const CertificateCreatePage = () => {
                 </div>
               </div>
             )}
-            <p className="text-xs text-gray-500 dark:text-slate-400">
-              Upload a photo or scan from email or mail.
-            </p>
+
+            {!badFileType && pipeline.error && (
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                Couldn't read text from this image. Try a clearer photo.
+              </p>
+            )}
+            {!badFileType && noTextDetected && (
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                No text detected — consider uploading a different image.
+              </p>
+            )}
+            {!badFileType && pipeline.status === 'done' && !pipeline.error && !noTextDetected && (
+              <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                Certificate text auto-filled.
+              </p>
+            )}
+            {!photoFile && (
+              badFileType ? (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  Unsupported file type. Please convert to JPEG or PNG and try again.
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  Upload a photo or scan from email or mail.
+                </p>
+              )
+            )}
           </div>
 
           <div className="form-field">
@@ -214,7 +318,7 @@ export const CertificateCreatePage = () => {
               value={certificateName}
               onChange={(e) => setCertificateName(e.target.value)}
               required
-              disabled={loading}
+              disabled={formDisabled}
               className="form-input"
               autoComplete="off"
             />
@@ -222,7 +326,7 @@ export const CertificateCreatePage = () => {
 
           <div className="form-field">
             <label htmlFor={`${formId}-company`} className="form-label">
-              Issuing organization <span className="text-red-500">*</span>
+              Provider <span className="text-red-500">*</span>
             </label>
             <input
               id={`${formId}-company`}
@@ -231,7 +335,7 @@ export const CertificateCreatePage = () => {
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               required
-              disabled={loading}
+              disabled={formDisabled}
               className="form-input"
               autoComplete="organization"
             />
@@ -248,7 +352,7 @@ export const CertificateCreatePage = () => {
                 value={completedDate}
                 onChange={(e) => setCompletedDate(e.target.value)}
                 required
-                disabled={loading}
+                disabled={formDisabled}
                 className="form-input"
                 max={expiresDate || undefined}
               />
@@ -263,7 +367,7 @@ export const CertificateCreatePage = () => {
                 value={expiresDate}
                 onChange={(e) => setExpiresDate(e.target.value)}
                 required
-                disabled={loading}
+                disabled={formDisabled}
                 className="form-input"
                 min={completedDate || undefined}
               />
@@ -284,14 +388,14 @@ export const CertificateCreatePage = () => {
               value={points}
               onChange={(e) => setPoints(e.target.value)}
               required
-              disabled={loading}
+              disabled={formDisabled}
               className="form-number"
             />
           </div>
 
           <div className="form-field">
             <span className="form-label">
-              Category <span className="text-red-500">*</span>
+              Licenses <span className="text-red-500">*</span>
             </span>
             <div className="flex flex-row gap-2 sm:gap-3">
               {categoryOptions.map((cat) => (
@@ -301,7 +405,7 @@ export const CertificateCreatePage = () => {
                     categories.includes(cat)
                       ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
                       : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500'
-                  } ${loading ? 'cursor-not-allowed opacity-50' : ''}`}
+                  } ${formDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                   <input
                     type="checkbox"
@@ -309,19 +413,19 @@ export const CertificateCreatePage = () => {
                     value={cat}
                     checked={categories.includes(cat)}
                     onChange={() => toggleCategory(cat)}
-                    disabled={loading}
+                    disabled={formDisabled}
                     className="form-checkbox"
                   />
                   {cat}
                 </label>
               ))}
             </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Select at least one category.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">Select at least one license.</p>
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={formDisabled}
             className="global-btn default-btn mt-1 flex max-w-sm items-center justify-between gap-3 self-center"
           >
             <span>{loading ? 'Saving…' : 'Save certificate'}</span>
