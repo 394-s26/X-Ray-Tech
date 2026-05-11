@@ -15,13 +15,14 @@ const inputClass =
 const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5';
 
 export const CertificateCreatePage = () => {
+  const categoryOptions: CertificateCategory[] = ['IEMA', 'ARRT'];
   const formId = useId();
   const [certificateName, setCertificateName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [completedDate, setCompletedDate] = useState('');
   const [expiresDate, setExpiresDate] = useState('');
   const [points, setPoints] = useState('');
-  const [category, setCategory] = useState<CertificateCategory | ''>('');
+  const [categories, setCategories] = useState<CertificateCategory[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,12 +38,20 @@ export const CertificateCreatePage = () => {
     });
   };
 
+  const toggleCategory = (selected: CertificateCategory) => {
+    setCategories((prev) =>
+      prev.includes(selected)
+        ? prev.filter((category) => category !== selected)
+        : [...prev, selected]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessId(null);
 
-    if (!photoFile || !category) {
+    if (!photoFile || categories.length === 0) {
       setError('Please complete all required fields.');
       return;
     }
@@ -69,7 +78,7 @@ export const CertificateCreatePage = () => {
         completedDate,
         expiresDate,
         points: pointsNum,
-        category,
+        categories,
       });
       setSuccessId(id);
       setCertificateName('');
@@ -77,7 +86,7 @@ export const CertificateCreatePage = () => {
       setCompletedDate('');
       setExpiresDate('');
       setPoints('');
-      setCategory('');
+      setCategories([]);
       setPhotoFile(null);
       setPhotoPreview((prev) => {
         if (prev) URL.revokeObjectURL(prev);
@@ -227,22 +236,21 @@ export const CertificateCreatePage = () => {
                 Category <span className="text-red-500">*</span>
               </span>
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                {(['IEMA', 'ARRT'] as const).map((cat) => (
+                {categoryOptions.map((cat) => (
                   <label
                     key={cat}
                     className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-[0.9375rem] font-medium transition-colors ${
-                      category === cat
+                      categories.includes(cat)
                         ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
                         : 'border-slate-300 bg-white text-slate-800 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-900/40 dark:text-slate-200 dark:hover:border-slate-500'
                     } ${loading ? 'opacity-60' : ''}`}
                   >
                     <input
-                      type="radio"
-                      name="category"
+                      type="checkbox"
+                      name="categories"
                       value={cat}
-                      checked={category === cat}
-                      onChange={() => setCategory(cat)}
-                      required={cat === 'IEMA'}
+                      checked={categories.includes(cat)}
+                      onChange={() => toggleCategory(cat)}
                       disabled={loading}
                       className="size-4 accent-primary"
                     />
@@ -250,6 +258,11 @@ export const CertificateCreatePage = () => {
                   </label>
                 ))}
               </div>
+              {categories.length === 0 && (
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Select at least one category.
+                </p>
+              )}
             </div>
 
             <button

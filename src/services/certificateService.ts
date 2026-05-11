@@ -39,7 +39,7 @@ export interface CertificateRecordInput {
   completedDate: string;
   expiresDate: string;
   points: number;
-  category: CertificateCategory;
+  categories: CertificateCategory[];
 }
 
 async function ensureSignedIn(): Promise<string> {
@@ -112,7 +112,7 @@ export async function createCertificateRecord(input: CertificateRecordInput): Pr
     completedAt,
     expiresAt,
     points: input.points,
-    category: input.category,
+    categories: input.categories,
     createdAt: serverTimestamp(),
   });
 
