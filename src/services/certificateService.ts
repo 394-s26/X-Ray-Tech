@@ -1,7 +1,6 @@
 import { FirebaseError } from 'firebase/app';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { signInAnonymously } from 'firebase/auth';
 import { auth, db, storage } from './firebase';
 
 /** User-facing copy when save fails (e.g. Auth / Storage rules). */
@@ -42,11 +41,11 @@ export interface CertificateRecordInput {
   categories: CertificateCategory[];
 }
 
-async function ensureSignedIn(): Promise<string> {
+function ensureSignedIn(): string {
   if (!auth.currentUser) {
-    await signInAnonymously(auth);
+    throw new Error('You must be signed in to save a certificate.');
   }
-  return auth.currentUser!.uid;
+  return auth.currentUser.uid;
 }
 
 const EXT_TO_MIME: Record<string, string> = {
@@ -86,7 +85,7 @@ function safeObjectBaseName(file: File): string {
 }
 
 export async function createCertificateRecord(input: CertificateRecordInput): Promise<string> {
-  const uid = await ensureSignedIn();
+  const uid = ensureSignedIn();
 
   const extRaw = fileExtensionLower(input.photoFile.name);
   const ext = extRaw && EXT_TO_MIME[extRaw] ? extRaw : 'png';

@@ -93,10 +93,40 @@ export const CertificateCreatePage = () => {
     }
   };
 
+  const handleOverlayDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
   return (
-    <div className="mx-auto rounded-2xl w-full max-w-2xl overflow-hidden">
-      <div className="login-card-body">
+    <div className="mx-auto w-full h-full max-w-2xl overflow-hidden">
+      <div className="login-card-body relative">
         {/* <h1 className="login-heading">New certificate record</h1> */}
+
+        {!photoFile && (
+          <div
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm cursor-pointer"
+            onDrop={handleOverlayDrop}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => document.getElementById(`${formId}-photo`)?.click()}
+          >
+            <div className="flex flex-col items-center gap-3 px-8 text-center pointer-events-none">
+              <div className="rounded-full bg-primary/10 p-5">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              </div>
+              <p className="text-lg font-semibold text-gray-800 dark:text-slate-100">Upload certificate photo</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400">Drag & drop or click to select an image</p>
+            </div>
+          </div>
+        )}
 
         <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="form-field">

@@ -82,9 +82,15 @@ const Router = () => {
               <Navigate to="/" replace />
             }
           />
-          <Route 
-            path="/create" 
-            element={<CertificateCreatePage />}
+          <Route
+            path="/create"
+            element={
+              user && appUser
+                ? appUser.setupCompleted
+                  ? <CertificateCreatePage />
+                  : <Navigate to="/setup" replace />
+                : <Navigate to="/login" replace />
+            }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
