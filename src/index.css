@@ -2,21 +2,43 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --color-primary: #102E4A;
-  --color-primary-light: #1A4975;
-  --color-primary-extra-light: #245582;
-  --color-secondary: #8490CC;
-  --color-tertiary: #60a5fa;
-  --color-neutral: #F0F2EF;
-  --color-brand: #3b82f6;
+@font-face {
+  font-family: 'Host Grotesk';
+  src: url('./assets/fonts/Host_Grotesk/HostGrotesk-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Host Grotesk';
+  src: url('./assets/fonts/Host_Grotesk/HostGrotesk-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('./assets/fonts/Inter_Tight/InterTight-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
-  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+@theme {
+  --color-primary: #4E2A84;
+  --color-primary-light: #68489A;
+  --color-primary-extra-light: #7660A0;
+  --color-secondary: #8490CC;
+  --color-tertiary: #a78bda;
+  --color-neutral: #F5F0FA;
+  --color-brand: #7660A0;
+
+  --font-family-sans: 'Host Grotesk', 'Inter Tight', system-ui, -apple-system, sans-serif;
 }
 
 
 body, #root {
-  @apply bg-gray-50 dark:bg-slate-900;
+  @apply bg-[#F5F0FA] dark:bg-[#1a0f2e] font-sans;
   height: 100%;
 }
 
@@ -142,7 +164,7 @@ body, #root {
 /* ── Buttons ─────────────────────────────────────────────── */
 
 .global-btn {
-  @apply cursor-pointer py-2 rounded-lg font-medium text-sm transition-colors w-full;
+  @apply cursor-pointer px-4 py-3 rounded-xl font-medium text-sm transition-colors w-full border border-transparent;
 }
 
 .default-btn {
@@ -274,4 +296,13 @@ body, #root {
 
 .form-check-row {
   @apply flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300 cursor-pointer;
+}
+
+
+@media (max-width: 640px) {
+  .form-input,
+  .form-textarea,
+  .form-number {
+    @apply py-4 text-lg;
+  }
 }
