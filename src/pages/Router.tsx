@@ -6,6 +6,7 @@ import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../servic
 import Dashboard from './Dashboard';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
+import { CertificateCreatePage } from './CertificateCreatePage';
 import { AccountSetupPage } from './AccountSetupPage';
 
 const Router = () => {
@@ -80,6 +81,10 @@ const Router = () => {
               !appUser.setupCompleted ? <Navigate to="/setup" replace /> :
               <Navigate to="/" replace />
             }
+          />
+          <Route 
+            path="/create" 
+            element={<CertificateCreatePage />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
