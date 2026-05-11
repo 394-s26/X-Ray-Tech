@@ -4,7 +4,7 @@ import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
 import CertList from '../pages/CertList.tsx';
-import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs.ts'
+import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs.ts';
 import Dashboard from './Dashboard';
 import CredentialTracking from './CredentialTracking';
 import TeamManagement from './TeamManagement';
@@ -29,7 +29,7 @@ const Router = () => {
         // Retry once after a short delay if the doc isn't ready yet.
         let profile = await fetchAppUser(u.uid);
         if (!profile) {
-          await new Promise(r => setTimeout(r, 1000));
+          await new Promise((r) => setTimeout(r, 1000));
           profile = await fetchAppUser(u.uid);
         }
         if (!profile) {
@@ -92,29 +92,37 @@ const Router = () => {
         <Route
           path="/setup"
           element={
-            !user ? <Navigate to="/login" replace /> :
-            !appUser ? null :
-            !appUser.setupCompleted
-              ? <AccountSetupPage appUser={appUser} onComplete={(updated) => setAppUser(updated)} />
-              : <Navigate to="/" replace />
+            !user ? (
+              <Navigate to="/login" replace />
+            ) : !appUser ? null : !appUser.setupCompleted ? (
+              <AccountSetupPage appUser={appUser} onComplete={(updated) => setAppUser(updated)} />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/login"
           element={
-            !user ? <LoginPage /> :
-            !appUser ? null :
-            !appUser.setupCompleted ? <Navigate to="/setup" replace /> :
-            <Navigate to="/" replace />
+            !user ? (
+              <LoginPage />
+            ) : !appUser ? null : !appUser.setupCompleted ? (
+              <Navigate to="/setup" replace />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/signup"
           element={
-            !user ? <SignupPage /> :
-            !appUser ? null :
-            !appUser.setupCompleted ? <Navigate to="/setup" replace /> :
-            <Navigate to="/" replace />
+            !user ? (
+              <SignupPage />
+            ) : !appUser ? null : !appUser.setupCompleted ? (
+              <Navigate to="/setup" replace />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
