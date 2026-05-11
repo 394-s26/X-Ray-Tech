@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import {
   MoonIcon,
@@ -59,30 +60,32 @@ interface NavExpandButtonProps {
   icon: React.ReactNode;
   label: string;
   spin?: boolean;
+  alwaysExpanded?: boolean;
+  to?: string;
 }
 
-function NavExpandButton({ icon, label, spin = false }: NavExpandButtonProps) {
-  return (
-    <button
-      aria-label={label}
-      className="group h-10 flex items-center rounded-full border-2 border-[#7C49D5] text-[#7C49D5] dark:border-[#A876FF] dark:text-[#A876FF] hover:bg-[#7C49D5]/10 dark:hover:bg-[#A876FF]/15 transition-colors overflow-hidden"
-    >
+function NavExpandButton({ icon, label, spin = false, alwaysExpanded = false, to }: NavExpandButtonProps) {
+  const className = "cursor-pointer group h-10 flex items-center rounded-full border-2 border-[#7C49D5] text-[#7C49D5] dark:border-[#A876FF] dark:text-[#A876FF] hover:bg-[#7C49D5]/10 dark:hover:bg-[#A876FF]/15 transition-colors overflow-hidden";
+  const inner = (
+    <>
       <span className="w-9 h-9 flex items-center justify-center shrink-0">
-        <span
-          className={
-            'inline-flex transition-transform duration-300 ' +
-            (spin ? 'group-hover:rotate-90' : '')
-          }
-        >
+        <span className={'inline-flex transition-transform duration-300 ' + (spin ? 'group-hover:rotate-90' : '')}>
           {icon}
         </span>
       </span>
-      <span className="grid grid-cols-[0fr] group-hover:grid-cols-[1fr] transition-[grid-template-columns] duration-300">
+      <span className={alwaysExpanded ? 'grid grid-cols-[1fr]' : 'grid grid-cols-[0fr] group-hover:grid-cols-[1fr] transition-[grid-template-columns] duration-300'}>
         <span className="overflow-hidden whitespace-nowrap">
           <span className="pr-4 text-sm font-semibold">{label}</span>
         </span>
       </span>
-    </button>
+    </>
+  );
+
+  if (to) {
+    return <Link to={to} aria-label={label} className={className}>{inner}</Link>;
+  }
+  return (
+    <button aria-label={label} className={className}>{inner}</button>
   );
 }
 
@@ -113,18 +116,26 @@ interface MenuItemProps {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
+  to?: string;
 }
 
-function MenuItem({ icon, label, onClick }: MenuItemProps) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      className="navbar-menu__item"
-      onClick={onClick}
-    >
+function MenuItem({ icon, label, onClick, to }: MenuItemProps) {
+  const content = (
+    <>
       <span className="navbar-menu__icon">{icon}</span>
       <span className="navbar-menu__label">{label}</span>
+    </>
+  );
+  if (to) {
+    return (
+      <Link to={to} role="menuitem" className="navbar-menu__item" onClick={onClick}>
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" role="menuitem" className="navbar-menu__item" onClick={onClick}>
+      {content}
     </button>
   );
 }
@@ -189,7 +200,8 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
           <NavExpandButton
             icon={<PlusIcon size={18} />}
             label="Add Certificate"
-            spin
+            alwaysExpanded
+            to="/create"
           />
           <NavExpandButton icon={<TeamIcon size={18} />} label="Manage Team" />
         </div>
@@ -213,6 +225,7 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
                 icon={<PlusIcon size={18} />}
                 label="Add Certificate"
                 onClick={close}
+                to="/create"
               />
               <MenuItem
                 icon={<TeamIcon size={18} />}
