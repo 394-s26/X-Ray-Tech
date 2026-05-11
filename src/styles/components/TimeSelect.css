@@ -25,7 +25,7 @@
 }
 
 .time-select-option--selected {
-  @apply bg-green-50 dark:bg-primary/20 text-primary font-medium;
+  @apply bg-green-50 dark:bg-primary/20 text-primary dark:text-slate-100 font-medium;
 }
 
 .time-select-option-label {

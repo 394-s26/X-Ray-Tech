@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import ThemeToggle from './ThemeToggle';
+// import UserAvatar from './UserAvatar';
 import { PlusIcon, TeamIcon, UserIcon } from '../services/svgIcons';
+import '../styles/components/NavBar.css';
 
 const PROFILE_MENU = ['Requirements', 'Team', 'Settings'];
+
 
 function ProfileMenu() {
   const [open, setOpen] = useState(false);
