@@ -2,6 +2,8 @@ import { useState } from 'react';
 import ThemeToggle from './ThemeToggle';
 import UserAvatar from './UserAvatar';
 import { PlusIcon } from '../services/svgIcons';
+import '../styles/components/NavBar.css';
+
 
 function ProfileMenu() {
   const [open, setOpen] = useState(false);
