@@ -6,6 +6,7 @@ import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../servic
 import CertList from '../pages/CertList.tsx';
 import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs.ts'
 import App from './App';
+import Dashboard from './Dashboard';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
@@ -50,7 +51,7 @@ const Router = () => {
             element={
               user && appUser
                 ? appUser.setupCompleted
-                  ? <App />
+                  ? <Dashboard />
                   : <Navigate to="/setup" replace />
                 : <Navigate to="/login" replace />
             }

@@ -25,20 +25,20 @@
 }
 
 @theme {
-  --color-primary: #102E4A;
-  --color-primary-light: #1A4975;
-  --color-primary-extra-light: #245582;
+  --color-primary: #4E2A84;
+  --color-primary-light: #68489A;
+  --color-primary-extra-light: #7660A0;
   --color-secondary: #8490CC;
-  --color-tertiary: #60a5fa;
-  --color-neutral: #F0F2EF;
-  --color-brand: #3b82f6;
+  --color-tertiary: #a78bda;
+  --color-neutral: #F5F0FA;
+  --color-brand: #7660A0;
 
   --font-family-sans: 'Host Grotesk', 'Inter Tight', system-ui, -apple-system, sans-serif;
 }
 
 
 body, #root {
-  @apply bg-[#F6F5FA] dark:bg-slate-900 font-sans;
+  @apply bg-[#F5F0FA] dark:bg-[#1a0f2e] font-sans;
   height: 100%;
 }
 
