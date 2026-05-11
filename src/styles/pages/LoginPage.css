@@ -1,0 +1,90 @@
+@reference "../index.css";
+
+/* ── Layout ──────────────────────────────────────────────── */
+
+.login-page {
+  @apply fixed inset-0 flex items-start sm:items-center justify-center bg-gray-50 dark:bg-slate-900 overflow-y-auto overflow-x-hidden py-6 sm:py-8;
+}
+
+/* ── Animated diagonal grid ──────────────────────────────── */
+
+.login-grid {
+  @apply absolute inset-0;
+  background-image:
+    linear-gradient(to right, rgba(59, 130, 246, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: login-grid-scroll 22s linear infinite;
+}
+
+.dark .login-grid {
+  background-image:
+    linear-gradient(to right, rgba(96, 165, 250, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(96, 165, 250, 0.1) 1px, transparent 1px);
+}
+
+@keyframes login-grid-scroll {
+  from { background-position: 0 0; }
+  to   { background-position: 50px 50px; }
+}
+
+/* ── Pulsing radial glow ─────────────────────────────────── */
+
+.login-glow {
+  translate: -50% -50%;
+  animation: login-glow-pulse 5s ease-in-out infinite;
+}
+
+.dark .login-glow {
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.2) 0%, rgba(96, 165, 250, 0.05) 45%, transparent 70%);
+}
+
+@keyframes login-glow-pulse {
+  0%, 100% {
+    opacity: 0.65;
+    scale: 1;
+  }
+  50% {
+    opacity: 1;
+    scale: 1.35;
+  }
+}
+
+/* ── Card ────────────────────────────────────────────────── */
+
+.login-card {
+  @apply relative z-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-lg w-full max-w-[440px] overflow-hidden mx-4 flex flex-col min-h-0;
+}
+
+.login-card--wide {
+  max-width: min(100% - 2rem, 520px);
+}
+
+.login-card-header {
+  @apply flex items-center gap-2.5 px-7 py-[1.125rem] border-b border-slate-200 dark:border-slate-700;
+}
+
+.login-logo-text {
+  @apply text-[0.9375rem] font-semibold text-slate-900 dark:text-slate-100 tracking-tight;
+}
+
+.login-card-body {
+  @apply px-7 pt-8 pb-9;
+}
+
+/* Scrollable body when card is max-height constrained (flex min-h-0 + overflow). */
+.login-card-body--scroll {
+  @apply flex-1 min-h-0 overflow-y-auto overscroll-y-contain;
+}
+
+.login-heading {
+  @apply text-[1.625rem] font-bold text-slate-900 dark:text-slate-100 leading-tight mb-7;
+}
+
+.login-error {
+  @apply mt-4 px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm;
+}
+
+.login-success {
+  @apply mt-4 px-4 py-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm;
+}
