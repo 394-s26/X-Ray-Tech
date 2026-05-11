@@ -166,7 +166,7 @@ export const CopyIcon = ({ size = 24, className }: IconProps): ReactElement => (
   </svg>
 );
 
-export const RotateCwIcon = ({ size = 24, className }: IconProps): ReactElement => (
+export const ChevronRightIcon = ({ size = 24, className }: IconProps): ReactElement => (
   <svg
     width={size}
     height={size}
@@ -179,23 +179,57 @@ export const RotateCwIcon = ({ size = 24, className }: IconProps): ReactElement 
     aria-hidden="true"
     className={className}
   >
-    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-    <path d="M21 3v5h-5" />
+    <path d="M9 6l6 6-6 6" />
   </svg>
 );
 
-export const MicrosoftIcon = ({ size = 24, className }: IconProps): ReactElement => (
+export const PlusIcon = ({ size = 24, className }: IconProps): ReactElement => (
   <svg
     width={size}
     height={size}
-    viewBox="0 0 21 21"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
     aria-hidden="true"
     className={className}
   >
-    <rect x="0" y="0" width="10" height="10" fill="#F25022" />
-    <rect x="11" y="0" width="10" height="10" fill="#7FBA00" />
-    <rect x="0" y="11" width="10" height="10" fill="#00A4EF" />
-    <rect x="11" y="11" width="10" height="10" fill="#FFB900" />
+    <path d="M12 5v14M5 12h14" />
   </svg>
 );
 
+export const CheckIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M5 12l5 5L20 7" />
+  </svg>
+);
+
+export const ChevronRightIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+);
