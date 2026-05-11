@@ -93,7 +93,7 @@ function IconButton({ label, danger, children }: IconButtonProps) {
 function CertRow({ record }: { record: CertRecord }) {
   const status = expiryStatus(record.expiryDate);
   return (
-    <article className="relative rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex items-stretch">
+    <article className="relative rounded-2xl glass-panel hover:shadow-md transition-shadow overflow-hidden flex items-stretch">
       <div className={`w-1.5 shrink-0 ${STRIPE_COLOR[status.tier]}`} />
       <div className="flex-1 p-4 flex flex-col gap-3 min-w-0">
         <div className="flex items-start justify-between gap-2">
@@ -158,7 +158,7 @@ export default function CertList({ name, fullName, accent, records }: CertListPr
   };
 
   return (
-    <main className="min-h-screen pt-20 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
+    <main className="min-h-[calc(100vh-6rem)] pt-2 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
       <Link
         to="/"
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-slate-100 transition-colors"
@@ -203,7 +203,7 @@ export default function CertList({ name, fullName, accent, records }: CertListPr
       </header>
 
       {filtersOpen && (
-        <div className="mb-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-4">
+        <div className="mb-6 rounded-2xl glass-panel p-4">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
             <div className="form-field lg:col-span-2">
               <label className="form-label">Search</label>

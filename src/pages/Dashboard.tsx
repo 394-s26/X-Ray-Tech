@@ -151,7 +151,7 @@ function CertCard({ name, fullName, completed, total, to }: CertCardProps) {
   return (
     <Link
       to={to}
-      className="group relative w-full h-full text-left rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all overflow-hidden p-4 pt-5 flex flex-col gap-2.5"
+      className="group relative w-full h-full text-left rounded-2xl glass-panel hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all overflow-hidden p-4 pt-5 flex flex-col gap-2.5"
       style={done ? { boxShadow: `0 6px 20px -8px ${accent}` } : undefined}
     >
       <div
@@ -289,7 +289,7 @@ function UpcomingExpirations() {
   }, []);
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+    <div className="rounded-2xl glass-panel p-5">
       <h3 className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500 mb-4">
         Upcoming
       </h3>
@@ -338,7 +338,7 @@ const SAMPLE_COURSES = [
 
 function BrowseCourses() {
   return (
-    <div className="rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+    <div className="rounded-2xl glass-panel p-5">
       <h3 className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500 mb-1">
         Browse courses
       </h3>
@@ -382,7 +382,7 @@ export default function Dashboard() {
   const iemaPct = (iemaCompleted / IEMA_TOTAL) * 100;
 
   return (
-    <main className="min-h-screen pt-24 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
+    <main className="min-h-[calc(100vh-6rem)] pt-4 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
       <section className="flex flex-col items-center">
         <Donut percent={percent} filterId="main-donut" />
         <p
@@ -418,7 +418,7 @@ export default function Dashboard() {
         <BrowseCourses />
       </section>
 
-      <section className="mt-10 w-full max-w-md mx-auto flex flex-col gap-4 rounded-2xl bg-white/60 dark:bg-slate-800/40 border border-gray-100 dark:border-slate-700 p-4">
+      <section className="mt-10 w-full max-w-md mx-auto flex flex-col gap-4 rounded-2xl glass-panel--soft p-4">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500">
           Demo controls
         </p>

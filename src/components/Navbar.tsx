@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useTheme } from '../hooks/useTheme';
+import {
+  MoonIcon,
+  PlusIcon,
+  SunIcon,
+  TeamIcon,
+  UserIcon,
+} from '../services/svgIcons';
 import ThemeToggle from './ThemeToggle';
-// import UserAvatar from './UserAvatar';
-import { PlusIcon, TeamIcon, UserIcon } from '../services/svgIcons';
 import '../styles/components/NavBar.css';
 
 const PROFILE_MENU = ['Requirements', 'Team', 'Settings'];
-
 
 function ProfileMenu() {
   const [open, setOpen] = useState(false);
@@ -27,7 +33,6 @@ function ProfileMenu() {
       {open && (
         <div className="absolute right-0 top-full z-50">
           <div className="relative pr-3 py-3">
-            {/* Vertical line extending from the avatar down through the dots */}
             <div className="absolute right-5 top-0 bottom-3 w-[3px] rounded-full bg-[#7C49D5]/50 dark:bg-[#A876FF]/50" />
 
             <ul className="relative flex flex-col gap-5 pt-1">
@@ -81,18 +86,143 @@ function NavExpandButton({ icon, label, spin = false }: NavExpandButtonProps) {
   );
 }
 
-export default function Navbar() {
+interface HamburgerButtonProps {
+  open: boolean;
+  onClick: () => void;
+}
+
+function HamburgerButton({ open, onClick }: HamburgerButtonProps) {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 py-4 bg-transparent">
-      <div className="flex items-center gap-3">
-        <NavExpandButton icon={<PlusIcon size={18} />} label="Add Certificate" spin />
-        <NavExpandButton icon={<TeamIcon size={18} />} label="Manage Team" />
+    <button
+      type="button"
+      className={`navbar-hamburger ${open ? 'is-open' : ''}`}
+      onClick={onClick}
+      aria-label={open ? 'Close menu' : 'Open menu'}
+      aria-expanded={open}
+    >
+      <span className="navbar-hamburger__box">
+        <span className="navbar-hamburger__line" />
+        <span className="navbar-hamburger__line" />
+        <span className="navbar-hamburger__line" />
+      </span>
+    </button>
+  );
+}
+
+interface MenuItemProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}
+
+function MenuItem({ icon, label, onClick }: MenuItemProps) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      className="navbar-menu__item"
+      onClick={onClick}
+    >
+      <span className="navbar-menu__icon">{icon}</span>
+      <span className="navbar-menu__label">{label}</span>
+    </button>
+  );
+}
+
+export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
+  const close = () => setMenuOpen(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [menuOpen]);
+
+  const handleThemeToggle = () => {
+    setTheme(isDark ? 'light' : 'dark');
+    close();
+  };
+
+  return (
+    <nav
+      className={`sticky top-0 z-50 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 m-3 rounded-2xl ${
+        menuOpen ? 'pointer-events-none' : ''
+      }`}
+    >
+      <div
+        className={`flex items-center gap-3 ${
+          menuOpen ? 'pointer-events-auto' : ''
+        }`}
+      >
+        <div className="lg:hidden">
+          <HamburgerButton
+            open={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          />
+        </div>
+
+        <div className="hidden lg:flex items-center gap-3">
+          <NavExpandButton
+            icon={<PlusIcon size={18} />}
+            label="Add Certificate"
+            spin
+          />
+          <NavExpandButton icon={<TeamIcon size={18} />} label="Manage Team" />
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="hidden lg:flex items-center gap-3">
         <ThemeToggle />
         <ProfileMenu />
       </div>
+
+      {menuOpen &&
+        createPortal(
+          <>
+            <div
+              className="navbar-menu-scrim"
+              onClick={close}
+              aria-hidden="true"
+            />
+            <div className="navbar-menu" role="menu" aria-label="Quick actions">
+              <MenuItem
+                icon={<PlusIcon size={18} />}
+                label="Add Certificate"
+                onClick={close}
+              />
+              <MenuItem
+                icon={<TeamIcon size={18} />}
+                label="Manage Team"
+                onClick={close}
+              />
+              <MenuItem
+                icon={
+                  isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />
+                }
+                label={isDark ? 'Light mode' : 'Dark mode'}
+                onClick={handleThemeToggle}
+              />
+              <MenuItem
+                icon={<UserIcon size={18} />}
+                label="Profile"
+                onClick={close}
+              />
+            </div>
+          </>,
+          document.body,
+        )}
     </nav>
   );
 }

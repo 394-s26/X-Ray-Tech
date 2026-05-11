@@ -1,0 +1,166 @@
+@reference "../index.css";
+
+/* ── Hamburger button (mobile) ──────────────────────────────
+   Matches the existing 40 px circular nav-button look so the
+   width stays the same as the other top-bar icons. */
+
+.navbar-hamburger {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  border: 2px solid #7C49D5;
+  color: #7C49D5;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.dark .navbar-hamburger {
+  border-color: #A876FF;
+  color: #A876FF;
+  background: rgba(30, 22, 50, 0.5);
+}
+
+.navbar-hamburger:hover {
+  background: rgba(124, 73, 213, 0.15);
+}
+
+.dark .navbar-hamburger:hover {
+  background: rgba(168, 118, 255, 0.18);
+}
+
+.navbar-hamburger__box {
+  position: relative;
+  width: 1.125rem;
+  height: 0.875rem;
+  display: block;
+}
+
+.navbar-hamburger__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  transform-origin: center;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease;
+}
+
+.navbar-hamburger__line:nth-child(1) { top: 0; }
+.navbar-hamburger__line:nth-child(2) { top: 6px; }
+.navbar-hamburger__line:nth-child(3) { top: 12px; }
+
+.navbar-hamburger.is-open .navbar-hamburger__line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.navbar-hamburger.is-open .navbar-hamburger__line:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0.2);
+}
+
+.navbar-hamburger.is-open .navbar-hamburger__line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ── Overlay scrim + menu (mobile) ──────────────────────── */
+
+.navbar-menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(15, 11, 30, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.navbar-menu {
+  position: fixed;
+  top: 5rem;
+  left: 0.75rem;
+  z-index: 45;
+  min-width: 14rem;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(245, 240, 250, 0.5) 100%
+  );
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 24px 48px -16px rgba(78, 42, 132, 0.45);
+  animation: navbar-menu-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.dark .navbar-menu {
+  background: linear-gradient(
+    180deg,
+    rgba(30, 22, 50, 0.7) 0%,
+    rgba(15, 11, 30, 0.5) 100%
+  );
+  border-color: rgba(168, 118, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 48px -16px rgba(0, 0, 0, 0.65);
+}
+
+@keyframes navbar-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.navbar-menu__item {
+  @apply flex items-center gap-3 w-full px-2 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-200 text-left transition-colors;
+}
+
+.navbar-menu__item:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: #7C49D5;
+}
+
+.dark .navbar-menu__item:hover {
+  background: rgba(168, 118, 255, 0.12);
+  color: #A876FF;
+}
+
+/* The icon button preserves the 40 px width of the original
+   top-bar icon buttons. */
+.navbar-menu__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  border: 2px solid #7C49D5;
+  color: #7C49D5;
+  background: rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+}
+
+.dark .navbar-menu__icon {
+  border-color: #A876FF;
+  color: #A876FF;
+  background: rgba(30, 22, 50, 0.3);
+}
+
+.navbar-menu__label {
+  flex: 1;
+  white-space: nowrap;
+}
