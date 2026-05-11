@@ -38,7 +38,7 @@
 
 
 body, #root {
-  @apply bg-[#F5F0FA] dark:bg-[#1a0f2e] font-sans;
+  @apply bg-gray-50 dark:bg-slate-900 font-sans;
   height: 100%;
 }
 
@@ -210,7 +210,7 @@ body, #root {
 /* ── Buttons ─────────────────────────────────────────────── */
 
 .global-btn {
-  @apply cursor-pointer px-4 py-3 rounded-xl font-medium text-sm transition-colors w-full border border-transparent;
+  @apply cursor-pointer px-4 py-3 rounded-3xl font-medium text-sm transition-colors w-full border border-transparent;
 }
 
 .default-btn {

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import type { AppUser } from '../types/auth';
 import { updateUserProfile, createTeam } from '../services/authService';
 import UserAvatar from './UserAvatar';
-import Navbar from './Navbar';
 import { CopyIcon, RotateCwIcon } from '../services/svgIcons';
 import { COLORS } from '../utils/colors';
 import '../styles/components/AccountSetupFlow.css';
@@ -441,7 +440,6 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   return (
     <div className="setup-flow__overlay">
-      <Navbar />
       <div className="setup-flow__panel">
         <div className="setup-flow__header">
           <div className="setup-flow__steps">

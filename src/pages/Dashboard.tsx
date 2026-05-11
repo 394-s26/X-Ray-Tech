@@ -4,12 +4,12 @@ import { ChevronRightIcon, CheckIcon } from '../services/svgIcons';
 import { ARRT_RECORDS, IEMA_RECORDS, type CertRecord } from '../data/certs';
 
 const ARRT_TOTAL = 24;
-const IEMA_TOTAL = 12;
+const IEMA_TOTAL = 24;
 
 function statusMessage(percent: number): string {
   if (percent >= 100) return 'Fully certified!';
-  if (percent > 75) return 'Almost there!';
-  if (percent > 50) return 'Getting close!';
+  if (percent > 85) return 'Almost there!';
+  if (percent > 70) return 'Getting close!';
   return 'Needs work';
 }
 
@@ -18,17 +18,17 @@ function clampPct(percent: number): number {
 }
 
 const PURPLE_STOPS: { p: number; color: [number, number, number] }[] = [
-  { p: 0, color: [227, 210, 255] },   // #E3D2FF
-  { p: 50, color: [197, 163, 255] },  // #C5A3FF
-  { p: 75, color: [168, 118, 255] },  // #A876FF
-  { p: 100, color: [124, 73, 213] },  // #7C49D5
+  { p: 0,   color: [235, 225, 250] },  // neutral-ish light purple
+  { p: 50,  color: [167, 139, 218] },  // tertiary  #a78bda
+  { p: 75,  color: [118,  96, 160] },  // brand     #7660A0
+  { p: 100, color: [104,  72, 154] },  // primary-light #68489A
 ];
 
 const PURPLE_DEEP_STOPS: { p: number; color: [number, number, number] }[] = [
-  { p: 0, color: [128, 105, 165] },   // dusty
-  { p: 50, color: [102, 71, 165] },
-  { p: 75, color: [88, 53, 170] },
-  { p: 100, color: [74, 40, 138] },   // deep
+  { p: 0,   color: [118,  96, 160] },  // brand     #7660A0
+  { p: 50,  color: [104,  72, 154] },  // primary-light #68489A
+  { p: 75,  color: [91,   57, 144] },  // between
+  { p: 100, color: [78,   42, 132] },  // primary   #4E2A84
 ];
 
 function interpolate(stops: typeof PURPLE_STOPS, percent: number): string {
@@ -58,10 +58,10 @@ function donutDeepColor(percent: number): string {
 
 // Discrete purple tiers for the ARRT/IEMA cards.
 function purpleTier(percent: number): string {
-  if (percent >= 100) return '#7C49D5';
-  if (percent >= 75) return '#A876FF';
-  if (percent >= 50) return '#C5A3FF';
-  return '#E3D2FF';
+  if (percent >= 100) return 'var(--color-primary-light)';
+  if (percent >= 75)  return 'var(--color-brand)';
+  if (percent >= 50)  return 'var(--color-tertiary)';
+  return 'color-mix(in srgb, var(--color-slate-100) 45%, white)';
 }
 
 interface DonutProps {
@@ -72,7 +72,7 @@ interface DonutProps {
   filterId: string;
 }
 
-function Donut({ percent, size = 280, strokeWidth = 26, showCenter = true, filterId }: DonutProps) {
+function Donut({ percent, size = 220, strokeWidth = 26, showCenter = true, filterId }: DonutProps) {
   const cx = size / 2;
   const cy = size / 2;
   const r = (size - strokeWidth) / 2;
@@ -121,7 +121,7 @@ function Donut({ percent, size = 280, strokeWidth = 26, showCenter = true, filte
       {showCenter && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span
-            className="text-7xl font-black tracking-tight leading-none"
+            className="text-4xl font-black tracking-tight leading-none"
             style={{ color: deep, transition: 'color 0.6s ease-out' }}
           >
             {Math.round(pct)}%
@@ -152,41 +152,35 @@ function CertCard({ name, fullName, completed, total, to }: CertCardProps) {
     <Link
       to={to}
       className="group relative w-full h-full text-left rounded-2xl glass-panel hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all overflow-hidden p-4 pt-5 flex flex-col gap-2.5"
-      style={done ? { boxShadow: `0 6px 20px -8px ${accent}` } : undefined}
+      style={done ? { boxShadow: '0 6px 20px -8px rgba(100,116,139,0.45)' } : undefined}
     >
-      <div
-        className="absolute top-0 left-0 right-0 h-1.5"
-        style={{ background: accent, transition: 'background 0.4s ease-out' }}
-      />
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary dark:bg-secondary transition-colors" />
 
       <div className="flex items-center justify-between gap-2">
-        <p className="text-lg font-extrabold tracking-wide text-primary dark:text-slate-100">
+        <p className="text-lg font-extrabold tracking-wide text-primary dark:text-slate-200">
           {name}
         </p>
         {done ? (
-          <span
-            className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-white px-2 py-1 rounded-full"
-            style={{ background: accent }}
-          >
+          <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-white bg-primary dark:bg-secondary px-2 py-1 rounded-full">
             <CheckIcon size={10} />
             Done
           </span>
         ) : (
-          <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-primary dark:text-slate-100">
             {Math.round(pct)}%
           </span>
         )}
       </div>
 
-      <p className="text-[11px] leading-snug text-gray-500 dark:text-slate-400 line-clamp-2 min-h-[2.2em]">
+      <p className="text-[11px] leading-snug text-gray-500 dark:text-slate-300 line-clamp-2 min-h-[2.2em]">
         {fullName}
       </p>
 
       <div className="mt-auto flex flex-col gap-2">
-        <div className="h-2 rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
+        <div className="h-2 rounded-full bg-gray-200 dark:bg-slate-300 overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${pct}%`, background: accent }}
+            className="h-full rounded-full transition-all duration-500 bg-primary dark:bg-secondary"
+            style={{ width: `${pct}%` }}
           />
         </div>
         <div className="flex items-center justify-between">
@@ -217,7 +211,7 @@ interface DemoSliderProps {
 function DemoSlider({ label, value, max, accent, onChange }: DemoSliderProps) {
   return (
     <div className="flex items-center gap-3">
-      <label className="text-xs font-bold w-12 shrink-0 text-primary dark:text-slate-200">
+      <label className="text-xs font-bold w-12 shrink-0 text-primary dark:text-slate-100">
         {label}
       </label>
       <input
@@ -289,11 +283,11 @@ function UpcomingExpirations() {
   }, []);
 
   return (
-    <div className="rounded-2xl glass-panel p-5">
+    <div className="rounded-2xl glass-panel p-5 flex flex-col">
       <h3 className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500 mb-4">
         Upcoming
       </h3>
-      <ul className="flex flex-col gap-3.5">
+      <ul className="flex flex-col gap-3.5 mb-6">
         {upcoming.map((record) => {
           const status = tierFromDate(record.expiryDate);
           return (
@@ -322,7 +316,7 @@ function UpcomingExpirations() {
       </ul>
       <Link
         to="/arrt"
-        className="mt-5 block w-full text-center px-3 py-2 rounded-full bg-[#7C49D5] hover:bg-[#6A3CC1] text-white text-xs font-bold tracking-wide transition-colors"
+        className="global-btn default-btn ounded-full mt-auto text-center"
       >
         View all certificates
       </Link>
@@ -338,14 +332,14 @@ const SAMPLE_COURSES = [
 
 function BrowseCourses() {
   return (
-    <div className="rounded-2xl glass-panel p-5">
+    <div className="rounded-2xl glass-panel p-5 flex flex-col">
       <h3 className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500 mb-1">
         Browse courses
       </h3>
       <p className="text-[11px] text-gray-500 dark:text-slate-400 mb-4">
         Find your next certification
       </p>
-      <ul className="flex flex-col gap-2.5 mb-5">
+      <ul className="flex flex-col gap-2.5 mb-5 flex-1">
         {SAMPLE_COURSES.map((course) => (
           <li
             key={course.name}
@@ -362,7 +356,7 @@ function BrowseCourses() {
       </ul>
       <button
         type="button"
-        className="block w-full text-center px-3 py-2 rounded-full border-2 border-[#7C49D5] text-[#7C49D5] dark:text-[#A876FF] dark:border-[#A876FF] hover:bg-[#7C49D5]/10 text-xs font-bold tracking-wide transition-colors"
+        className="global-btn default-btn outline rounded-full"
       >
         Explore catalog
       </button>
@@ -374,8 +368,8 @@ export default function Dashboard() {
   const [arrtCompleted, setArrtCompleted] = useState(ARRT_TOTAL);
   const [iemaCompleted, setIemaCompleted] = useState(IEMA_TOTAL);
 
-  const totalCompleted = arrtCompleted + iemaCompleted;
-  const totalRequired = ARRT_TOTAL + IEMA_TOTAL;
+  const totalCompleted = Math.max(arrtCompleted, iemaCompleted);
+  const totalRequired = Math.max(ARRT_TOTAL, ARRT_TOTAL);
   const percent = totalRequired === 0 ? 0 : (totalCompleted / totalRequired) * 100;
 
   const arrtPct = (arrtCompleted / ARRT_TOTAL) * 100;

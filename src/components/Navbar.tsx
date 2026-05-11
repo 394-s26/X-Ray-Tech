@@ -129,7 +129,11 @@ function MenuItem({ icon, label, onClick }: MenuItemProps) {
   );
 }
 
-export default function Navbar() {
+interface NavbarProps {
+  mode?: 'full' | 'minimal';
+}
+
+export default function Navbar({ mode = 'full' }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
@@ -154,6 +158,14 @@ export default function Navbar() {
     setTheme(isDark ? 'light' : 'dark');
     close();
   };
+
+  if (mode === 'minimal') {
+    return (
+      <nav className="sticky top-0 z-50 flex items-center justify-end px-4 sm:px-5 py-3 sm:py-4 m-3 rounded-2xl">
+        <ThemeToggle />
+      </nav>
+    );
+  }
 
   return (
     <nav
