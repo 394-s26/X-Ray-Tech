@@ -5,11 +5,11 @@ import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
 import CertList from '../pages/CertList.tsx';
 import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs.ts'
-import App from './App';
 import Dashboard from './Dashboard';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
+import Navbar from '../components/Navbar';
 
 const Router = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -51,7 +51,7 @@ const Router = () => {
             element={
               user && appUser
                 ? appUser.setupCompleted
-                  ? <Dashboard />
+                  ? <><Navbar /><Dashboard /></>
                   : <Navigate to="/setup" replace />
                 : <Navigate to="/login" replace />
             }
@@ -60,23 +60,29 @@ const Router = () => {
           <Route
             path="/arrt"
             element={
-              <CertList
-                name="ARRT"
-                fullName="American Registry of Radiologic Technologists"
-                accent="#1A4975"
-                records={ARRT_RECORDS}
-              />
+              <>
+                <Navbar />
+                <CertList
+                  name="ARRT"
+                  fullName="American Registry of Radiologic Technologists"
+                  accent="#1A4975"
+                  records={ARRT_RECORDS}
+                />
+              </>
             }
           />
           <Route
             path="/iema"
             element={
-              <CertList
-                name="IEMA"
-                fullName="Illinois Emergency Management Agency"
-                accent="#0EA37E"
-                records={IEMA_RECORDS}
-              />
+              <>
+                <Navbar />
+                <CertList
+                  name="IEMA"
+                  fullName="Illinois Emergency Management Agency"
+                  accent="#0EA37E"
+                  records={IEMA_RECORDS}
+                />
+              </>
             }
           />
 
