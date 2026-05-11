@@ -1,10 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './pages/App.tsx'
-import ExampleUsage from './pages/ExampleUsage.tsx'
+import Router from './pages/Router.tsx'
 import { ThemeProvider } from './contexts/ThemeContext.tsx'
-import Navbar from './components/Navbar.tsx'
 
 const path = window.location.pathname
 
@@ -17,8 +15,7 @@ const page = routes[path] ?? <App />
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
-      <Navbar />
-      {page}
+      <Router />
     </ThemeProvider>
   </StrictMode>,
 )

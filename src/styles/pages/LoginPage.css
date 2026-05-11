@@ -31,8 +31,7 @@
 /* ── Pulsing radial glow ─────────────────────────────────── */
 
 .login-glow {
-  @apply absolute top-1/2 left-1/2 w-[720px] h-[720px] pointer-events-none;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0.08) 45%, transparent 70%);
+  translate: -50% -50%;
   animation: login-glow-pulse 5s ease-in-out infinite;
 }
 
@@ -43,11 +42,11 @@
 @keyframes login-glow-pulse {
   0%, 100% {
     opacity: 0.65;
-    transform: translate(-50%, -50%) scale(1);
+    scale: 1;
   }
   50% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.35);
+    scale: 1.35;
   }
 }
 
