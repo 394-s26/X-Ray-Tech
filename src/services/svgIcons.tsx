@@ -132,38 +132,6 @@ export const CheckIcon = ({ size = 24, className }: IconProps): ReactElement => 
   </svg>
 );
 
-export const RotateCwIcon = ({ size = 24, className }: IconProps): ReactElement => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-    className={className}
-  >
-    <path d="M3 3v5h5"/>
-  </svg>
-);
-
-export const MicrosoftIcon = ({ size = 24, className }: IconProps): ReactElement => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 21 21"
-    aria-hidden="true"
-    className={className}
-  >
-    <rect x="0" y="0" width="10" height="10" fill="#F25022" />
-    <rect x="11" y="0" width="10" height="10" fill="#7FBA00" />
-    <rect x="0" y="11" width="10" height="10" fill="#00A4EF" />
-    <rect x="11" y="11" width="10" height="10" fill="#FFB900" />
-  </svg>
-);
-
 export const ArrowLeftIcon = ({ size = 24, className }: IconProps): ReactElement => (
   <svg
     width={size}
@@ -178,6 +146,23 @@ export const ArrowLeftIcon = ({ size = 24, className }: IconProps): ReactElement
     className={className}
   >
     <path d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
+
+export const ChevronRightIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M9 6l6 6-6 6" />
   </svg>
 );
 
