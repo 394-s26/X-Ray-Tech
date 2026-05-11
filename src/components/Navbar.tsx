@@ -201,7 +201,7 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
             icon={<PlusIcon size={18} />}
             label="Add Certificate"
             alwaysExpanded
-            to="/create"
+            to="/certificates/new"
           />
           <NavExpandButton icon={<TeamIcon size={18} />} label="Manage Team" />
         </div>
@@ -225,7 +225,7 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
                 icon={<PlusIcon size={18} />}
                 label="Add Certificate"
                 onClick={close}
-                to="/create"
+                to="/certificates/new"
               />
               <MenuItem
                 icon={<TeamIcon size={18} />}

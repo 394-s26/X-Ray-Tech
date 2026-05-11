@@ -8,6 +8,7 @@ import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs.ts'
 import Dashboard from './Dashboard';
 import CredentialTracking from './CredentialTracking';
 import TeamManagement from './TeamManagement';
+import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
@@ -57,6 +58,10 @@ const Router = () => {
       <Routes>
         <Route path="/" element={requireAuth(<Dashboard />)} />
         <Route path="/credentials" element={requireAuth(<CredentialTracking />)} />
+        <Route
+          path="/certificates/new"
+          element={requireAuth(<CertificateCreatePage />)}
+        />
         <Route
           path="/team"
           element={requireAuth(appUser ? <TeamManagement appUser={appUser} /> : <></>)}

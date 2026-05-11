@@ -4,6 +4,7 @@ import UserAvatar from './UserAvatar';
 import {
   LayoutGridIcon,
   IdCardIcon,
+  PlusIcon,
   TeamIcon,
   SettingsIcon,
 } from '../services/svgIcons';
@@ -15,6 +16,8 @@ interface NavItem {
   shortLabel: string;
   icon: (size: number) => React.ReactElement;
   managerOnly?: boolean;
+  /** When true, only highlight this item when the path matches exactly. */
+  exact?: boolean;
 }
 
 const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
@@ -29,6 +32,13 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     longLabel: 'Credential Tracking',
     shortLabel: 'Credentials',
     icon: (s) => <IdCardIcon size={s} />,
+  },
+  {
+    to: '/certificates/new',
+    longLabel: 'Add certificate',
+    shortLabel: 'Add cert',
+    icon: (s) => <PlusIcon size={s} />,
+    exact: true,
   },
   {
     to: '/team',
@@ -59,7 +69,7 @@ const profileDisplayName = (user: AppUser): string => {
 const NavItemLink = ({ item }: { item: NavItem }) => (
   <NavLink
     to={item.to}
-    end={item.to === '/'}
+    end={item.exact !== undefined ? item.exact : item.to === '/'}
     className={({ isActive }) =>
       `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
     }
