@@ -3,7 +3,7 @@
 /* ── Layout ──────────────────────────────────────────────── */
 
 .login-page {
-  @apply fixed inset-0 flex items-start sm:items-center justify-center bg-gray-50 dark:bg-slate-900 overflow-y-auto overflow-x-hidden py-6 sm:py-8;
+  @apply fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-slate-900 overflow-hidden;
 }
 
 /* ── Animated diagonal grid ──────────────────────────────── */
@@ -53,11 +53,7 @@
 /* ── Card ────────────────────────────────────────────────── */
 
 .login-card {
-  @apply relative z-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-lg w-full max-w-[440px] overflow-hidden mx-4 flex flex-col min-h-0;
-}
-
-.login-card--wide {
-  max-width: min(100% - 2rem, 520px);
+  @apply relative z-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-lg w-full max-w-[440px] overflow-hidden mx-4;
 }
 
 .login-card-header {
@@ -72,19 +68,38 @@
   @apply px-7 pt-8 pb-9;
 }
 
-/* Scrollable body when card is max-height constrained (flex min-h-0 + overflow). */
-.login-card-body--scroll {
-  @apply flex-1 min-h-0 overflow-y-auto overscroll-y-contain;
-}
-
 .login-heading {
   @apply text-[1.625rem] font-bold text-slate-900 dark:text-slate-100 leading-tight mb-7;
 }
 
-.login-error {
-  @apply mt-4 px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm;
+/* ── Microsoft sign-in button ────────────────────────────── */
+
+.login-ms-btn {
+  @apply flex items-center justify-between w-full px-5 py-[0.9rem] text-slate-900 dark:text-slate-100 border border-slate-700 dark:border-slate-600 rounded-xl text-[0.9375rem] font-semibold cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed;
 }
 
-.login-success {
-  @apply mt-4 px-4 py-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm;
+.login-ms-btn:hover:not(:disabled) {
+  background-color: #efefef;
+}
+
+.dark .login-ms-btn:hover:not(:disabled) {
+  background-color: #334155; /* slate-700 */
+}
+
+.login-ms-btn-label {
+  @apply flex items-center gap-3;
+}
+
+.arrow-right {
+  transition: transform 150ms ease;
+}
+
+.login-ms-btn:hover:not(:disabled) .arrow-right {
+  transform: translateX(6px);
+}
+
+/* ── Error message ───────────────────────────────────────── */
+
+.login-error {
+  @apply mt-4 px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm;
 }

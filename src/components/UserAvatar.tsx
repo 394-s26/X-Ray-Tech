@@ -1,7 +1,7 @@
 import React from 'react';
 import type { AppUser } from '../types/auth';
 import { UserIcon } from '../services/svgIcons';
-import './UserAvatar.css';
+import '../styles/components/UserAvatar.css';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -22,6 +22,14 @@ const iconSizeMap: Record<AvatarSize, number> = {
   xl: 22,
 };
 
+const textSizeMap: Record<AvatarSize, string> = {
+  xs: '0.35rem',
+  sm: '0.55rem',
+  md: '0.8rem',
+  lg: '0.9rem',
+  xl: '1.05rem',
+};
+
 const UserAvatar = ({ user, size = 'md', bordered = false, borderColor, className = '', style }: UserAvatarProps) => {
   const hasBorder = bordered || !!borderColor;
   const borderClass = hasBorder
@@ -32,15 +40,19 @@ const UserAvatar = ({ user, size = 'md', bordered = false, borderColor, classNam
     ? { ...style, borderColor }
     : { ...style };
 
-  if (user?.photoURL) {
+  const initials = user?.firstName && user?.lastName
+    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    : null;
+
+  if (initials && user?.colorCode) {
     return (
-      <img
-        src={user.photoURL}
-        alt={user.firstName || 'User'}
-        className={sizeClass}
-        style={mergedStyle}
-        referrerPolicy="no-referrer"
-      />
+      <div
+        className={`${sizeClass} user-avatar-initials`}
+        style={{ ...mergedStyle, backgroundColor: user.colorCode, fontSize: textSizeMap[size] }}
+        aria-label={`${user.firstName} ${user.lastName}`}
+      >
+        {initials}
+      </div>
     );
   }
 
