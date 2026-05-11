@@ -2,6 +2,28 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@font-face {
+  font-family: 'Host Grotesk';
+  src: url('./assets/fonts/Host_Grotesk/HostGrotesk-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Host Grotesk';
+  src: url('./assets/fonts/Host_Grotesk/HostGrotesk-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('./assets/fonts/Inter_Tight/InterTight-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-primary: #102E4A;
   --color-primary-light: #1A4975;
@@ -11,12 +33,12 @@
   --color-neutral: #F0F2EF;
   --color-brand: #3b82f6;
 
-  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-sans: 'Host Grotesk', 'Inter Tight', system-ui, -apple-system, sans-serif;
 }
 
 
 body, #root {
-  @apply bg-gray-50 dark:bg-slate-900;
+  @apply bg-[#F6F5FA] dark:bg-slate-900 font-sans;
   height: 100%;
 }
 

@@ -75,3 +75,54 @@ export const MoonIcon = ({ size = 24, className }: IconProps): ReactElement => (
     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
   </svg>
 );
+
+export const PlusIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+export const CheckIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M5 12l5 5L20 7" />
+  </svg>
+);
+
+export const ChevronRightIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+);
