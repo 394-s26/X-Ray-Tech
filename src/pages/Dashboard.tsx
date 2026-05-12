@@ -281,7 +281,7 @@ function UpcomingExpirations({ certifications }: { certifications: Certification
         </ul>
       )}
       <Link
-        to="/arrt"
+        to="/credentials"
         className="global-btn default-btn ounded-full mt-auto text-center"
       >
         View all certificates
