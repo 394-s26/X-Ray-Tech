@@ -50,6 +50,74 @@
   }
 }
 
+/* ── Auth card & inputs ──────────────────────────────────── */
+
+.auth-card {
+  @apply relative z-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-lg w-full max-w-[440px] overflow-hidden mx-4;
+}
+
+.auth-card-header {
+  @apply flex items-center gap-2.5 px-7 py-[1.125rem] border-b border-slate-200 dark:border-slate-700;
+}
+
+.auth-card-title {
+  @apply text-[0.9375rem] font-semibold text-slate-900 dark:text-slate-100 tracking-tight;
+}
+
+.auth-heading {
+  @apply text-[1.625rem] font-bold text-slate-900 dark:text-slate-100 leading-tight mb-7;
+}
+
+.auth-input {
+  @apply w-full px-4 py-[0.8rem] rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/50 text-[0.9375rem] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400 dark:focus:border-purple-400 disabled:opacity-60 transition-colors;
+}
+
+.auth-input-error {
+  @apply border-red-400 focus:ring-red-500/40 focus:border-red-400;
+}
+
+.auth-input-success {
+  @apply border-green-400 focus:ring-green-500/40 focus:border-green-400;
+}
+
+.auth-divider {
+  @apply flex-1 h-px bg-slate-200 dark:bg-slate-600;
+}
+
+.auth-error {
+  @apply mt-4 px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm;
+}
+
+.auth-footer-text {
+  @apply mt-6 text-center text-sm text-slate-500 dark:text-slate-400;
+}
+
+/* ── Auth background (purple variant) ───────────────────── */
+
+.auth-grid {
+  @apply absolute inset-0;
+  background-image:
+    linear-gradient(to right, rgba(143, 59, 246, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(143, 59, 246, 0.07) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.dark .auth-grid {
+  background-image:
+    linear-gradient(to right, rgba(109, 40, 217, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(109, 40, 217, 0.15) 1px, transparent 1px);
+}
+
+.auth-glow {
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgba(184, 59, 246, 0.35) 0%, rgba(184, 59, 246, 0.08) 45%, transparent 70%);
+  animation: login-glow-pulse 5s ease-in-out infinite;
+}
+
+.dark .auth-glow {
+  background: radial-gradient(circle, rgba(109, 40, 217, 0.3) 0%, rgba(88, 28, 135, 0.1) 45%, transparent 70%);
+}
+
 /* ── Card ────────────────────────────────────────────────── */
 
 .login-card {

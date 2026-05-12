@@ -1,0 +1,8 @@
+{
+  "owner": [
+    "certificate:create",
+    "certificate:delete",
+    "scantron:create",
+    "scantron:delete"
+  ]
+}

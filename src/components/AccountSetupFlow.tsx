@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { AppUser } from '../types/auth';
-import { updateUserProfile, createTeam } from '../services/authService';
+import { updateUserProfile, createTeam, getTeamByCode, fetchUsersByUids, addMemberToTeam } from '../services/authService';
 import UserAvatar from './UserAvatar';
-import Navbar from './Navbar';
 import { CopyIcon, RotateCwIcon } from '../services/svgIcons';
 import { COLORS } from '../utils/colors';
 import '../styles/components/AccountSetupFlow.css';
@@ -23,17 +22,14 @@ interface SetupFormData {
 }
 
 
-const generateTeamId = (existingIds: Set<string>): string => {
+const generateTeamId = (): string => {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const digits = '0123456789';
-  let id: string;
-  do {
-    id =
-      letters[Math.floor(Math.random() * 26)] +
-      letters[Math.floor(Math.random() * 26)] +
-      Array.from({ length: 5 }, () => digits[Math.floor(Math.random() * 10)]).join('');
-  } while (existingIds.has(id));
-  return id;
+  return (
+    letters[Math.floor(Math.random() * 26)] +
+    letters[Math.floor(Math.random() * 26)] +
+    Array.from({ length: 5 }, () => digits[Math.floor(Math.random() * 10)]).join('')
+  );
 };
 
 interface TeamCardProps {
@@ -60,7 +56,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [teamMode, setTeamMode] = useState<'join' | 'create'>('join');
   const [newTeamName, setNewTeamName] = useState('');
-  const [newTeamId, setNewTeamId] = useState(() => generateTeamId(new Set(Object.keys({ 'AB12345': 1, 'AA11111': 1 }))));
+  const [newTeamId, setNewTeamId] = useState(() => generateTeamId());
   const [newTeamColor, setNewTeamColor] = useState<string | null>(null);
   const [newTeamErrors, setNewTeamErrors] = useState<Record<string, string>>({});
   const [regenerateSpin, setRegenerateSpin] = useState(false);
@@ -77,6 +73,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [foundTeam, setFoundTeam] = useState<{ name: string; manager: string; color: string } | null>(null);
+  const [teamLookupLoading, setTeamLookupLoading] = useState(false);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -85,6 +83,36 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
       document.body.style.overflow = prev;
     };
   }, []);
+
+  useEffect(() => {
+    const code = formData.teamCode.trim();
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
+      if (!code) {
+        setFoundTeam(null);
+        setTeamLookupLoading(false);
+        return;
+      }
+      setTeamLookupLoading(true);
+      const team = await getTeamByCode(code);
+      if (cancelled) return;
+      if (!team) {
+        setFoundTeam(null);
+        setTeamLookupLoading(false);
+        return;
+      }
+      const leads = await fetchUsersByUids([team.teamLead]);
+      if (cancelled) return;
+      const lead = leads[0];
+      const managerName = lead
+        ? [lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.email
+        : 'Unknown';
+      setFoundTeam({ name: team.name, manager: managerName, color: team.color });
+      setTeamLookupLoading(false);
+    }, code ? 400 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [formData.teamCode]);
 
   const formatBirthdayPreview = (val: string): string | null => {
     const match = val.match(/^(\d{2})-(\d{2})$/);
@@ -111,11 +139,6 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     return Object.keys(errs).length === 0;
   };
 
-  const DUMMY_TEAMS: Record<string, { name: string; manager: string; color: string }> = {
-    'AB12345': { name: 'X-Ray Team', manager: 'Michelle Ramirez', color: '#3b82f6' },
-    'AA11111': { name: 'Northwestern Team', manager: 'Adnan Alhabian', color: '#a855f7' },
-  };
-
   const validatePage2 = (): boolean => {
     if (teamMode === 'join') {
       const code = formData.teamCode.trim();
@@ -123,7 +146,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         setErrors({ teamCode: 'Team code is required.' });
         return false;
       }
-      if (!DUMMY_TEAMS[code]) {
+      if (!foundTeam) {
         setErrors({ teamCode: 'No team found with that code.' });
         return false;
       }
@@ -158,6 +181,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
           teamLead: user.uid,
           members: [],
         });
+      } else {
+        await addMemberToTeam(formData.teamCode.trim(), user.uid);
       }
       await updateUserProfile(user.uid, update);
       onComplete({ ...user, ...update });
@@ -278,18 +303,20 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
               type="text"
               placeholder="AB12345"
               value={formData.teamCode}
-              onChange={e => setField('teamCode', e.target.value)}
+              onChange={e => setField('teamCode', e.target.value.toUpperCase())}
             />
             <p className="setup-flow__field-error">{errors.teamCode}</p>
           </div>
 
           {formData.teamCode.trim() && (
-            DUMMY_TEAMS[formData.teamCode.trim()] ? (
+            teamLookupLoading ? (
+              <p className="setup-flow__field-hint">Looking up team…</p>
+            ) : foundTeam ? (
               <TeamCard
-                name={DUMMY_TEAMS[formData.teamCode.trim()].name}
+                name={foundTeam.name}
                 code={formData.teamCode.trim()}
-                manager={DUMMY_TEAMS[formData.teamCode.trim()].manager}
-                color={DUMMY_TEAMS[formData.teamCode.trim()].color}
+                manager={foundTeam.manager}
+                color={foundTeam.color}
               />
             ) : (
               <p className="setup-flow__field-error">No matching team found for that code.</p>
@@ -323,7 +350,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
                 type="button"
                 className="setup-flow__team-code-btn"
                 onClick={() => {
-                  setNewTeamId(generateTeamId(new Set(Object.keys(DUMMY_TEAMS))));
+                  setNewTeamId(generateTeamId());
                   setRegenerateSpin(true);
                 }}
                 onAnimationEnd={() => setRegenerateSpin(false)}
@@ -441,7 +468,6 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   return (
     <div className="setup-flow__overlay">
-      <Navbar />
       <div className="setup-flow__panel">
         <div className="setup-flow__header">
           <div className="setup-flow__steps">

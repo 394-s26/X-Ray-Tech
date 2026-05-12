@@ -19,6 +19,10 @@ export interface AppUser {
   teamCode?: string | null;
   hospitalAddress?: string | null;
   colorCode?: string | null;
+
+  // 'manager' unlocks the Team Management area in the sidebar; everyone else
+  // is treated as a member.
+  role?: 'manager' | 'member' | null;
 }
 
 export interface EmailRegistrationInput {

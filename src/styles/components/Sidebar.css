@@ -1,0 +1,231 @@
+@reference "../index.css";
+
+/* ── Default (mobile): fixed BOTTOM nav bar ───────────────── */
+
+.app-sidebar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+}
+
+.app-sidebar__inner {
+  @apply flex flex-row items-stretch gap-1 mx-3 mb-3 mt-0 rounded-2xl px-2 py-2 relative;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(245, 240, 250, 0.4) 100%
+  );
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 -18px 40px -22px rgba(78, 42, 132, 0.35);
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.dark .app-sidebar__inner {
+  background: linear-gradient(
+    180deg,
+    rgba(30, 22, 50, 0.55) 0%,
+    rgba(15, 11, 30, 0.35) 100%
+  );
+  border-color: rgba(168, 118, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 -18px 40px -22px rgba(0, 0, 0, 0.65);
+}
+
+/* Profile chip is desktop-only */
+.app-sidebar__profile {
+  display: none;
+}
+
+.app-sidebar__profile-name {
+  @apply text-sm font-semibold text-gray-900 dark:text-slate-50 leading-tight truncate;
+}
+
+.app-sidebar__profile-role {
+  @apply text-xs text-gray-500 dark:text-slate-400 truncate;
+}
+
+/* Sections collapse to their children on mobile so all nav items
+   become direct flex children of the bar and share width equally. */
+.app-sidebar__section {
+  display: contents;
+}
+
+.app-sidebar__nav-item {
+  @apply flex flex-col items-center justify-center gap-1 flex-1 min-w-0 px-2 py-2 rounded-xl text-[11px] font-medium transition-colors;
+  @apply text-gray-600 dark:text-slate-300;
+}
+
+.app-sidebar__nav-item:hover {
+  @apply bg-slate-100 dark:bg-slate-700/40 text-primary dark:text-slate-50;
+}
+
+.app-sidebar__nav-item--active {
+  @apply bg-primary/15 text-primary dark:bg-primary-light/30 dark:text-slate-50;
+}
+
+.app-sidebar__nav-item--active:hover {
+  @apply bg-primary/20;
+}
+
+.app-sidebar__nav-icon {
+  @apply shrink-0;
+}
+
+.app-sidebar__nav-label {
+  @apply leading-none truncate max-w-full;
+}
+
+.app-sidebar__nav-label--short {
+  display: inline;
+}
+
+.app-sidebar__nav-label--long {
+  display: none;
+}
+
+.app-sidebar__bottom {
+  display: contents;
+}
+
+.app-sidebar__divider {
+  display: none;
+}
+
+/* Mobile: hidden nav items */
+.app-sidebar__nav-item--mobile-hidden {
+  display: none;
+}
+
+/* Mobile: Add Certificate as a circle FAB */
+.app-sidebar__nav-item.highlighted {
+  @apply bg-primary/20 hover:bg-primary/10 dark:bg-secondary dark:hover:bg-indigo-400;
+  flex: 0 0 auto;
+  width: 6rem;
+  height: 3.5rem;
+  border-radius: 30px;
+  padding: 0;
+  margin: 0 1.5rem;
+}
+
+.app-sidebar__nav-item.highlighted .app-sidebar__nav-label {
+  display: none;
+}
+
+.app-sidebar__logout {
+  @apply text-red-500 dark:text-red-400 w-full cursor-pointer;
+}
+
+.app-sidebar__logout:hover {
+  @apply bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300;
+}
+
+/* ── Desktop (≥1024px): sticky LEFT rail ─────────────────── */
+@media (min-width: 1024px) {
+  .app-sidebar {
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
+    width: 16rem; /* w-64 */
+    flex-shrink: 0;
+    align-self: flex-start;
+    height: 100dvh;
+  }
+
+  .app-sidebar__inner {
+    @apply flex-col items-stretch h-full m-3 px-3 py-5;
+    padding-bottom: 1.25rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 18px 40px -22px rgba(78, 42, 132, 0.35);
+  }
+
+  .dark .app-sidebar__inner {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 18px 40px -22px rgba(0, 0, 0, 0.65);
+  }
+
+  .app-sidebar__profile {
+    @apply flex items-center gap-3 px-2 py-3 mb-4 rounded-xl w-full text-left cursor-pointer transition-colors;
+    border: 1px solid rgba(120, 80, 200, 0.3);
+    background: transparent;
+  }
+
+  .app-sidebar__profile:hover {
+    @apply bg-primary/10 dark:bg-primary-light/10;
+    border-color: rgba(120, 80, 200, 0.6);
+  }
+
+  .app-sidebar__profile-chevron {
+    @apply shrink-0 text-gray-400 dark:text-slate-500 transition-transform duration-200;
+    margin-left: auto;
+  }
+
+  .app-sidebar__profile:hover .app-sidebar__profile-chevron {
+    transform: translateX(3px);
+  }
+
+  .app-sidebar__section {
+    @apply flex flex-col gap-1 flex-none;
+  }
+
+  .app-sidebar__bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-sidebar__nav-item {
+    @apply flex-row items-center justify-start gap-3 px-3 py-2.5 text-sm;
+  }
+
+  .app-sidebar__nav-label--short {
+    display: none;
+  }
+
+  .app-sidebar__nav-label--long {
+    display: inline;
+  }
+
+  .app-sidebar__team-name {
+    @apply block text-[10px] italic font-normal opacity-60 leading-tight mt-0.5;
+  }
+
+  .app-sidebar__divider {
+    @apply block h-px my-3 bg-white/60 dark:bg-slate-700/40;
+  }
+
+  /* Restore hidden items on desktop */
+  .app-sidebar__nav-item--mobile-hidden {
+    display: flex;
+  }
+
+  /* Restore Add Certificate as a normal row item */
+  .app-sidebar__nav-item.highlighted {
+    @apply bg-primary/20 hover:bg-primary/10 dark:bg-secondary dark:hover:bg-indigo-400 mb-4;
+    flex: unset;
+    width: auto;
+    height: auto;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    margin-inline: 0;
+  }
+
+  .app-sidebar__nav-item.highlighted .app-sidebar__nav-label--long {
+    display: inline;
+  }
+
+  .app-sidebar__nav-item.highlighted .app-sidebar__nav-label--short {
+    display: none;
+  }
+}
