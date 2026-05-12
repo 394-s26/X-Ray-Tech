@@ -72,7 +72,7 @@ interface DonutProps {
   filterId: string;
 }
 
-function Donut({ percent, size = 220, strokeWidth = 26, showCenter = true, filterId }: DonutProps) {
+function Donut({ percent, size = 280, strokeWidth = 26, showCenter = true, filterId }: DonutProps) {
   const cx = size / 2;
   const cy = size / 2;
   const r = (size - strokeWidth) / 2;
@@ -114,15 +114,15 @@ function Donut({ percent, size = 220, strokeWidth = 26, showCenter = true, filte
           strokeDashoffset={offset}
           transform={`rotate(-90 ${cx} ${cy}) translate(0 ${size}) scale(1 -1)`}
           filter={`url(#${filterId})`}
-          style={{ transition: 'stroke-dashoffset 0.6s ease-out, stroke 0.6s ease-out' }}
+          style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
         />
       </svg>
 
       {showCenter && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span
-            className="text-4xl font-black tracking-tight leading-none"
-            style={{ color: deep, transition: 'color 0.6s ease-out' }}
+            className="text-7xl font-black tracking-tight leading-none"
+            style={{ color: deep }}
           >
             {Math.round(pct)}%
           </span>
@@ -345,7 +345,7 @@ export default function Dashboard() {
         <Donut percent={percent} filterId="main-donut" />
         <p
           className="mt-7 text-3xl font-extrabold tracking-tight"
-          style={{ color: donutDeepColor(percent), transition: 'color 0.6s ease-out' }}
+          style={{ color: donutDeepColor(percent) }}
         >
           {statusMessage(percent)}
         </p>

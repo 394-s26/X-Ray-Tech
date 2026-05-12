@@ -1,4 +1,3 @@
-import { Navigate } from 'react-router-dom';
 import type { AppUser } from '../types/auth';
 import { TeamIcon } from '../services/svgIcons';
 
@@ -7,10 +6,6 @@ interface TeamManagementProps {
 }
 
 const TeamManagement = ({ appUser }: TeamManagementProps) => {
-  if (appUser.role !== 'manager') {
-    return <Navigate to="/" replace />;
-  }
-
   return (
     <main className="min-h-[calc(100vh-6rem)] pb-16 px-5 lg:px-10 w-full max-w-5xl mx-auto">
       <header className="mt-2 mb-8 flex items-center gap-3">
