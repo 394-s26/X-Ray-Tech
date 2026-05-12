@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { AppUser } from '../types/auth';
-import { updateUserProfile, createTeam, getTeamByCode, fetchUsersByUids } from '../services/authService';
+import { updateUserProfile, createTeam, getTeamByCode, fetchUsersByUids, addMemberToTeam } from '../services/authService';
 import UserAvatar from './UserAvatar';
 import { CopyIcon, RotateCwIcon } from '../services/svgIcons';
 import { COLORS } from '../utils/colors';
@@ -181,6 +181,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
           teamLead: user.uid,
           members: [],
         });
+      } else {
+        await addMemberToTeam(formData.teamCode.trim(), user.uid);
       }
       await updateUserProfile(user.uid, update);
       onComplete({ ...user, ...update });
@@ -301,7 +303,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
               type="text"
               placeholder="AB12345"
               value={formData.teamCode}
-              onChange={e => setField('teamCode', e.target.value)}
+              onChange={e => setField('teamCode', e.target.value.toUpperCase())}
             />
             <p className="setup-flow__field-error">{errors.teamCode}</p>
           </div>

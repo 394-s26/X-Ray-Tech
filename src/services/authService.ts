@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, runTransaction, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc, runTransaction, serverTimestamp, writeBatch, arrayUnion, updateDoc } from 'firebase/firestore';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import { auth, db } from './firebase';
@@ -117,8 +117,12 @@ export async function createTeam(team: Team): Promise<void> {
 }
 
 export async function getTeamByCode(teamCode: string): Promise<Team | null> {
-  const snap = await getDoc(doc(db, 'teams', teamCode));
+  const snap = await getDoc(doc(db, 'teams', teamCode.toUpperCase()));
   return snap.exists() ? (snap.data() as Team) : null;
+}
+
+export async function addMemberToTeam(teamCode: string, uid: string): Promise<void> {
+  await updateDoc(doc(db, 'teams', teamCode.toUpperCase()), { members: arrayUnion(uid) });
 }
 
 export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
