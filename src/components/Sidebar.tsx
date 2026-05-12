@@ -42,10 +42,9 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
   },
   {
     to: '/team',
-    longLabel: 'Team Members',
+    longLabel: 'Manage Team',
     shortLabel: 'Team',
     icon: (s) => <TeamIcon size={s} />,
-    managerOnly: true,
   },
 ];
 

@@ -6,53 +6,19 @@ import {
   MoonIcon,
   PlusIcon,
   SunIcon,
-  TeamIcon,
   UserIcon,
 } from '../services/svgIcons';
 import ThemeToggle from './ThemeToggle';
 import BrandLogo from './BrandLogo';
 import '../styles/components/NavBar.css';
 
-const PROFILE_MENU = ['Requirements', 'Team', 'Settings'];
-
 function ProfileMenu() {
-  const [open, setOpen] = useState(false);
-
   return (
     <div
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      aria-label="Profile"
+      className="w-10 h-10 rounded-full border-2 border-[#7C49D5] dark:border-[#A876FF] bg-white dark:bg-slate-800 flex items-center justify-center text-[#7C49D5] dark:text-[#A876FF]"
     >
-      <button
-        aria-label="Profile"
-        aria-expanded={open}
-        className="w-10 h-10 rounded-full border-2 border-[#7C49D5] dark:border-[#A876FF] bg-white dark:bg-slate-800 flex items-center justify-center text-[#7C49D5] dark:text-[#A876FF] hover:bg-[#7C49D5]/10 dark:hover:bg-[#A876FF]/15 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7C49D5]/40"
-      >
-        <UserIcon size={18} />
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full z-50">
-          <div className="relative pr-3 py-3">
-            <div className="absolute right-5 top-0 bottom-3 w-[3px] rounded-full bg-[#7C49D5]/50 dark:bg-[#A876FF]/50" />
-
-            <ul className="relative flex flex-col gap-5 pt-1">
-              {PROFILE_MENU.map((item) => (
-                <li key={item} className="flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-primary dark:text-slate-100 hover:text-[#7C49D5] dark:hover:text-[#A876FF] whitespace-nowrap transition-colors"
-                  >
-                    {item}
-                  </button>
-                  <span className="w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-[#7C49D5] dark:border-[#A876FF] shrink-0 relative z-10" />
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
+      <UserIcon size={18} />
     </div>
   );
 }
@@ -213,7 +179,6 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
           alwaysExpanded
           to="/certificates/new"
         />
-        <NavExpandButton icon={<TeamIcon size={18} />} label="Manage Team" alwaysExpanded />
         <ThemeToggle />
         <ProfileMenu />
       </div>
@@ -232,11 +197,6 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
                 label="Add Certificate"
                 onClick={close}
                 to="/certificates/new"
-              />
-              <MenuItem
-                icon={<TeamIcon size={18} />}
-                label="Manage Team"
-                onClick={close}
               />
               <MenuItem
                 icon={
