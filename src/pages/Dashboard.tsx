@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, CheckIcon } from '../services/svgIcons';
 import { ARRT_RECORDS, IEMA_RECORDS, type CertRecord } from '../data/certs';
@@ -200,39 +200,6 @@ function CertCard({ name, fullName, completed, total, to }: CertCardProps) {
   );
 }
 
-interface DemoSliderProps {
-  label: string;
-  value: number;
-  max: number;
-  accent: string;
-  onChange: (value: number) => void;
-}
-
-function DemoSlider({ label, value, max, accent, onChange }: DemoSliderProps) {
-  return (
-    <div className="flex items-center gap-3">
-      <label className="text-xs font-bold w-12 shrink-0 text-primary dark:text-slate-100">
-        {label}
-      </label>
-      <input
-        type="range"
-        min={0}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{ accentColor: accent }}
-        className="flex-1 h-2 cursor-pointer"
-      />
-      <span
-        className="text-xs font-semibold tabular-nums w-12 text-right"
-        style={{ color: accent }}
-      >
-        {value}/{max}
-      </span>
-    </div>
-  );
-}
-
 // ── Side widgets (desktop only) ──────────────────────────────
 
 type ExpiryTier = 'expired' | 'urgent' | 'warn' | 'ok';
@@ -365,15 +332,12 @@ function BrowseCourses() {
 }
 
 export default function Dashboard() {
-  const [arrtCompleted, setArrtCompleted] = useState(ARRT_TOTAL);
-  const [iemaCompleted, setIemaCompleted] = useState(IEMA_TOTAL);
+  const arrtCompleted = ARRT_RECORDS.length;
+  const iemaCompleted = IEMA_RECORDS.length;
 
-  const totalCompleted = Math.max(arrtCompleted, iemaCompleted);
-  const totalRequired = Math.max(ARRT_TOTAL, ARRT_TOTAL);
+  const totalCompleted = arrtCompleted + iemaCompleted;
+  const totalRequired = ARRT_TOTAL + IEMA_TOTAL;
   const percent = totalRequired === 0 ? 0 : (totalCompleted / totalRequired) * 100;
-
-  const arrtPct = (arrtCompleted / ARRT_TOTAL) * 100;
-  const iemaPct = (iemaCompleted / IEMA_TOTAL) * 100;
 
   return (
     <main className="min-h-[calc(100vh-6rem)] pt-4 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
@@ -410,26 +374,6 @@ export default function Dashboard() {
       <section className="hidden lg:grid lg:grid-cols-2 lg:gap-4 mt-8 lg:max-w-3xl lg:mx-auto">
         <UpcomingExpirations />
         <BrowseCourses />
-      </section>
-
-      <section className="mt-10 w-full max-w-md mx-auto flex flex-col gap-4 rounded-2xl glass-panel--soft p-4">
-        <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500">
-          Demo controls
-        </p>
-        <DemoSlider
-          label="ARRT"
-          value={arrtCompleted}
-          max={ARRT_TOTAL}
-          accent={purpleTier(arrtPct)}
-          onChange={setArrtCompleted}
-        />
-        <DemoSlider
-          label="IEMA"
-          value={iemaCompleted}
-          max={IEMA_TOTAL}
-          accent={purpleTier(iemaPct)}
-          onChange={setIemaCompleted}
-        />
       </section>
     </main>
   );
