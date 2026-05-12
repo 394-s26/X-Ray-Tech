@@ -106,9 +106,9 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
       if (cancelled) return;
       const lead = leads[0];
       const managerName = lead
-        ? [lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.email
+        ? [lead.firstName, lead.lastName].filter(Boolean).join(' ') || (lead.email ?? 'Unknown')
         : 'Unknown';
-      setFoundTeam({ name: team.name, manager: managerName, color: team.color });
+      setFoundTeam({ name: team.name, manager: managerName, color: team.color ?? '' });
       setTeamLookupLoading(false);
     }, code ? 400 : 0);
     return () => { cancelled = true; clearTimeout(timer); };
