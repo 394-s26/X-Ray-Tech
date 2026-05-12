@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { AppLogoIcon, ArrowRightIcon, EyeIcon, EyeOffIcon } from '../services/svgIcons';
-import { registerWithEmail, checkUsernameAvailable } from '../services/authService';
+import { AppLogoIcon, ArrowRightIcon, EyeIcon, EyeOffIcon, GoogleIcon } from '../services/svgIcons';
+import { registerWithEmail, checkUsernameAvailable, signInWithGoogle } from '../services/authService';
 import { AuthBackground } from './AuthBackground';
 import '../styles/pages/LoginPage.css';
 
@@ -29,9 +29,10 @@ const isPasswordValid = (strength: PasswordStrength): boolean =>
 interface PillProps {
   met: boolean;
   label: string;
+  mobileLabel?: string;
 }
 
-const StrengthPill = ({ met, label }: PillProps) => (
+const StrengthPill = ({ met, label, mobileLabel }: PillProps) => (
   <span
     className={`flex-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
       met
@@ -52,7 +53,12 @@ const StrengthPill = ({ met, label }: PillProps) => (
     >
       {met ? <path d="M20 6L9 17l-5-5" /> : <circle cx="12" cy="12" r="9" />}
     </svg>
-    {label}
+    {mobileLabel ? (
+      <>
+        <span className="sm:hidden">{mobileLabel}</span>
+        <span className="hidden sm:inline">{label}</span>
+      </>
+    ) : label}
   </span>
 );
 
@@ -124,6 +130,18 @@ export const SignupPage = () => {
     }, 400);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [username]);
+
+  const handleGoogleSignUp = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch {
+      setError('Sign-up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -205,11 +223,11 @@ export const SignupPage = () => {
               </button>
             </div>
 
-            <div className="flex flex-wrap justify-between gap-1.5">
+            <div className="flex flex-nowrap justify-between gap-1.5">
               <StrengthPill met={strength.hasMinLength} label="8+ chars" />
               <StrengthPill met={strength.hasLetter} label="Letter" />
-              <StrengthPill met={strength.hasNumber} label="Number" />
-              <StrengthPill met={strength.hasSpecial} label="Special char" />
+              <StrengthPill met={strength.hasNumber} label="Number" mobileLabel="Num" />
+              <StrengthPill met={strength.hasSpecial} label="Special char" mobileLabel="Special" />
             </div>
 
             <input
@@ -234,6 +252,24 @@ export const SignupPage = () => {
               <ArrowRightIcon size={18} />
             </button>
           </form>
+
+          <div className="flex items-center gap-3 mt-5 mb-4">
+            <div className="auth-divider" />
+            <span className="text-xs text-slate-400 font-medium">or</span>
+            <div className="auth-divider" />
+          </div>
+
+          <button
+            className="login-google-btn"
+            onClick={handleGoogleSignUp}
+            disabled={loading}
+          >
+            <span className="login-google-btn-label">
+              <GoogleIcon size={20} />
+              Sign up with Google
+            </span>
+            <ArrowRightIcon size={18} className="arrow-right" />
+          </button>
 
           {error && <p className="auth-error">{error}</p>}
 

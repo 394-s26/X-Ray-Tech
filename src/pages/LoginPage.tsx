@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AppLogoIcon, ArrowRightIcon, MicrosoftIcon } from '../services/svgIcons';
-import { signInWithMicrosoft, signInWithEmail } from '../services/authService';
+import { AppLogoIcon, ArrowRightIcon, GoogleIcon } from '../services/svgIcons';
+import { signInWithGoogle, signInWithEmail } from '../services/authService';
 import { AuthBackground } from './AuthBackground';
 import { EyeIcon, EyeOffIcon } from '../services/svgIcons';
 
@@ -12,11 +12,11 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleMicrosoftSignIn = async () => {
+  const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithMicrosoft();
+      await signInWithGoogle();
     } catch {
       setError('Sign-in failed. Please try again.');
     } finally {
@@ -96,13 +96,13 @@ export const LoginPage = () => {
           </div>
 
           <button
-            className="login-ms-btn"
-            onClick={handleMicrosoftSignIn}
+            className="login-google-btn"
+            onClick={handleGoogleSignIn}
             disabled={loading}
           >
-            <span className="login-ms-btn-label">
-              <MicrosoftIcon size={20} />
-              Sign in with Microsoft
+            <span className="login-google-btn-label">
+              <GoogleIcon size={20} />
+              Sign in with Google
             </span>
             <ArrowRightIcon size={18} className="arrow-right" />
           </button>

@@ -1,5 +1,5 @@
 import {
-  OAuthProvider,
+  GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -12,10 +12,10 @@ import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import { auth, db } from './firebase';
 
-const microsoftProvider = new OAuthProvider('microsoft.com');
+const googleProvider = new GoogleAuthProvider();
 
-export const signInWithMicrosoft = async (): Promise<void> => {
-  await signInWithPopup(auth, microsoftProvider);
+export const signInWithGoogle = async (): Promise<void> => {
+  await signInWithPopup(auth, googleProvider);
 };
 
 export const signInWithEmail = async (email: string, password: string): Promise<void> => {
@@ -66,11 +66,11 @@ export const createStubAppUser = async (firebaseUser: User): Promise<AppUser> =>
     .toLowerCase()
     .slice(0, 20) || firebaseUser.uid.slice(0, 12);
 
-  // Find a username that isn't already taken, appending a numeric suffix if needed.
+  // Find a username that isn't already taken, appending a random numeric suffix if needed.
   let username = base;
-  let suffix = 1;
   while (!(await checkUsernameAvailable(username))) {
-    username = `${base.slice(0, 18)}${suffix++}`;
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    username = `${base.slice(0, 16)}${rand}`;
   }
 
   await runTransaction(db, async txn => {
