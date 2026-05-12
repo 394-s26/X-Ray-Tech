@@ -12,50 +12,6 @@ import ThemeToggle from './ThemeToggle';
 import BrandLogo from './BrandLogo';
 import '../styles/components/NavBar.css';
 
-function ProfileMenu() {
-  return (
-    <div
-      aria-label="Profile"
-      className="w-10 h-10 rounded-full border-2 border-[#7C49D5] dark:border-[#A876FF] bg-white dark:bg-slate-800 flex items-center justify-center text-[#7C49D5] dark:text-[#A876FF]"
-    >
-      <UserIcon size={18} />
-    </div>
-  );
-}
-
-interface NavExpandButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  spin?: boolean;
-  alwaysExpanded?: boolean;
-  to?: string;
-}
-
-function NavExpandButton({ icon, label, spin = false, alwaysExpanded = false, to }: NavExpandButtonProps) {
-  const className = "cursor-pointer group h-10 flex items-center rounded-full border-2 border-[#7C49D5] text-[#7C49D5] dark:border-[#A876FF] dark:text-[#A876FF] hover:bg-[#7C49D5]/10 dark:hover:bg-[#A876FF]/15 transition-colors overflow-hidden";
-  const inner = (
-    <>
-      <span className="w-9 h-9 flex items-center justify-center shrink-0">
-        <span className={'inline-flex transition-transform duration-300 ' + (spin ? 'group-hover:rotate-90' : '')}>
-          {icon}
-        </span>
-      </span>
-      <span className={alwaysExpanded ? 'grid grid-cols-[1fr]' : 'grid grid-cols-[0fr] group-hover:grid-cols-[1fr] transition-[grid-template-columns] duration-300'}>
-        <span className="overflow-hidden whitespace-nowrap">
-          <span className="pr-4 text-sm font-semibold">{label}</span>
-        </span>
-      </span>
-    </>
-  );
-
-  if (to) {
-    return <Link to={to} aria-label={label} className={className}>{inner}</Link>;
-  }
-  return (
-    <button aria-label={label} className={className}>{inner}</button>
-  );
-}
-
 interface HamburgerButtonProps {
   open: boolean;
   onClick: () => void;
@@ -151,36 +107,29 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
         menuOpen ? 'pointer-events-none' : ''
       }`}
     >
+      <Link to="/" aria-label="X-Ray Tech home" className="lg:hidden">
+        <BrandLogo />
+      </Link>
+
+      <Link to="/" aria-label="X-Ray Tech home" className="hidden lg:inline-flex">
+        <BrandLogo />
+      </Link>
+
       <div
         className={`flex items-center gap-3 ${
           menuOpen ? 'pointer-events-auto' : ''
         }`}
       >
+        <div className="hidden lg:flex items-center gap-3">
+          <ThemeToggle />
+        </div>
+
         <div className="lg:hidden">
           <HamburgerButton
             open={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
           />
         </div>
-
-        <Link to="/" aria-label="X-Ray Tech home" className="hidden lg:inline-flex">
-          <BrandLogo />
-        </Link>
-      </div>
-
-      <Link to="/" aria-label="X-Ray Tech home" className="lg:hidden">
-        <BrandLogo />
-      </Link>
-
-      <div className="hidden lg:flex items-center gap-3">
-        <NavExpandButton
-          icon={<PlusIcon size={18} />}
-          label="Add Certificate"
-          alwaysExpanded
-          to="/certificates/new"
-        />
-        <ThemeToggle />
-        <ProfileMenu />
       </div>
 
       {menuOpen &&
@@ -209,6 +158,7 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
                 icon={<UserIcon size={18} />}
                 label="Profile"
                 onClick={close}
+                to="/profile"
               />
             </div>
           </>,

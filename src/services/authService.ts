@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, runTransaction, serverTimestamp, writeBatch } from 'firebase/firestore';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import { auth, db } from './firebase';
@@ -114,4 +114,30 @@ export const subscribeToAuthState = (
 
 export async function createTeam(team: Team): Promise<void> {
   await setDoc(doc(db, 'teams', team.id), team);
+}
+
+export async function getTeamByCode(teamCode: string): Promise<Team | null> {
+  const snap = await getDoc(doc(db, 'teams', teamCode));
+  return snap.exists() ? (snap.data() as Team) : null;
+}
+
+export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
+  const results = await Promise.all(uids.map(uid => fetchAppUser(uid)));
+  return results.filter((u): u is AppUser => u !== null);
+}
+
+export async function updateTeamCode(
+  oldCode: string,
+  newCode: string,
+  team: Team,
+  leadUid: string,
+): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'teams', newCode), { ...team, id: newCode });
+  batch.delete(doc(db, 'teams', oldCode));
+  batch.update(doc(db, 'users', leadUid), { teamCode: newCode });
+  for (const uid of team.members) {
+    batch.update(doc(db, 'users', uid), { teamCode: newCode });
+  }
+  await batch.commit();
 }

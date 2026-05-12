@@ -3,8 +3,8 @@ import { ArrowRightIcon, CertificateUploadIcon, PlusIcon } from '../services/svg
 import {
   createCertificateRecord,
   describeCertificateSaveError,
-  type CertificateCategory,
 } from '../services/certificateService';
+import type { CertificateCategory } from '../types/certification';
 import { useOcrPipeline } from '../hooks/useOcrPipeline';
 import { parseCertificateText } from '../services/certificateParser';
 import type { PreprocessingOptions } from '../types/ocr';
@@ -117,6 +117,7 @@ export const CertificateCreatePage = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setError(null);
     setSuccessId(null);
 
@@ -143,10 +144,10 @@ export const CertificateCreatePage = () => {
       const id = await createCertificateRecord({
         photoFile,
         certificateName,
-        companyName,
+        providerName: companyName,
         completedDate,
-        expiresDate,
-        points: pointsNum,
+        expirationDate: expiresDate,
+        ceCredits: pointsNum,
         categories,
       });
       setSuccessId(id);
@@ -157,7 +158,7 @@ export const CertificateCreatePage = () => {
         return null;
       });
       pipeline.reset();
-      e.currentTarget.reset();
+      form.reset();
     } catch (err) {
       console.error(err);
       setError(describeCertificateSaveError(err));

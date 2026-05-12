@@ -4,7 +4,6 @@ import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
 import CertList from '../pages/CertList.tsx';
-import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs.ts';
 import Dashboard from './Dashboard';
 import CredentialTracking from './CredentialTracking';
 import TeamManagement from './TeamManagement';
@@ -73,7 +72,7 @@ const Router = () => {
               name="ARRT"
               fullName="American Registry of Radiologic Technologists"
               accent="#1A4975"
-              records={ARRT_RECORDS}
+              category="ARRT"
             />,
           )}
         />
@@ -84,7 +83,7 @@ const Router = () => {
               name="IEMA"
               fullName="Illinois Emergency Management Agency"
               accent="#0EA37E"
-              records={IEMA_RECORDS}
+              category="IEMA"
             />,
           )}
         />

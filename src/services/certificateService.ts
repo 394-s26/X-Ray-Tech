@@ -22,6 +22,9 @@ import {
   type CertificateInput,
   type Scantron,
 } from '../types/upload';
+import type { Certification, CertificateCategory } from '../types/certification';
+
+export type { CertificateCategory };
 
 const COLLECTION = 'certificates';
 
@@ -29,15 +32,13 @@ const certCollection = () => collection(db, COLLECTION);
 
 // ── Manual CE certificate form (CertificateCreatePage) ─────────────────────
 
-export type CertificateCategory = 'IEMA' | 'ARRT';
-
 export interface CreateCertificateInput {
   photoFile: File;
   certificateName: string;
-  companyName: string;
+  providerName: string;
   completedDate: string;
-  expiresDate: string;
-  points: number;
+  expirationDate: string;
+  ceCredits: number;
   categories: CertificateCategory[];
 }
 
@@ -70,14 +71,14 @@ export const createCertificateRecord = async (
 
   await setDoc(certRef, {
     id: certId,
-    uid: user.uid,
+    ownerId: user.uid,
     certificateName: input.certificateName.trim(),
-    companyName: input.companyName.trim(),
+    providerName: input.providerName.trim(),
     completedDate: input.completedDate,
-    expiresDate: input.expiresDate,
-    points: input.points,
+    expirationDate: input.expirationDate,
+    ceCredits: input.ceCredits,
     categories: input.categories,
-    photoPath: path,
+    photoStoragePath: path,
     photoURL,
     createdAt: serverTimestamp(),
   });
@@ -168,6 +169,12 @@ export const listCertificates = async (uid: string): Promise<Certificate[]> => {
   const q = query(certCollection(), where('uid', '==', uid), orderBy('uploadedAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as Certificate);
+};
+
+export const listUserCertifications = async (uid: string): Promise<Certification[]> => {
+  const q = query(certCollection(), where('ownerId', '==', uid), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as Certification);
 };
 
 export const getCertificateDownloadUrl = (cert: Certificate): Promise<string> => {

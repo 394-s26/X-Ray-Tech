@@ -1,5 +1,7 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import type { AppUser } from '../types/auth';
+import type { Team } from '../types/team';
 import UserAvatar from './UserAvatar';
 import {
   LayoutGridIcon,
@@ -7,7 +9,10 @@ import {
   PlusIcon,
   TeamIcon,
   SettingsIcon,
+  ChevronRightIcon,
+  LogOutIcon,
 } from '../services/svgIcons';
+import { signOut, getTeamByCode } from '../services/authService';
 import '../styles/components/Sidebar.css';
 
 interface NavItem {
@@ -18,6 +23,7 @@ interface NavItem {
   managerOnly?: boolean;
   /** When true, only highlight this item when the path matches exactly. */
   exact?: boolean;
+  highlighted?: boolean;
 }
 
 const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
@@ -33,20 +39,16 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     shortLabel: 'Credentials',
     icon: (s) => <IdCardIcon size={s} />,
   },
-  {
-    to: '/certificates/new',
-    longLabel: 'Add certificate',
-    shortLabel: 'Add cert',
-    icon: (s) => <PlusIcon size={s} />,
-    exact: true,
-  },
-  {
-    to: '/team',
-    longLabel: 'Manage Team',
-    shortLabel: 'Team',
-    icon: (s) => <TeamIcon size={s} />,
-  },
 ];
+
+const ADD_CERT_ITEM: NavItem = {
+  to: '/certificates/new',
+  longLabel: 'Add certificate',
+  shortLabel: 'Add cert',
+  icon: (s) => <PlusIcon size={s} />,
+  exact: true,
+  highlighted: true,
+};
 
 const SETTINGS_ITEM: NavItem = {
   to: '/settings',
@@ -70,7 +72,7 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
     to={item.to}
     end={item.exact !== undefined ? item.exact : item.to === '/'}
     className={({ isActive }) =>
-      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
+      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}`
     }
   >
     <span className="app-sidebar__nav-icon">{item.icon(20)}</span>
@@ -85,14 +87,32 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
 
 const Sidebar = ({ appUser }: SidebarProps) => {
   const isManager = appUser.role === 'manager';
+  const navigate = useNavigate();
+  const [team, setTeam] = useState<Team | null>(null);
+  const [teamHovered, setTeamHovered] = useState(false);
+
+  useEffect(() => {
+    if (!appUser.teamCode) return;
+    getTeamByCode(appUser.teamCode).then(setTeam);
+  }, [appUser.teamCode]);
+
   const visiblePrimary = PRIMARY_ITEMS.filter(
     (item) => !item.managerOnly || isManager,
   );
 
+  const teamBg = team?.color
+    ? `${team.color}${teamHovered ? '14' : '0D'}`
+    : undefined;
+
   return (
     <aside className="app-sidebar" aria-label="Primary navigation">
       <div className="app-sidebar__inner">
-        <div className="app-sidebar__profile">
+        <button
+          type="button"
+          className="app-sidebar__profile"
+          onClick={() => navigate('/profile')}
+          aria-label="Go to profile"
+        >
           <UserAvatar user={appUser} size="lg" bordered />
           <div className="min-w-0 flex-1">
             <p className="app-sidebar__profile-name">{profileDisplayName(appUser)}</p>
@@ -100,22 +120,60 @@ const Sidebar = ({ appUser }: SidebarProps) => {
               {isManager ? 'Manager' : 'Technologist'}
             </p>
           </div>
-        </div>
+          <span className="app-sidebar__profile-chevron">
+            <ChevronRightIcon size={16} />
+          </span>
+        </button>
 
         <nav className="app-sidebar__section" aria-label="Sidebar">
           {visiblePrimary.map((item) => (
             <NavItemLink key={item.to} item={item} />
           ))}
+          <NavLink
+            to="/team"
+            end={false}
+            className={({ isActive }) =>
+              `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
+            }
+            style={{ backgroundColor: teamBg }}
+            onMouseEnter={() => setTeamHovered(true)}
+            onMouseLeave={() => setTeamHovered(false)}
+          >
+            <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
+            <span className="app-sidebar__nav-label app-sidebar__nav-label--long">
+              {isManager ? 'Manage Team' : 'View Team'}
+              {team?.name && (
+                <span className="app-sidebar__team-name">{team.name}</span>
+              )}
+            </span>
+            <span className="app-sidebar__nav-label app-sidebar__nav-label--short">
+              Team
+            </span>
+          </NavLink>
         </nav>
 
-        <div className="app-sidebar__divider" />
-
-        <nav
-          className="app-sidebar__section app-sidebar__section--settings"
-          aria-label="Settings"
-        >
-          <NavItemLink item={SETTINGS_ITEM} />
-        </nav>
+        <div className="app-sidebar__bottom">
+          <div className="app-sidebar__divider" />
+          <nav className="app-sidebar__section" aria-label="Add certificate">
+            <NavItemLink item={ADD_CERT_ITEM} />
+          </nav>
+          <nav
+            className="app-sidebar__section app-sidebar__section--settings"
+            aria-label="Settings"
+          >
+            <NavItemLink item={SETTINGS_ITEM} />
+            <button
+              type="button"
+              className="app-sidebar__nav-item app-sidebar__logout"
+              onClick={() => signOut()}
+              aria-label="Log out"
+            >
+              <span className="app-sidebar__nav-icon"><LogOutIcon size={20} /></span>
+              <span className="app-sidebar__nav-label app-sidebar__nav-label--long">Log Out</span>
+              <span className="app-sidebar__nav-label app-sidebar__nav-label--short">Logout</span>
+            </button>
+          </nav>
+        </div>
       </div>
     </aside>
   );

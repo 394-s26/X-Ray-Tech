@@ -8,13 +8,14 @@ import {
   TrashIcon,
   FilterIcon,
 } from '../services/svgIcons';
-import type { CertRecord } from '../data/certs';
+import type { CertificateCategory, Certification } from '../types/certification';
+import { useCertifications } from '../hooks/useCertifications';
 
 export interface CertListProps {
   name: string;
   fullName: string;
   accent: string;
-  records: CertRecord[];
+  category: CertificateCategory;
 }
 
 type ExpiryTier = 'expired' | 'urgent' | 'warn' | 'ok';
@@ -90,15 +91,15 @@ function IconButton({ label, danger, children }: IconButtonProps) {
   );
 }
 
-function CertRow({ record }: { record: CertRecord }) {
-  const status = expiryStatus(record.expiryDate);
+function CertRow({ cert }: { cert: Certification }) {
+  const status = expiryStatus(cert.expirationDate);
   return (
     <article className="relative rounded-2xl glass-panel hover:shadow-md transition-shadow overflow-hidden flex items-stretch">
       <div className={`w-1.5 shrink-0 ${STRIPE_COLOR[status.tier]}`} />
       <div className="flex-1 p-4 flex flex-col gap-3 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-base font-bold text-primary dark:text-slate-100 leading-tight min-w-0">
-            {record.name}
+            {cert.certificateName}
           </p>
           <div className="flex items-center gap-0.5 shrink-0">
             <IconButton label="View photo">
@@ -121,7 +122,7 @@ function CertRow({ record }: { record: CertRecord }) {
             {status.tier === 'expired' ? 'Expired' : 'Expires'}
           </span>
           <span className={`text-lg font-extrabold tracking-tight ${TEXT_COLOR[status.tier]}`}>
-            {formatDate(record.expiryDate)}
+            {formatDate(cert.expirationDate)}
           </span>
           <span className={`text-xs font-medium ${TEXT_COLOR[status.tier]} opacity-80`}>
             · {daysLabel(status)}
@@ -132,7 +133,8 @@ function CertRow({ record }: { record: CertRecord }) {
   );
 }
 
-export default function CertList({ name, fullName, accent, records }: CertListProps) {
+export default function CertList({ name, fullName, accent, category }: CertListProps) {
+  const { certifications, loading } = useCertifications(category);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [expiryBefore, setExpiryBefore] = useState('');
@@ -140,13 +142,13 @@ export default function CertList({ name, fullName, accent, records }: CertListPr
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return records.filter((r) => {
-      if (q && !r.name.toLowerCase().includes(q)) return false;
-      if (expiryBefore && r.expiryDate > expiryBefore) return false;
-      if (addedAfter && r.addedDate < addedAfter) return false;
+    return certifications.filter((c) => {
+      if (q && !c.certificateName.toLowerCase().includes(q)) return false;
+      if (expiryBefore && c.expirationDate > expiryBefore) return false;
+      if (addedAfter && c.completedDate < addedAfter) return false;
       return true;
     });
-  }, [records, search, expiryBefore, addedAfter]);
+  }, [certifications, search, expiryBefore, addedAfter]);
 
   const activeCount =
     (search.trim() ? 1 : 0) + (expiryBefore ? 1 : 0) + (addedAfter ? 1 : 0);
@@ -178,7 +180,7 @@ export default function CertList({ name, fullName, accent, records }: CertListPr
           {fullName}
         </p>
         <div className="mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
-          <span>{filtered.length} records</span>
+          <span>{loading ? '…' : `${filtered.length} records`}</span>
           <span className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />
           <button
             type="button"
@@ -248,14 +250,20 @@ export default function CertList({ name, fullName, accent, records }: CertListPr
         </div>
       )}
 
-      {filtered.length === 0 ? (
+      {loading ? (
         <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 text-center py-12">
-          No records match these filters.
+          Loading…
+        </p>
+      ) : filtered.length === 0 ? (
+        <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 text-center py-12">
+          {certifications.length === 0
+            ? 'No certificates yet. Add one via the + button.'
+            : 'No records match these filters.'}
         </p>
       ) : (
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
-          {filtered.map((r) => (
-            <CertRow key={r.id} record={r} />
+          {filtered.map((c) => (
+            <CertRow key={c.id} cert={c} />
           ))}
         </section>
       )}

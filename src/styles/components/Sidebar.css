@@ -63,11 +63,19 @@
 }
 
 .app-sidebar__nav-item:hover {
-  @apply bg-white/60 dark:bg-slate-700/40 text-primary dark:text-slate-50;
+  @apply bg-slate-100 dark:bg-slate-700/40 text-primary dark:text-slate-50;
+}
+
+.app-sidebar__nav-item.highlighted {
+  @apply bg-primary/20 hover:bg-primary/10 dark:bg-secondary dark:hover:bg-indigo-400 mb-4;
 }
 
 .app-sidebar__nav-item--active {
   @apply bg-primary/15 text-primary dark:bg-primary-light/30 dark:text-slate-50;
+}
+
+.app-sidebar__nav-item--active:hover {
+  @apply bg-primary/20;
 }
 
 .app-sidebar__nav-icon {
@@ -86,8 +94,20 @@
   display: none;
 }
 
+.app-sidebar__bottom {
+  display: contents;
+}
+
 .app-sidebar__divider {
   display: none;
+}
+
+.app-sidebar__logout {
+  @apply text-red-500 dark:text-red-400 w-full cursor-pointer;
+}
+
+.app-sidebar__logout:hover {
+  @apply bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300;
 }
 
 /* ── Desktop (≥1024px): sticky LEFT rail ─────────────────── */
@@ -120,15 +140,33 @@
   }
 
   .app-sidebar__profile {
-    @apply flex items-center gap-3 px-2 py-3 mb-4 rounded-xl;
+    @apply flex items-center gap-3 px-2 py-3 mb-4 rounded-xl w-full text-left cursor-pointer transition-colors;
+    border: 1px solid rgba(120, 80, 200, 0.3);
+    background: transparent;
+  }
+
+  .app-sidebar__profile:hover {
+    @apply bg-primary/10 dark:bg-primary-light/10;
+    border-color: rgba(120, 80, 200, 0.6);
+  }
+
+  .app-sidebar__profile-chevron {
+    @apply shrink-0 text-gray-400 dark:text-slate-500 transition-transform duration-200;
+    margin-left: auto;
+  }
+
+  .app-sidebar__profile:hover .app-sidebar__profile-chevron {
+    transform: translateX(3px);
   }
 
   .app-sidebar__section {
     @apply flex flex-col gap-1 flex-none;
   }
 
-  .app-sidebar__section--settings {
+  .app-sidebar__bottom {
     margin-top: auto;
+    display: flex;
+    flex-direction: column;
   }
 
   .app-sidebar__nav-item {
@@ -141,6 +179,10 @@
 
   .app-sidebar__nav-label--long {
     display: inline;
+  }
+
+  .app-sidebar__team-name {
+    @apply block text-[10px] italic font-normal opacity-60 leading-tight mt-0.5;
   }
 
   .app-sidebar__divider {

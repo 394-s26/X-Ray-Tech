@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, CheckIcon } from '../services/svgIcons';
-import { ARRT_RECORDS, IEMA_RECORDS, type CertRecord } from '../data/certs';
+import { useCertifications } from '../hooks/useCertifications';
+import type { Certification } from '../types/certification';
 
 const ARRT_TOTAL = 24;
 const IEMA_TOTAL = 24;
@@ -18,17 +19,17 @@ function clampPct(percent: number): number {
 }
 
 const PURPLE_STOPS: { p: number; color: [number, number, number] }[] = [
-  { p: 0,   color: [235, 225, 250] },  // neutral-ish light purple
-  { p: 50,  color: [167, 139, 218] },  // tertiary  #a78bda
-  { p: 75,  color: [118,  96, 160] },  // brand     #7660A0
-  { p: 100, color: [104,  72, 154] },  // primary-light #68489A
+  { p: 0,   color: [235, 225, 250] },
+  { p: 50,  color: [167, 139, 218] },
+  { p: 75,  color: [118,  96, 160] },
+  { p: 100, color: [104,  72, 154] },
 ];
 
 const PURPLE_DEEP_STOPS: { p: number; color: [number, number, number] }[] = [
-  { p: 0,   color: [118,  96, 160] },  // brand     #7660A0
-  { p: 50,  color: [104,  72, 154] },  // primary-light #68489A
-  { p: 75,  color: [91,   57, 144] },  // between
-  { p: 100, color: [78,   42, 132] },  // primary   #4E2A84
+  { p: 0,   color: [118,  96, 160] },
+  { p: 50,  color: [104,  72, 154] },
+  { p: 75,  color: [91,   57, 144] },
+  { p: 100, color: [78,   42, 132] },
 ];
 
 function interpolate(stops: typeof PURPLE_STOPS, percent: number): string {
@@ -56,7 +57,6 @@ function donutDeepColor(percent: number): string {
   return interpolate(PURPLE_DEEP_STOPS, percent);
 }
 
-// Discrete purple tiers for the ARRT/IEMA cards.
 function purpleTier(percent: number): string {
   if (percent >= 100) return 'var(--color-primary-light)';
   if (percent >= 75)  return 'var(--color-brand)';
@@ -236,51 +236,50 @@ function formatShortDate(dateString: string): string {
   });
 }
 
-function UpcomingExpirations() {
+function UpcomingExpirations({ certifications }: { certifications: Certification[] }) {
   const upcoming = useMemo(() => {
-    const all: Array<CertRecord & { type: 'ARRT' | 'IEMA' }> = [
-      ...ARRT_RECORDS.map((r) => ({ ...r, type: 'ARRT' as const })),
-      ...IEMA_RECORDS.map((r) => ({ ...r, type: 'IEMA' as const })),
-    ];
-    all.sort(
-      (a, b) =>
-        new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime(),
-    );
-    return all.slice(0, 4);
-  }, []);
+    return [...certifications]
+      .sort((a, b) => a.expirationDate.localeCompare(b.expirationDate))
+      .slice(0, 4);
+  }, [certifications]);
 
   return (
     <div className="rounded-2xl glass-panel p-5 flex flex-col">
       <h3 className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500 mb-4">
         Upcoming
       </h3>
-      <ul className="flex flex-col gap-3.5 mb-6">
-        {upcoming.map((record) => {
-          const status = tierFromDate(record.expiryDate);
-          return (
-            <li key={record.id} className="flex items-start gap-3">
-              <span
-                className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${TIER_DOT[status.tier]}`}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-primary dark:text-slate-100 truncate">
-                  {record.name}
-                </p>
-                <p className="text-[11px] mt-0.5 flex items-center gap-1.5">
-                  <span className={`font-semibold ${TIER_TEXT[status.tier]}`}>
-                    {status.tier === 'expired'
-                      ? `Expired ${formatShortDate(record.expiryDate)}`
-                      : `${formatShortDate(record.expiryDate)}`}
-                  </span>
-                  <span className="text-gray-400 dark:text-slate-500">
-                    · {record.type}
-                  </span>
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {upcoming.length === 0 ? (
+        <p className="text-sm text-gray-400 dark:text-slate-500 mb-6">No certificates yet.</p>
+      ) : (
+        <ul className="flex flex-col gap-3.5 mb-6">
+          {upcoming.map((cert) => {
+            const status = tierFromDate(cert.expirationDate);
+            const category = cert.categories[0] ?? '';
+            return (
+              <li key={cert.id} className="flex items-start gap-3">
+                <span
+                  className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${TIER_DOT[status.tier]}`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-primary dark:text-slate-100 truncate">
+                    {cert.certificateName}
+                  </p>
+                  <p className="text-[11px] mt-0.5 flex items-center gap-1.5">
+                    <span className={`font-semibold ${TIER_TEXT[status.tier]}`}>
+                      {status.tier === 'expired'
+                        ? `Expired ${formatShortDate(cert.expirationDate)}`
+                        : `${formatShortDate(cert.expirationDate)}`}
+                    </span>
+                    <span className="text-gray-400 dark:text-slate-500">
+                      · {category}
+                    </span>
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <Link
         to="/arrt"
         className="global-btn default-btn ounded-full mt-auto text-center"
@@ -332,12 +331,35 @@ function BrowseCourses() {
 }
 
 export default function Dashboard() {
-  const arrtCompleted = ARRT_RECORDS.length;
-  const iemaCompleted = IEMA_RECORDS.length;
+  const { certifications, loading } = useCertifications();
 
-  const totalCompleted = arrtCompleted + iemaCompleted;
+  const arrtCredits = useMemo(
+    () =>
+      certifications
+        .filter((c) => c.categories.includes('ARRT'))
+        .reduce((sum, c) => sum + c.ceCredits, 0),
+    [certifications],
+  );
+
+  const iemaCredits = useMemo(
+    () =>
+      certifications
+        .filter((c) => c.categories.includes('IEMA'))
+        .reduce((sum, c) => sum + c.ceCredits, 0),
+    [certifications],
+  );
+
+  const totalCompleted = arrtCredits + iemaCredits;
   const totalRequired = ARRT_TOTAL + IEMA_TOTAL;
   const percent = totalRequired === 0 ? 0 : (totalCompleted / totalRequired) * 100;
+
+  if (loading) {
+    return (
+      <main className="min-h-[calc(100vh-6rem)] pt-4 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto flex items-center justify-center">
+        <span className="inline-block w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-[calc(100vh-6rem)] pt-4 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
@@ -358,21 +380,21 @@ export default function Dashboard() {
         <CertCard
           name="ARRT"
           fullName="American Registry of Radiologic Technologists"
-          completed={arrtCompleted}
+          completed={arrtCredits}
           total={ARRT_TOTAL}
           to="/arrt"
         />
         <CertCard
           name="IEMA"
           fullName="Illinois Emergency Management Agency"
-          completed={iemaCompleted}
+          completed={iemaCredits}
           total={IEMA_TOTAL}
           to="/iema"
         />
       </section>
 
       <section className="hidden lg:grid lg:grid-cols-2 lg:gap-4 mt-8 lg:max-w-3xl lg:mx-auto">
-        <UpcomingExpirations />
+        <UpcomingExpirations certifications={certifications} />
         <BrowseCourses />
       </section>
     </main>
