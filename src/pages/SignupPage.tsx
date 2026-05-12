@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppLogoIcon, ArrowRightIcon, EyeIcon, EyeOffIcon } from '../services/svgIcons';
 import { registerWithEmail, checkUsernameAvailable } from '../services/authService';
 import { AuthBackground } from './AuthBackground';
+import '../styles/pages/LoginPage.css';
 
 import MailChecker from 'mailchecker';
 
@@ -34,8 +35,8 @@ const StrengthPill = ({ met, label }: PillProps) => (
   <span
     className={`flex-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
       met
-        ? 'bg-green-50 border-green-200 text-green-700'
-        : 'bg-slate-50 border-slate-200 text-slate-400'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+        : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'
     }`}
   >
     <svg
@@ -142,18 +143,14 @@ export const SignupPage = () => {
 
   return (
     <AuthBackground>
-      <div className="relative z-10 bg-white rounded-2xl border border-slate-200/90 shadow-lg w-full max-w-[440px] overflow-hidden mx-4">
-        <div className="flex items-center gap-2.5 px-7 py-[1.125rem] border-b border-slate-200">
+      <div className="auth-card">
+        <div className="auth-card-header">
           <AppLogoIcon size={28} />
-          <span className="text-[0.9375rem] font-semibold text-slate-900 tracking-tight">
-            X-Ray Tech
-          </span>
+          <span className="auth-card-title">X-Ray Tech</span>
         </div>
 
         <div className="px-7 pt-8 pb-9">
-          <h1 className="text-[1.625rem] font-bold text-slate-900 leading-tight mb-7">
-            Create an account.
-          </h1>
+          <h1 className="auth-heading">Create an account.</h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <div>
@@ -164,11 +161,11 @@ export const SignupPage = () => {
                 onChange={e => setEmail(e.target.value)}
                 required
                 disabled={loading}
-                className="w-full px-4 py-[0.8rem] rounded-xl border border-slate-300 text-[0.9375rem] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 disabled:opacity-60 transition-colors"
+                className="auth-input"
               />
               <p className="text-xs text-red-500 mb-1 px-1 h-1">{(email.length > 3 && !emailValid) ? "Email is not valid." : ""}</p>
             </div>
-            
+
             <div>
               <input
                 type="text"
@@ -177,16 +174,15 @@ export const SignupPage = () => {
                 onChange={e => setUsername(e.target.value)}
                 required
                 disabled={loading}
-                className={`w-full px-4 py-[0.8rem] rounded-xl border text-[0.9375rem] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 disabled:opacity-60 transition-colors ${
+                className={`auth-input ${
                   usernameStatus === 'taken'
-                    ? 'border-red-400 focus:ring-red-500/40 focus:border-red-400'
+                    ? 'auth-input-error'
                     : usernameStatus === 'available'
-                    ? 'border-green-400 focus:ring-green-500/40 focus:border-green-400'
-                    : 'border-slate-300 focus:ring-blue-500/40 focus:border-blue-400'
+                    ? 'auth-input-success'
+                    : ''
                 }`}
               />
-              <p className={`text-xs text-slate-400 mb-1 px-1 h-1 ${usernameStatusColor}`}>{usernameStatusMessage}</p>
-              
+              <p className={`text-xs mb-1 px-1 h-1 ${usernameStatusColor}`}>{usernameStatusMessage}</p>
             </div>
 
             <div className="relative mt-6">
@@ -197,12 +193,12 @@ export const SignupPage = () => {
                 onChange={e => setPassword(e.target.value)}
                 required
                 disabled={loading}
-                className="w-full px-4 py-[0.8rem] pr-11 rounded-xl border border-slate-300 text-[0.9375rem] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 disabled:opacity-60 transition-colors"
+                className="auth-input pr-11"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
@@ -223,10 +219,8 @@ export const SignupPage = () => {
               onChange={e => setConfirmPassword(e.target.value)}
               required
               disabled={loading}
-              className={`w-full px-4 py-[0.8rem] rounded-xl border text-[0.9375rem] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 disabled:opacity-60 transition-colors ${
-                confirmPassword.length > 0 && !passwordsMatch
-                  ? 'border-red-400 focus:ring-red-500/40 focus:border-red-400'
-                  : 'border-slate-300 focus:ring-blue-500/40 focus:border-blue-400'
+              className={`auth-input ${
+                confirmPassword.length > 0 && !passwordsMatch ? 'auth-input-error' : ''
               }`}
             />
             <p className="text-xs text-red-500 -mt-3 mb-1 px-1 h-1">{confirmPassword.length > 0 && !passwordsMatch && ("Passwords do not match.")}</p>
@@ -241,15 +235,11 @@ export const SignupPage = () => {
             </button>
           </form>
 
-          {error && (
-            <p className="mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-              {error}
-            </p>
-          )}
+          {error && <p className="auth-error">{error}</p>}
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="auth-footer-text">
             Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 hover:underline font-medium">
+            <Link to="/login" className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
               Log in
             </Link>
             .

@@ -66,10 +66,6 @@
   @apply bg-slate-100 dark:bg-slate-700/40 text-primary dark:text-slate-50;
 }
 
-.app-sidebar__nav-item.highlighted {
-  @apply bg-primary/20 hover:bg-primary/10 dark:bg-secondary dark:hover:bg-indigo-400 mb-4;
-}
-
 .app-sidebar__nav-item--active {
   @apply bg-primary/15 text-primary dark:bg-primary-light/30 dark:text-slate-50;
 }
@@ -99,6 +95,26 @@
 }
 
 .app-sidebar__divider {
+  display: none;
+}
+
+/* Mobile: hidden nav items */
+.app-sidebar__nav-item--mobile-hidden {
+  display: none;
+}
+
+/* Mobile: Add Certificate as a circle FAB */
+.app-sidebar__nav-item.highlighted {
+  @apply bg-primary/20 hover:bg-primary/10 dark:bg-secondary dark:hover:bg-indigo-400;
+  flex: 0 0 auto;
+  width: 6rem;
+  height: 3.5rem;
+  border-radius: 30px;
+  padding: 0;
+  margin: 0 1.5rem;
+}
+
+.app-sidebar__nav-item.highlighted .app-sidebar__nav-label {
   display: none;
 }
 
@@ -187,5 +203,29 @@
 
   .app-sidebar__divider {
     @apply block h-px my-3 bg-white/60 dark:bg-slate-700/40;
+  }
+
+  /* Restore hidden items on desktop */
+  .app-sidebar__nav-item--mobile-hidden {
+    display: flex;
+  }
+
+  /* Restore Add Certificate as a normal row item */
+  .app-sidebar__nav-item.highlighted {
+    @apply bg-primary/20 hover:bg-primary/10 dark:bg-secondary dark:hover:bg-indigo-400 mb-4;
+    flex: unset;
+    width: auto;
+    height: auto;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    margin-inline: 0;
+  }
+
+  .app-sidebar__nav-item.highlighted .app-sidebar__nav-label--long {
+    display: inline;
+  }
+
+  .app-sidebar__nav-item.highlighted .app-sidebar__nav-label--short {
+    display: none;
   }
 }

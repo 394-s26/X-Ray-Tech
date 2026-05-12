@@ -1,4 +1,5 @@
 import { useId, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRightIcon, CertificateUploadIcon, PlusIcon } from '../services/svgIcons';
 import {
   createCertificateRecord,
@@ -19,9 +20,12 @@ const ALL_PREPROCESSING_OPTIONS: PreprocessingOptions = {
   upscale2x: true,
 };
 
+const CATEGORY_ROUTE: Record<string, string> = { ARRT: '/arrt', IEMA: '/iema' };
+
 export const CertificateCreatePage = () => {
   const categoryOptions: CertificateCategory[] = ['IEMA', 'ARRT'];
   const formId = useId();
+  const navigate = useNavigate();
   const [certificateName, setCertificateName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [completedDate, setCompletedDate] = useState('');
@@ -117,7 +121,6 @@ export const CertificateCreatePage = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
     setError(null);
     setSuccessId(null);
 
@@ -150,15 +153,8 @@ export const CertificateCreatePage = () => {
         ceCredits: pointsNum,
         categories,
       });
-      setSuccessId(id);
-      clearForm();
-      setPhotoFile(null);
-      setPhotoPreview((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
-      pipeline.reset();
-      form.reset();
+      const route = CATEGORY_ROUTE[categories[0]] ?? '/arrt';
+      navigate(`${route}?certificate=${id}`);
     } catch (err) {
       console.error(err);
       setError(describeCertificateSaveError(err));

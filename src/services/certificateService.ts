@@ -7,6 +7,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
   type Timestamp,
 } from 'firebase/firestore';
@@ -188,6 +189,32 @@ export const deleteCertificate = async (cert: Certificate): Promise<void> => {
   } catch (err) {
     if (err instanceof Error && /not-found|object-not-found/.test(err.message)) return;
     throw err;
+  }
+};
+
+export const updateCertificationRecord = async (
+  id: string,
+  updates: {
+    certificateName?: string;
+    providerName?: string;
+    completedDate?: string;
+    expirationDate?: string;
+    ceCredits?: number;
+    categories?: CertificateCategory[];
+  },
+): Promise<void> => {
+  await updateDoc(doc(db, COLLECTION, id), updates);
+};
+
+export const deleteCertificationRecord = async (cert: Certification): Promise<void> => {
+  await deleteDoc(doc(db, COLLECTION, cert.id));
+  if (cert.photoStoragePath) {
+    try {
+      await deleteObject(storageRef(storage, cert.photoStoragePath));
+    } catch (err) {
+      if (err instanceof Error && /not-found|object-not-found/.test(err.message)) return;
+      throw err;
+    }
   }
 };
 

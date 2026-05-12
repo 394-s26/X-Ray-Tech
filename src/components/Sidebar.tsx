@@ -24,6 +24,8 @@ interface NavItem {
   /** When true, only highlight this item when the path matches exactly. */
   exact?: boolean;
   highlighted?: boolean;
+  /** When true, the item is hidden in the mobile bottom nav. */
+  mobileHidden?: boolean;
 }
 
 const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
@@ -32,12 +34,14 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     longLabel: 'Compliance Overview',
     shortLabel: 'Overview',
     icon: (s) => <LayoutGridIcon size={s} />,
+    mobileHidden: true,
   },
   {
     to: '/credentials',
     longLabel: 'Credential Tracking',
     shortLabel: 'Credentials',
     icon: (s) => <IdCardIcon size={s} />,
+    mobileHidden: true,
   },
 ];
 
@@ -72,7 +76,7 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
     to={item.to}
     end={item.exact !== undefined ? item.exact : item.to === '/'}
     className={({ isActive }) =>
-      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}`
+      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}${item.mobileHidden ? ' app-sidebar__nav-item--mobile-hidden' : ''}`
     }
   >
     <span className="app-sidebar__nav-icon">{item.icon(20)}</span>
@@ -164,7 +168,7 @@ const Sidebar = ({ appUser }: SidebarProps) => {
             <NavItemLink item={SETTINGS_ITEM} />
             <button
               type="button"
-              className="app-sidebar__nav-item app-sidebar__logout"
+              className="app-sidebar__nav-item app-sidebar__logout app-sidebar__nav-item--mobile-hidden"
               onClick={() => signOut()}
               aria-label="Log out"
             >
