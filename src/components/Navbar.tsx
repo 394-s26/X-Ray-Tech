@@ -10,6 +10,7 @@ import {
   UserIcon,
 } from '../services/svgIcons';
 import ThemeToggle from './ThemeToggle';
+import BrandLogo from './BrandLogo';
 import '../styles/components/NavBar.css';
 
 const PROFILE_MENU = ['Requirements', 'Team', 'Settings'];
@@ -196,18 +197,23 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
           />
         </div>
 
-        <div className="hidden lg:flex items-center gap-3">
-          <NavExpandButton
-            icon={<PlusIcon size={18} />}
-            label="Add Certificate"
-            alwaysExpanded
-            to="/certificates/new"
-          />
-          <NavExpandButton icon={<TeamIcon size={18} />} label="Manage Team" />
-        </div>
+        <Link to="/" aria-label="X-Ray Tech home" className="hidden lg:inline-flex">
+          <BrandLogo />
+        </Link>
       </div>
 
+      <Link to="/" aria-label="X-Ray Tech home" className="lg:hidden">
+        <BrandLogo />
+      </Link>
+
       <div className="hidden lg:flex items-center gap-3">
+        <NavExpandButton
+          icon={<PlusIcon size={18} />}
+          label="Add Certificate"
+          alwaysExpanded
+          to="/certificates/new"
+        />
+        <NavExpandButton icon={<TeamIcon size={18} />} label="Manage Team" alwaysExpanded />
         <ThemeToggle />
         <ProfileMenu />
       </div>

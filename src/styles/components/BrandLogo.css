@@ -1,0 +1,28 @@
+@reference "../../index.css";
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  user-select: none;
+  font-family: 'Inter Tight', 'Host Grotesk', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+  .brand-logo {
+    font-size: 1.5rem;
+  }
+}
+
+.brand-logo__text {
+  display: inline-block;
+  color: var(--color-primary);
+}
+
+:where(.dark) .brand-logo__text {
+  color: var(--color-secondary);
+}
