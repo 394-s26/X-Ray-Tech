@@ -20,10 +20,10 @@ const ALL_PREPROCESSING_OPTIONS: PreprocessingOptions = {
   upscale2x: true,
 };
 
-const CATEGORY_ROUTE: Record<string, string> = { ARRT: '/arrt', IEMA: '/iema' };
+const CATEGORY_ROUTE: Record<string, string> = { ARRT: '/arrt', IEMA: '/iema', CPR: '/cpr' };
 
 export const CertificateCreatePage = () => {
-  const categoryOptions: CertificateCategory[] = ['IEMA', 'ARRT'];
+  const categoryOptions: CertificateCategory[] = ['IEMA', 'ARRT', 'CPR'];
   const formId = useId();
   const navigate = useNavigate();
   const [certificateName, setCertificateName] = useState('');
@@ -112,11 +112,12 @@ export const CertificateCreatePage = () => {
   };
 
   const toggleCategory = (selected: CertificateCategory) => {
-    setCategories((prev) =>
-      prev.includes(selected)
-        ? prev.filter((category) => category !== selected)
-        : [...prev, selected],
-    );
+    setCategories((prev) => {
+      if (prev.includes(selected)) return prev.filter((c) => c !== selected);
+      // CPR is mutually exclusive with ARRT/IEMA and vice versa
+      if (selected === 'CPR') return ['CPR'];
+      return [...prev.filter((c) => c !== 'CPR'), selected];
+    });
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -395,29 +396,39 @@ export const CertificateCreatePage = () => {
               Licenses <span className="text-red-500">*</span>
             </span>
             <div className="flex flex-row gap-2 sm:gap-3">
-              {categoryOptions.map((cat) => (
-                <label
-                  key={cat}
-                  className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-colors ${
-                    categories.includes(cat)
-                      ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
-                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500'
-                  } ${formDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    name="categories"
-                    value={cat}
-                    checked={categories.includes(cat)}
-                    onChange={() => toggleCategory(cat)}
-                    disabled={formDisabled}
-                    className="form-checkbox"
-                  />
-                  {cat}
-                </label>
-              ))}
+              {categoryOptions.map((cat) => {
+                const isCprSelected = categories.includes('CPR');
+                const isArrtIemaSelected = categories.some((c) => c === 'ARRT' || c === 'IEMA');
+                const isGreyed =
+                  (cat === 'CPR' && isArrtIemaSelected) ||
+                  ((cat === 'ARRT' || cat === 'IEMA') && isCprSelected);
+                const isDisabled = formDisabled || isGreyed;
+                return (
+                  <label
+                    key={cat}
+                    className={`flex flex-1 items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-colors ${
+                      categories.includes(cat)
+                        ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
+                        : isGreyed
+                        ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-600'
+                        : 'cursor-pointer border-gray-200 bg-white text-gray-800 hover:border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500'
+                    } ${formDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      name="categories"
+                      value={cat}
+                      checked={categories.includes(cat)}
+                      onChange={() => toggleCategory(cat)}
+                      disabled={isDisabled}
+                      className="form-checkbox"
+                    />
+                    {cat}
+                  </label>
+                );
+              })}
             </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Select at least one license.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">Select at least one license. CPR cannot be combined with other licenses.</p>
           </div>
 
           <button

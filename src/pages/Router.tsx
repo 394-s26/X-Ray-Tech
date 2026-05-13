@@ -87,6 +87,17 @@ const Router = () => {
             />,
           )}
         />
+        <Route
+          path="/cpr"
+          element={requireAuth(
+            <CertList
+              name="CPR"
+              fullName="Cardiopulmonary Resuscitation"
+              accent="#DC2626"
+              category="CPR"
+            />,
+          )}
+        />
 
         <Route
           path="/setup"

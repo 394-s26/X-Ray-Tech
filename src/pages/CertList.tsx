@@ -284,12 +284,12 @@ function CertDetailOverlay({
   };
 
   const toggleCategory = (cat: CertificateCategory) =>
-    setForm((prev) => ({
-      ...prev,
-      categories: prev.categories.includes(cat)
-        ? prev.categories.filter((c) => c !== cat)
-        : [...prev.categories, cat],
-    }));
+    setForm((prev) => {
+      const already = prev.categories.includes(cat);
+      if (already) return { ...prev, categories: prev.categories.filter((c) => c !== cat) };
+      if (cat === 'CPR') return { ...prev, categories: ['CPR'] };
+      return { ...prev, categories: [...prev.categories.filter((c) => c !== 'CPR'), cat] };
+    });
 
   const thumbnailBtn = (
     <button
@@ -410,19 +410,28 @@ function CertDetailOverlay({
                   <div className="form-field">
                     <span className="form-label">Categories</span>
                     <div className="flex gap-2">
-                      {(['IEMA', 'ARRT'] as CertificateCategory[]).map((cat) => (
-                        <label
-                          key={cat}
-                          className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
-                            form.categories.includes(cat)
-                              ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
-                              : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200'
-                          } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          <input type="checkbox" checked={form.categories.includes(cat)} onChange={() => toggleCategory(cat)} disabled={saving} className="form-checkbox" />
-                          {cat}
-                        </label>
-                      ))}
+                      {(['IEMA', 'ARRT', 'CPR'] as CertificateCategory[]).map((cat) => {
+                        const isCprSelected = form.categories.includes('CPR');
+                        const isArrtIemaSelected = form.categories.some((c) => c === 'ARRT' || c === 'IEMA');
+                        const isGreyed =
+                          (cat === 'CPR' && isArrtIemaSelected) ||
+                          ((cat === 'ARRT' || cat === 'IEMA') && isCprSelected);
+                        return (
+                          <label
+                            key={cat}
+                            className={`flex flex-1 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                              form.categories.includes(cat)
+                                ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
+                                : isGreyed
+                                ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-600'
+                                : 'cursor-pointer border-gray-200 bg-white text-gray-800 hover:border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200'
+                            } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <input type="checkbox" checked={form.categories.includes(cat)} onChange={() => toggleCategory(cat)} disabled={saving || isGreyed} className="form-checkbox" />
+                            {cat}
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
