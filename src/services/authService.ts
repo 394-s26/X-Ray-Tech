@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, runTransaction, serverTimestamp, writeBatch, arrayUnion, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, runTransaction, serverTimestamp, arrayUnion, updateDoc } from 'firebase/firestore';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import { auth, db } from './firebase';
@@ -133,15 +133,19 @@ export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
 export async function updateTeamCode(
   oldCode: string,
   newCode: string,
-  team: Team,
   leadUid: string,
-): Promise<void> {
-  const batch = writeBatch(db);
-  batch.set(doc(db, 'teams', newCode), { ...team, id: newCode });
-  batch.delete(doc(db, 'teams', oldCode));
-  batch.update(doc(db, 'users', leadUid), { teamCode: newCode });
-  for (const uid of team.members) {
-    batch.update(doc(db, 'users', uid), { teamCode: newCode });
-  }
-  await batch.commit();
+): Promise<Team> {
+  return runTransaction(db, async tx => {
+    const oldRef = doc(db, 'teams', oldCode);
+    const snap = await tx.get(oldRef);
+    if (!snap.exists()) throw new Error('Team not found');
+    const currentTeam = snap.data() as Team;
+    tx.set(doc(db, 'teams', newCode), { ...currentTeam, id: newCode });
+    tx.delete(oldRef);
+    tx.update(doc(db, 'users', leadUid), { teamCode: newCode });
+    for (const uid of currentTeam.members) {
+      tx.update(doc(db, 'users', uid), { teamCode: newCode });
+    }
+    return { ...currentTeam, id: newCode };
+  });
 }

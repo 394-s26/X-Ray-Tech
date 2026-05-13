@@ -74,8 +74,8 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
     setRegenerating(true);
     setRegenerateSpin(true);
     try {
-      await updateTeamCode(teamCode, newCode, team, appUser.uid);
-      setTeam(prev => prev ? { ...prev, id: newCode } : prev);
+      const updatedTeam = await updateTeamCode(teamCode, newCode, appUser.uid);
+      setTeam(updatedTeam);
       setTeamCode(newCode);
     } catch {
       setRegenerateError('Failed to regenerate team code. Please try again.');

@@ -1,33 +1,35 @@
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, IdCardIcon } from '../services/svgIcons';
-import { ARRT_RECORDS, IEMA_RECORDS } from '../data/certs';
+import { useCertifications } from '../hooks/useCertifications';
 
-interface AgencySummary {
+interface AgencyConfig {
   to: string;
   name: string;
   fullName: string;
   accent: string;
-  count: number;
 }
 
-const AGENCIES: ReadonlyArray<AgencySummary> = [
+const AGENCIES: ReadonlyArray<AgencyConfig> = [
   {
     to: '/arrt',
     name: 'ARRT',
     fullName: 'American Registry of Radiologic Technologists',
     accent: '#1A4975',
-    count: ARRT_RECORDS.length,
   },
   {
     to: '/iema',
     name: 'IEMA',
     fullName: 'Illinois Emergency Management Agency',
     accent: '#0EA37E',
-    count: IEMA_RECORDS.length,
   },
 ];
 
 const CredentialTracking = () => {
+  const { certifications } = useCertifications();
+
+  const countFor = (name: string) =>
+    certifications.filter((c) => c.categories.includes(name as 'ARRT' | 'IEMA')).length;
+
   return (
     <main className="min-h-[calc(100vh-6rem)] pb-16 px-5 lg:px-10 w-full max-w-5xl mx-auto">
       <header className="mt-2 mb-8 flex items-center gap-3">
@@ -72,7 +74,7 @@ const CredentialTracking = () => {
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              {agency.count} {agency.count === 1 ? 'record' : 'records'} tracked
+              {countFor(agency.name)} {countFor(agency.name) === 1 ? 'record' : 'records'} tracked
             </p>
           </Link>
         ))}
