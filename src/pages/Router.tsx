@@ -12,6 +12,7 @@ import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
 import AppLayout from '../components/AppLayout';
+import DevRoleToggle from '../components/DevRoleToggle';
 
 const Router = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -126,6 +127,9 @@ const Router = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {import.meta.env.DEV && appUser && (
+        <DevRoleToggle appUser={appUser} onRoleChanged={setAppUser} />
+      )}
     </BrowserRouter>
   );
 };

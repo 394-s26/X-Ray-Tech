@@ -130,6 +130,16 @@ export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
   return results.filter((u): u is AppUser => u !== null);
 }
 
+export async function updateAppUserRole(
+  uid: string,
+  role: 'manager' | 'member',
+): Promise<AppUser> {
+  await updateDoc(doc(db, 'users', uid), { role });
+  const updated = await fetchAppUser(uid);
+  if (!updated) throw new Error('User not found after role update');
+  return updated;
+}
+
 export async function updateTeamCode(
   oldCode: string,
   newCode: string,
