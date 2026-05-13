@@ -171,6 +171,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         teamCode: teamMode === 'create' ? newTeamId : formData.teamCode.trim(),
         hospitalAddress: skip ? user.hospitalAddress ?? null : formData.hospitalAddress.trim() || null,
         colorCode: formData.colorCode,
+        role: teamMode === 'create' ? 'manager' : 'member',
         setupCompleted: true,
       };
       if (teamMode === 'create') {
@@ -427,7 +428,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         <div className="flex gap-12">
           <div className="form-field">
             <label className="form-label">Preview</label>
-            <UserAvatar user={{ ...user, colorCode: formData.colorCode }} size="xl" />
+            <UserAvatar user={{ ...user, firstName: formData.firstName, lastName: formData.lastName, colorCode: formData.colorCode }} size="xl" />
           </div>
           <div className="form-field">
             <label className="form-label">Avatar color</label>

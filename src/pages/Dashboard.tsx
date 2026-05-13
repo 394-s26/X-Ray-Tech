@@ -336,7 +336,7 @@ export default function Dashboard() {
   const arrtCredits = useMemo(
     () =>
       certifications
-        .filter((c) => c.categories.includes('ARRT'))
+        .filter((c) => c.categories.includes('ARRT') && tierFromDate(c.expirationDate).tier !== 'expired')
         .reduce((sum, c) => sum + c.ceCredits, 0),
     [certifications],
   );
@@ -344,7 +344,7 @@ export default function Dashboard() {
   const iemaCredits = useMemo(
     () =>
       certifications
-        .filter((c) => c.categories.includes('IEMA'))
+        .filter((c) => c.categories.includes('IEMA') && tierFromDate(c.expirationDate).tier !== 'expired')
         .reduce((sum, c) => sum + c.ceCredits, 0),
     [certifications],
   );
