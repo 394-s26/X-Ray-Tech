@@ -130,7 +130,8 @@ export const CertificateCreatePage = () => {
       return;
     }
 
-    const pointsNum = Number(points);
+    const isCpr = categories.includes('CPR');
+    const pointsNum = points === '' && isCpr ? 0 : Number(points);
     if (!Number.isFinite(pointsNum) || pointsNum < 0) {
       setError('Points must be a valid non-negative number.');
       return;
@@ -374,7 +375,7 @@ export const CertificateCreatePage = () => {
 
           <div className="form-field">
             <label htmlFor={`${formId}-points`} className="form-label">
-              CE points <span className="text-red-500">*</span>
+              CE points {!categories.includes('CPR') && <span className="text-red-500">*</span>}
             </label>
             <input
               id={`${formId}-points`}
@@ -385,8 +386,8 @@ export const CertificateCreatePage = () => {
               placeholder="0"
               value={points}
               onChange={(e) => setPoints(e.target.value)}
-              required
-              disabled={formDisabled}
+              required={!categories.includes('CPR')}
+              disabled={formDisabled || categories.includes('CPR')}
               className="form-number"
             />
           </div>
