@@ -137,9 +137,9 @@ function CePointsCard({ completed, total }: CePointsCardProps) {
   const catB = Math.max(0, Math.min(completed - catATotal, catBTotal));
 
   return (
-    <Link to="/iema" className="nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden">
+    <Link to="/iema" className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden">
       <p className="overline text-[var(--brand-600)]">CE points</p>
-      <div className="flex flex-col items-start gap-3 min-w-0">
+      <div className="flex flex-col items-start gap-3 @[250px]:flex-row @[250px]:items-center @[250px]:gap-5 min-w-0">
         <Donut percent={pct} />
         <div className="font-mono-brand text-3xl xl:text-4xl font-semibold tracking-tight text-[var(--ink-900)] leading-none whitespace-nowrap">
           {completed}
@@ -172,7 +172,7 @@ function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: Re
           <img
             src={logoSrc}
             alt={logoAlt ?? ''}
-            className="h-10 sm:h-11 w-auto object-contain shrink-0"
+            className="h-6 w-auto object-contain shrink-0 rounded-md bg-white/70 px-0.75 py-1"
           />
         )}
       </div>
