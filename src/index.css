@@ -178,7 +178,7 @@ body, #root {
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out);
 }
 .nb-card.is-clickable { cursor: pointer; }
-.nb-card.is-clickable:hover  { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink-900); }
+.nb-card.is-clickable:hover  { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
 .nb-card.is-clickable:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
 
 .nb-card.tint-mint   { background: var(--tint-mint); }
@@ -195,7 +195,7 @@ body, #root {
   border-color: var(--ink-200);
   box-shadow: 4px 4px 0 var(--ink-300);
 }
-.dark .nb-card.is-clickable:hover  { box-shadow: 2px 2px 0 var(--ink-300); }
+.dark .nb-card.is-clickable:hover  { box-shadow: 0 0 0 var(--ink-300); }
 .dark .nb-card.is-clickable:active { box-shadow: 0 0 0 var(--ink-300); }
 
 .nb-btn {
@@ -210,7 +210,7 @@ body, #root {
   box-shadow: 3px 3px 0 var(--ink-900);
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out), background-color 80ms var(--ease-out);
 }
-.nb-btn:hover:not(:disabled)  { transform: translate(1.5px, 1.5px); box-shadow: 1.5px 1.5px 0 var(--ink-900); }
+.nb-btn:hover:not(:disabled)  { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink-900); }
 .nb-btn:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink-900); }
 .nb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .nb-btn.is-brand { background: var(--brand-600); }
@@ -301,9 +301,9 @@ body, #root {
 .dark .card--red     { background: rgba(200, 56, 47, 0.18); color: var(--ink-100); }
 
 .card.is-clickable        { cursor: pointer; }
-.card.is-clickable:hover  { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink-900); }
+.card.is-clickable:hover  { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
 .card.is-clickable:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
-.dark .card.is-clickable:hover  { box-shadow: 2px 2px 0 var(--ink-300); }
+.dark .card.is-clickable:hover  { box-shadow: 0 0 0 var(--ink-300); }
 .dark .card.is-clickable:active { box-shadow: 0 0 0 var(--ink-300); }
 
 .card--glass { background: var(--paper); }
@@ -368,12 +368,12 @@ body, #root {
   box-shadow: 3px 3px 0 var(--ink-900);
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out), background-color 120ms var(--ease-out);
 }
-.global-btn:hover:not(:disabled)  { transform: translate(1.5px, 1.5px); box-shadow: 1.5px 1.5px 0 var(--ink-900); }
+.global-btn:hover:not(:disabled)  { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink-900); }
 .global-btn:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink-900); }
 .global-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .dark .global-btn { border-color: var(--ink-200); box-shadow: 3px 3px 0 var(--ink-300); background: #14111F; color: var(--ink-100); }
-.dark .global-btn:hover:not(:disabled)  { box-shadow: 1.5px 1.5px 0 var(--ink-300); }
+.dark .global-btn:hover:not(:disabled)  { box-shadow: 0 0 0 var(--ink-300); }
 .dark .global-btn:active:not(:disabled) { box-shadow: 0 0 0 var(--ink-300); }
 
 .default-btn { background: var(--brand-600); color: #fff; }

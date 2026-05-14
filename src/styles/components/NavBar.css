@@ -23,13 +23,13 @@
 }
 
 .navbar-hamburger:hover {
-  transform: translate(1.5px, 1.5px);
-  box-shadow: 1.5px 1.5px 0 var(--ink-900);
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink-900);
   background: var(--brand-50);
 }
 .dark .navbar-hamburger:hover {
   background: rgba(91, 63, 228, 0.18);
-  box-shadow: 1.5px 1.5px 0 var(--ink-300);
+  box-shadow: 0 0 0 var(--ink-300);
 }
 
 .navbar-hamburger__box {

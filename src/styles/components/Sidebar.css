@@ -15,20 +15,21 @@
   flex-direction: row;
   align-items: stretch;
   gap: 4px;
-  margin: 0 12px 12px;
-  padding: 8px 8px;
-  border-radius: 14px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 0;
   background: var(--paper);
-  border: 1.5px solid var(--ink-900);
-  box-shadow: 0 4px 0 var(--ink-900);
+  border: none;
+  border-top: 1px solid var(--ink-200);
+  box-shadow: none;
   position: relative;
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 .dark .app-sidebar__inner {
   background: #14111F;
-  border-color: var(--ink-200);
-  box-shadow: 0 4px 0 var(--ink-300);
+  border-top-color: var(--ink-700);
+  box-shadow: none;
 }
 
 .app-sidebar__profile { display: none; }
@@ -123,8 +124,8 @@
 .app-sidebar__nav-item.highlighted:hover {
   background: var(--brand-700);
   color: #fff;
-  transform: translate(1.5px, 1.5px);
-  box-shadow: 1.5px 1.5px 0 var(--ink-900);
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink-900);
 }
 .dark .app-sidebar__nav-item.highlighted {
   border-color: var(--ink-200);
@@ -168,13 +169,17 @@
   .app-sidebar__inner {
     flex-direction: column;
     align-items: stretch;
-    height: calc(100% - 24px);
-    margin: 12px;
-    padding: 16px 14px 18px;
-    box-shadow: 4px 4px 0 var(--ink-900);
+    height: 100%;
+    margin: 0;
+    padding: 20px 16px;
+    border: none;
+    border-right: 1px solid var(--ink-200);
+    border-radius: 0;
+    box-shadow: none;
   }
   .dark .app-sidebar__inner {
-    box-shadow: 4px 4px 0 var(--ink-300);
+    border-right-color: var(--ink-700);
+    box-shadow: none;
   }
 
   .app-sidebar__profile {
@@ -199,12 +204,12 @@
   }
   .app-sidebar__profile:hover {
     background: var(--brand-50);
-    transform: translate(1.5px, 1.5px);
-    box-shadow: 1.5px 1.5px 0 var(--ink-900);
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--ink-900);
   }
   .dark .app-sidebar__profile:hover {
     background: rgba(91, 63, 228, 0.18);
-    box-shadow: 1.5px 1.5px 0 var(--ink-300);
+    box-shadow: 0 0 0 var(--ink-300);
   }
 
   .app-sidebar__profile-chevron {
@@ -277,8 +282,8 @@
   }
   .app-sidebar__nav-item.highlighted:hover {
     background: var(--brand-700);
-    transform: translate(1.5px, 1.5px);
-    box-shadow: 1.5px 1.5px 0 var(--ink-900);
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--ink-900);
   }
   .dark .app-sidebar__nav-item.highlighted {
     border-color: var(--ink-200);

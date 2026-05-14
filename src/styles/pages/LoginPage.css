@@ -190,8 +190,8 @@
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out), background-color 80ms var(--ease-out);
 }
 .login-google-btn:hover:not(:disabled) {
-  transform: translate(1.5px, 1.5px);
-  box-shadow: 1.5px 1.5px 0 var(--ink-900);
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink-900);
   background: var(--brand-50);
 }
 .login-google-btn:active:not(:disabled) {
@@ -208,7 +208,7 @@
 }
 .dark .login-google-btn:hover:not(:disabled) {
   background: rgba(91, 63, 228, 0.18);
-  box-shadow: 1.5px 1.5px 0 var(--ink-300);
+  box-shadow: 0 0 0 var(--ink-300);
 }
 
 .login-google-btn-label {

@@ -31,8 +31,8 @@
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out), background-color 120ms var(--ease-out);
 }
 .theme-toggle-btn:hover {
-  transform: translate(1.5px, 1.5px);
-  box-shadow: 1.5px 1.5px 0 var(--ink-900);
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink-900);
   background: var(--brand-50);
 }
 .theme-toggle-btn:active {
@@ -47,7 +47,7 @@
 }
 :where(.dark) .theme-toggle-btn:hover {
   background: rgba(91, 63, 228, 0.18);
-  box-shadow: 1.5px 1.5px 0 var(--ink-300);
+  box-shadow: 0 0 0 var(--ink-300);
 }
 :where(.dark) .theme-toggle-btn:active {
   box-shadow: 0 0 0 var(--ink-300);
