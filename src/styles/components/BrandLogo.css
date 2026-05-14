@@ -5,24 +5,24 @@
   align-items: center;
   line-height: 1;
   user-select: none;
-  font-family: 'Inter Tight', 'Host Grotesk', system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 1.35rem;
-  letter-spacing: -0.015em;
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  text-transform: none;
 }
 
 @media (min-width: 640px) {
   .brand-logo {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 }
 
 .brand-logo__text {
   display: inline-block;
-  color: var(--color-primary);
+  color: var(--ink-900);
 }
 
 :where(.dark) .brand-logo__text {
-  color: var(--color-secondary);
+  color: var(--ink-100);
 }

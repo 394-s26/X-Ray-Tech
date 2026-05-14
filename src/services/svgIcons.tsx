@@ -9,15 +9,19 @@ export const AppLogoIcon = ({ size = 24, className }: IconProps): ReactElement =
   <svg
     width={size}
     height={size}
-    viewBox="0 0 28 28"
+    viewBox="0 0 64 64"
     fill="none"
     aria-hidden="true"
     className={className}
   >
-    <rect width="28" height="28" rx="6" fill="#0f172a" />
-    <rect x="4" y="4" width="20" height="20" rx="3" stroke="white" strokeWidth="1.5" fill="none" />
-    <line x1="8" y1="14" x2="20" y2="14" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-    <line x1="14" y1="8" x2="14" y2="20" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="32" cy="32" r="24" fill="none" stroke="#5B3FE4" strokeWidth="2.5" />
+    <line x1="42.39" y1="38" x2="49.32" y2="42" stroke="#5B3FE4" strokeWidth="3.5" strokeLinecap="round" />
+    <line x1="32" y1="44" x2="32" y2="52" stroke="#5B3FE4" strokeWidth="3.5" strokeLinecap="round" />
+    <line x1="21.61" y1="38" x2="14.68" y2="42" stroke="#5B3FE4" strokeWidth="3.5" strokeLinecap="round" />
+    <line x1="21.61" y1="26" x2="14.68" y2="22" stroke="#5B3FE4" strokeWidth="3.5" strokeLinecap="round" />
+    <line x1="32" y1="20" x2="32" y2="12" stroke="#5B3FE4" strokeWidth="3.5" strokeLinecap="round" />
+    <line x1="42.39" y1="26" x2="49.32" y2="22" stroke="#5B3FE4" strokeWidth="3.5" strokeLinecap="round" />
+    <circle cx="32" cy="32" r="6" fill="#5B3FE4" />
   </svg>
 );
 

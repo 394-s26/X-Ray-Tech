@@ -9,7 +9,7 @@ interface AppLayoutProps {
 
 const AppLayout = ({ appUser, children }: PropsWithChildren<AppLayoutProps>) => {
   return (
-    <div className="min-h-screen flex">
+    <div className="app-canvas min-h-screen flex">
       <Sidebar appUser={appUser} />
       <div className="flex-1 min-w-0 flex flex-col">
         <Navbar />
