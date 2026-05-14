@@ -566,20 +566,14 @@ export default function CertList({ name, fullName, accent, category }: CertListP
       </Link>
 
       <header className="mt-3 mb-7">
-        <div className="flex items-center gap-4">
+        <div className="flex items-end gap-4">
           <img
             src={CATEGORY_LOGO[category]}
             alt={`${name} logo`}
             className="h-12 sm:h-14 w-auto object-contain shrink-0"
           />
           <div className="min-w-0">
-            <h1
-              className="font-display text-4xl sm:text-5xl font-semibold tracking-tight leading-none"
-              style={{ color: accent }}
-            >
-              {name}
-            </h1>
-            <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 leading-snug">
+            <p className="text-sm text-gray-500 dark:text-slate-400 leading-snug">
               {fullName}
             </p>
           </div>
