@@ -208,7 +208,7 @@ function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, 
           <img
             src={logoSrc}
             alt={logoAlt ?? ''}
-            className="h-7 w-auto object-contain shrink-0"
+            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
           />
         )}
       </div>
