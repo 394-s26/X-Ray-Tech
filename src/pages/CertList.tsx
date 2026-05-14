@@ -12,6 +12,13 @@ import {
 import type { CertificateCategory, Certification } from '../types/certification';
 import { useCertifications } from '../hooks/useCertifications';
 import { deleteCertificationRecord, updateCertificationRecord } from '../services/certificateService';
+import arrtLogo from '../assets/arrt.png';
+import iemaLogo from '../assets/iema.png';
+
+const CATEGORY_LOGO: Record<CertificateCategory, string> = {
+  ARRT: arrtLogo,
+  IEMA: iemaLogo,
+};
 
 export interface CertListProps {
   name: string;
@@ -297,9 +304,9 @@ function CertDetailOverlay({
       onClick={() => onPhotoView(cert)}
       aria-label="View certificate photo"
       title="View certificate photo"
-      className="shrink-0 w-32 self-start rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 cursor-pointer hover:border-primary/50 dark:hover:border-primary-light/50 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
+      className="shrink-0 w-full sm:w-32 self-stretch sm:self-start rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 cursor-pointer hover:border-primary/50 dark:hover:border-primary-light/50 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
     >
-      <img src={cert.photoURL} alt="Certificate thumbnail" className="w-full h-40 object-cover" />
+      <img src={cert.photoURL} alt="Certificate thumbnail" className="w-full h-32 sm:h-40 object-cover" />
     </button>
   );
 
@@ -317,12 +324,12 @@ function CertDetailOverlay({
   return (
     <div className="overlay-center" onClick={onClose}>
       <div
-        className="overlay-panel overlay-panel--md rounded-2xl shadow-2xl overflow-hidden"
+        className="overlay-panel overlay-panel--md rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`h-1.5 w-full ${STRIPE_COLOR[status.tier]}`} />
 
-        <div className="p-6 flex gap-6">
+        <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6">
           {thumbnailBtn}
 
           <div className="flex-1 min-w-0 flex flex-col gap-4">
@@ -393,7 +400,7 @@ function CertDetailOverlay({
                     <label className="form-label">Provider</label>
                     <input type="text" className="form-input" value={form.provider} onChange={(e) => setForm((p) => ({ ...p, provider: e.target.value }))} disabled={saving} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="form-field">
                       <label className="form-label">Date completed</label>
                       <input type="date" className="form-input" value={form.completedDate} max={form.expirationDate || undefined} onChange={(e) => setForm((p) => ({ ...p, completedDate: e.target.value }))} disabled={saving} />
@@ -427,7 +434,7 @@ function CertDetailOverlay({
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-1">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
                   <button type="button" onClick={handleCancel} disabled={saving} className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50">
                     Cancel
                   </button>
@@ -559,15 +566,24 @@ export default function CertList({ name, fullName, accent, category }: CertListP
       </Link>
 
       <header className="mt-3 mb-7">
-        <h1
-          className="text-6xl font-black tracking-tight leading-none"
-          style={{ color: accent }}
-        >
-          {name}
-        </h1>
-        <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 leading-snug">
-          {fullName}
-        </p>
+        <div className="flex items-center gap-4">
+          <img
+            src={CATEGORY_LOGO[category]}
+            alt={`${name} logo`}
+            className="h-12 sm:h-14 w-auto object-contain shrink-0"
+          />
+          <div className="min-w-0">
+            <h1
+              className="font-display text-4xl sm:text-5xl font-semibold tracking-tight leading-none"
+              style={{ color: accent }}
+            >
+              {name}
+            </h1>
+            <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 leading-snug">
+              {fullName}
+            </p>
+          </div>
+        </div>
         <div className="mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
           <span>{loading ? '…' : `${filtered.length} records`}</span>
           <span className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />

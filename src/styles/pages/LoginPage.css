@@ -54,7 +54,7 @@
   background: var(--paper);
   border: 1.5px solid var(--ink-900);
   border-radius: 14px;
-  box-shadow: 4px 4px 0 var(--ink-900);
+  box-shadow: 2px 2px 0 var(--ink-900);
   width: 100%;
   max-width: 440px;
   overflow: hidden;
@@ -64,7 +64,7 @@
 .dark .login-card {
   background: #14111F;
   border-color: var(--ink-200);
-  box-shadow: 4px 4px 0 var(--ink-300);
+  box-shadow: 2px 2px 0 var(--ink-300);
 }
 
 .auth-card-header,

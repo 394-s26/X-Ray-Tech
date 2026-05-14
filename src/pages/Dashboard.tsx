@@ -4,6 +4,8 @@ import { PlusIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
 import type { Certification, CertificateCategory } from '../types/certification';
 import type { AppUser } from '../types/auth';
+import arrtLogo from '../assets/arrt.png';
+import iemaLogo from '../assets/iema.png';
 
 const IEMA_TOTAL = 24;
 
@@ -78,7 +80,7 @@ interface DonutProps {
   strokeWidth?: number;
 }
 
-function Donut({ percent, size = 96, strokeWidth = 12 }: DonutProps) {
+function Donut({ percent, size = 88, strokeWidth = 11 }: DonutProps) {
   const cx = size / 2;
   const cy = size / 2;
   const r = (size - strokeWidth) / 2;
@@ -87,8 +89,11 @@ function Donut({ percent, size = 96, strokeWidth = 12 }: DonutProps) {
   const offset = circumference * (1 - pct / 100);
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full">
+    <div
+      className="relative shrink-0"
+      style={{ width: size, height: size, flex: `0 0 ${size}px` }}
+    >
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
         <circle
           cx={cx} cy={cy} r={r}
           fill="none"
@@ -107,8 +112,8 @@ function Donut({ percent, size = 96, strokeWidth = 12 }: DonutProps) {
           style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="font-mono-brand text-base font-semibold text-[var(--ink-900)]">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span className="font-mono-brand text-sm font-semibold text-[var(--ink-900)]">
           {Math.round(pct)}%
         </span>
       </div>
@@ -132,11 +137,11 @@ function CePointsCard({ completed, total }: CePointsCardProps) {
   const catB = Math.max(0, Math.min(completed - catATotal, catBTotal));
 
   return (
-    <Link to="/iema" className="nb-card is-clickable p-5 flex flex-col gap-4">
+    <Link to="/iema" className="nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden">
       <p className="overline text-[var(--brand-600)]">CE points</p>
-      <div className="flex items-center gap-5">
+      <div className="flex flex-col items-start gap-3 min-w-0">
         <Donut percent={pct} />
-        <div className="font-mono-brand text-4xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
+        <div className="font-mono-brand text-3xl xl:text-4xl font-semibold tracking-tight text-[var(--ink-900)] leading-none whitespace-nowrap">
           {completed}
           <span className="text-[var(--ink-300)] mx-1">/</span>
           {total}
@@ -153,15 +158,26 @@ interface RenewalCardProps {
   label: string;
   daysRemaining: number | null;
   renewalDate: string | null;
+  logoSrc?: string;
+  logoAlt?: string;
 }
 
-function RenewalCard({ label, daysRemaining, renewalDate }: RenewalCardProps) {
+function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: RenewalCardProps) {
   const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
   return (
-    <div className={`nb-card ${tint} p-5 flex flex-col gap-4`}>
-      <p className="overline text-[var(--ink-900)]">{label}</p>
+    <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="overline text-[var(--ink-900)]">{label}</p>
+        {logoSrc && (
+          <img
+            src={logoSrc}
+            alt={logoAlt ?? ''}
+            className="h-10 sm:h-11 w-auto object-contain shrink-0"
+          />
+        )}
+      </div>
       <div className="flex-1 flex items-end">
-        <span className="font-mono-brand text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
+        <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
           {daysRemaining == null ? '—' : daysRemaining}
         </span>
       </div>
@@ -177,26 +193,37 @@ interface CertCycleCardProps {
   daysRemaining: number | null;
   renewalDate: string | null;
   cycleNote: string;
+  logoSrc?: string;
+  logoAlt?: string;
 }
 
-function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote }: CertCycleCardProps) {
+function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, logoAlt }: CertCycleCardProps) {
   const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
   const duration = daysRemaining == null ? null : formatDuration(daysRemaining);
   return (
-    <div className={`nb-card ${tint} p-5 flex flex-col gap-4`}>
-      <p className="overline text-[var(--ink-900)]">{label}</p>
+    <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="overline text-[var(--ink-900)]">{label}</p>
+        {logoSrc && (
+          <img
+            src={logoSrc}
+            alt={logoAlt ?? ''}
+            className="h-7 w-auto object-contain shrink-0"
+          />
+        )}
+      </div>
       <div className="flex-1 flex items-end gap-2">
         {duration ? (
           <>
-            <span className="font-mono-brand text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
+            <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
               {duration.value}
             </span>
-            <span className="font-mono-brand text-3xl font-semibold text-[var(--ink-900)] leading-none mb-0.5">
+            <span className="font-mono-brand text-2xl sm:text-3xl font-semibold text-[var(--ink-900)] leading-none mb-0.5">
               {duration.unit}
             </span>
           </>
         ) : (
-          <span className="font-mono-brand text-5xl font-semibold tracking-tight text-[var(--ink-400)] leading-none">—</span>
+          <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-400)] leading-none">—</span>
         )}
       </div>
       <p className="font-mono-brand text-[11px] text-[var(--ink-700)] tracking-wide">
@@ -420,12 +447,16 @@ export default function Dashboard({ appUser }: DashboardProps) {
           label="Days to IEMA renewal"
           daysRemaining={iemaDays}
           renewalDate={earliestIema?.expirationDate ?? null}
+          logoSrc={iemaLogo}
+          logoAlt="IEMA"
         />
         <CertCycleCard
           label="ARRT certification"
           daysRemaining={arrtDays}
           renewalDate={earliestArrt?.expirationDate ?? null}
           cycleNote="BIENNIAL"
+          logoSrc={arrtLogo}
+          logoAlt="ARRT"
         />
       </section>
 

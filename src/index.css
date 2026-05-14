@@ -174,12 +174,12 @@ body, #root {
   color: var(--ink-900);
   border: 1.5px solid var(--ink-900);
   border-radius: 14px;
-  box-shadow: 4px 4px 0 var(--ink-900);
+  box-shadow: 2px 2px 0 var(--ink-900);
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out);
 }
 .nb-card.is-clickable { cursor: pointer; }
-.nb-card.is-clickable:hover  { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
-.nb-card.is-clickable:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
+.nb-card.is-clickable:hover  { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink-900); }
+.nb-card.is-clickable:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink-900); }
 
 .nb-card.tint-mint   { background: var(--tint-mint); }
 .nb-card.tint-sky    { background: var(--tint-sky); }
@@ -193,7 +193,7 @@ body, #root {
   background: #14111F;
   color: var(--ink-100);
   border-color: var(--ink-200);
-  box-shadow: 4px 4px 0 var(--ink-300);
+  box-shadow: 2px 2px 0 var(--ink-300);
 }
 .dark .nb-card.is-clickable:hover  { box-shadow: 0 0 0 var(--ink-300); }
 .dark .nb-card.is-clickable:active { box-shadow: 0 0 0 var(--ink-300); }
@@ -255,13 +255,13 @@ body, #root {
   color: var(--ink-900);
   border: 1.5px solid var(--ink-900);
   border-radius: 14px;
-  box-shadow: 4px 4px 0 var(--ink-900);
+  box-shadow: 2px 2px 0 var(--ink-900);
 }
 .dark .glass-panel {
   background: #14111F;
   color: var(--ink-100);
   border-color: var(--ink-200);
-  box-shadow: 4px 4px 0 var(--ink-300);
+  box-shadow: 2px 2px 0 var(--ink-300);
 }
 .glass-panel--strong { background: var(--paper); }
 .glass-panel--soft   { background: var(--surface); }
@@ -273,7 +273,7 @@ body, #root {
   color: var(--ink-900);
   border: 1.5px solid var(--ink-900);
   border-radius: 14px;
-  box-shadow: 4px 4px 0 var(--ink-900);
+  box-shadow: 2px 2px 0 var(--ink-900);
   padding: var(--card-p);
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out);
   overflow: hidden;
@@ -282,7 +282,7 @@ body, #root {
   background: #14111F;
   color: var(--ink-100);
   border-color: var(--ink-200);
-  box-shadow: 4px 4px 0 var(--ink-300);
+  box-shadow: 2px 2px 0 var(--ink-300);
 }
 
 .card--sm { --card-p: 0.75rem; }
@@ -301,8 +301,8 @@ body, #root {
 .dark .card--red     { background: rgba(200, 56, 47, 0.18); color: var(--ink-100); }
 
 .card.is-clickable        { cursor: pointer; }
-.card.is-clickable:hover  { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
-.card.is-clickable:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink-900); }
+.card.is-clickable:hover  { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink-900); }
+.card.is-clickable:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink-900); }
 .dark .card.is-clickable:hover  { box-shadow: 0 0 0 var(--ink-300); }
 .dark .card.is-clickable:active { box-shadow: 0 0 0 var(--ink-300); }
 
@@ -416,25 +416,27 @@ body, #root {
 .form-number,
 .form-select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-size: 14px;
   font-family: var(--font-sans);
   color: var(--ink-900);
-  background: var(--paper);
-  border: 1.5px solid var(--ink-900);
+  background: var(--surface);
+  border: 1px solid var(--ink-200);
   border-radius: 10px;
   outline: none;
-  transition: box-shadow 80ms var(--ease-out), transform 80ms var(--ease-out);
-  box-shadow: 3px 3px 0 var(--ink-900);
+  box-shadow: none;
+  transition:
+    border-color 120ms var(--ease-out),
+    box-shadow 120ms var(--ease-out),
+    background-color 120ms var(--ease-out);
 }
 .dark .form-input,
 .dark .form-textarea,
 .dark .form-number,
 .dark .form-select {
-  background: #14111F;
+  background: #1B1828;
   color: var(--ink-100);
-  border-color: var(--ink-200);
-  box-shadow: 3px 3px 0 var(--ink-300);
+  border-color: var(--ink-700);
 }
 
 .form-input::placeholder,
@@ -442,14 +444,53 @@ body, #root {
   color: var(--ink-400);
 }
 
+.form-input:hover:not(:disabled),
+.form-textarea:hover:not(:disabled),
+.form-number:hover:not(:disabled),
+.form-select:hover:not(:disabled) {
+  border-color: var(--ink-300);
+}
+
 .form-input:focus,
 .form-textarea:focus,
 .form-number:focus,
 .form-select:focus,
 .form-select[aria-expanded="true"] {
-  transform: translate(1.5px, 1.5px);
-  box-shadow: 1.5px 1.5px 0 var(--brand-600);
   border-color: var(--brand-600);
+  box-shadow: 0 0 0 3px rgba(91, 63, 228, 0.22);
+  background: var(--paper);
+}
+.dark .form-input:focus,
+.dark .form-textarea:focus,
+.dark .form-number:focus,
+.dark .form-select:focus,
+.dark .form-select[aria-expanded="true"] {
+  border-color: var(--brand-400);
+  box-shadow: 0 0 0 3px rgba(131, 102, 237, 0.28);
+  background: #14111F;
+}
+
+/* Error state — used via `.form-input.is-error` etc. */
+.form-input.is-error,
+.form-textarea.is-error,
+.form-number.is-error,
+.form-select.is-error {
+  border-color: var(--danger-600);
+  background: var(--danger-100);
+}
+.form-input.is-error:focus,
+.form-textarea.is-error:focus,
+.form-number.is-error:focus,
+.form-select.is-error:focus {
+  box-shadow: 0 0 0 3px rgba(200, 56, 47, 0.22);
+}
+.form-help {
+  font-size: 12px;
+  color: var(--ink-500);
+  margin-top: 4px;
+}
+.form-help.is-error {
+  color: var(--danger-600);
 }
 
 .form-input:disabled,
@@ -476,18 +517,18 @@ body, #root {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   z-index: 50;
   background: var(--paper);
-  border: 1.5px solid var(--ink-900);
+  border: 1px solid var(--ink-200);
   border-radius: 10px;
-  box-shadow: 4px 4px 0 var(--ink-900);
+  box-shadow: 0 8px 24px -8px rgba(14, 11, 31, 0.18), 0 2px 6px rgba(14, 11, 31, 0.06);
   overflow: hidden;
 }
 .dark .form-select-panel {
   background: #14111F;
-  border-color: var(--ink-200);
-  box-shadow: 4px 4px 0 var(--ink-300);
+  border-color: var(--ink-700);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .form-select-option {
@@ -542,7 +583,7 @@ body, #root {
   .form-number,
   .form-select {
     padding: 14px 14px;
-    font-size: 16px;
+    font-size: 16px; /* prevents iOS Safari from zooming on focus */
   }
 }
 
