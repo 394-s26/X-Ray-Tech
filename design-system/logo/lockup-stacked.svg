@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-label="X-Ray Tech logo, stacked">
+  <title>X-Ray Tech</title>
+  <g transform="translate(88, 8)">
+    <circle cx="32" cy="32" r="24" fill="none" stroke="#5B3FE4" stroke-width="2.5"/>
+    <line x1="42.39" y1="38" x2="49.32" y2="42" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="32" y1="44" x2="32" y2="52" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="21.61" y1="38" x2="14.68" y2="42" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="21.61" y1="26" x2="14.68" y2="22" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="32" y1="20" x2="32" y2="12" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="42.39" y1="26" x2="49.32" y2="22" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="6" fill="#5B3FE4"/>
+  </g>
+  <text x="120" y="128"
+        text-anchor="middle"
+        font-family="Geist, 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif"
+        font-weight="700"
+        font-size="34"
+        letter-spacing="-0.025em"
+        fill="#0E0B1F">X-Ray Tech</text>
+</svg>
