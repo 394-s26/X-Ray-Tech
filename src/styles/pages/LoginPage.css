@@ -1,173 +1,226 @@
 @reference "../index.css";
 
-/* ── Layout ──────────────────────────────────────────────── */
-
+/* ── Auth shell ──────────────────────────────────────────── */
 .login-page {
-  @apply fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-slate-900 overflow-hidden;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  overflow: hidden;
 }
+.dark .login-page { background: #0B0A14; }
 
-/* ── Animated diagonal grid ──────────────────────────────── */
-
-.login-grid {
-  @apply absolute inset-0;
+/* Soft grid (kept, but in brand violet) ───────────────────── */
+.login-grid,
+.auth-grid {
+  position: absolute;
+  inset: 0;
   background-image:
-    linear-gradient(to right, rgba(59, 130, 246, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: login-grid-scroll 22s linear infinite;
+    linear-gradient(to right, rgba(91, 63, 228, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(91, 63, 228, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
 }
 
-.dark .login-grid {
+.dark .login-grid,
+.dark .auth-grid {
   background-image:
-    linear-gradient(to right, rgba(96, 165, 250, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(96, 165, 250, 0.1) 1px, transparent 1px);
+    linear-gradient(to right, rgba(167, 142, 243, 0.10) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(167, 142, 243, 0.10) 1px, transparent 1px);
 }
 
-@keyframes login-grid-scroll {
-  from { background-position: 0 0; }
-  to   { background-position: 50px 50px; }
-}
-
-/* ── Pulsing radial glow ─────────────────────────────────── */
-
-.login-glow {
+.login-glow,
+.auth-glow {
   translate: -50% -50%;
-  animation: login-glow-pulse 5s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(91, 63, 228, 0.18) 0%, rgba(91, 63, 228, 0.04) 45%, transparent 70%);
+  animation: login-glow-pulse 6s ease-in-out infinite;
 }
-
-.dark .login-glow {
-  background: radial-gradient(circle, rgba(96, 165, 250, 0.2) 0%, rgba(96, 165, 250, 0.05) 45%, transparent 70%);
+.dark .login-glow,
+.dark .auth-glow {
+  background: radial-gradient(circle, rgba(91, 63, 228, 0.28) 0%, rgba(91, 63, 228, 0.08) 45%, transparent 70%);
 }
 
 @keyframes login-glow-pulse {
-  0%, 100% {
-    opacity: 0.65;
-    scale: 1;
-  }
-  50% {
-    opacity: 1;
-    scale: 1.35;
-  }
+  0%, 100% { opacity: 0.65; scale: 1; }
+  50%      { opacity: 1;    scale: 1.25; }
 }
 
-/* ── Auth card & inputs ──────────────────────────────────── */
-
-.auth-card {
-  @apply relative z-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-lg w-full max-w-[440px] overflow-hidden mx-4;
+/* ── Auth card — soft-brutalist ──────────────────────────── */
+.auth-card,
+.login-card {
+  position: relative;
+  z-index: 10;
+  background: var(--paper);
+  border: 1.5px solid var(--ink-900);
+  border-radius: 14px;
+  box-shadow: 2px 2px 0 var(--ink-900);
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  margin: 0 16px;
+}
+.dark .auth-card,
+.dark .login-card {
+  background: #14111F;
+  border-color: var(--ink-200);
+  box-shadow: 2px 2px 0 var(--ink-300);
 }
 
-.auth-card-header {
-  @apply flex items-center gap-2.5 px-7 py-[1.125rem] border-b border-slate-200 dark:border-slate-700;
+.auth-card-header,
+.login-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 28px;
+  border-bottom: 1.5px solid var(--ink-900);
 }
+.dark .auth-card-header,
+.dark .login-card-header { border-bottom-color: var(--ink-200); }
 
-.auth-card-title {
-  @apply text-[0.9375rem] font-semibold text-slate-900 dark:text-slate-100 tracking-tight;
+.auth-card-title,
+.login-logo-text {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
 }
+.dark .auth-card-title,
+.dark .login-logo-text { color: var(--ink-100); }
 
-.auth-heading {
-  @apply text-[1.625rem] font-bold text-slate-900 dark:text-slate-100 leading-tight mb-7;
+.auth-heading,
+.login-heading {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+  margin-bottom: 24px;
 }
+.dark .auth-heading,
+.dark .login-heading { color: var(--ink-100); }
 
 .auth-input {
-  @apply w-full px-4 py-[0.8rem] rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700/50 text-[0.9375rem] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400 dark:focus:border-purple-400 disabled:opacity-60 transition-colors;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--ink-900);
+  border-radius: 10px;
+  background: var(--paper);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink-900);
+  box-shadow: 3px 3px 0 var(--ink-900);
+  outline: none;
+  transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out);
+}
+.auth-input::placeholder { color: var(--ink-400); }
+.auth-input:focus {
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 1.5px 1.5px 0 var(--brand-600);
+  border-color: var(--brand-600);
+}
+.auth-input:disabled { opacity: 0.6; }
+
+.dark .auth-input {
+  background: #14111F;
+  color: var(--ink-100);
+  border-color: var(--ink-200);
+  box-shadow: 3px 3px 0 var(--ink-300);
 }
 
-.auth-input-error {
-  @apply border-red-400 focus:ring-red-500/40 focus:border-red-400;
-}
-
-.auth-input-success {
-  @apply border-green-400 focus:ring-green-500/40 focus:border-green-400;
-}
+.auth-input-error  { border-color: var(--danger-600); }
+.auth-input-error:focus { box-shadow: 1.5px 1.5px 0 var(--danger-600); border-color: var(--danger-600); }
+.auth-input-success { border-color: var(--success-600); }
+.auth-input-success:focus { box-shadow: 1.5px 1.5px 0 var(--success-600); border-color: var(--success-600); }
 
 .auth-divider {
-  @apply flex-1 h-px bg-slate-200 dark:bg-slate-600;
+  flex: 1;
+  height: 1.5px;
+  background: var(--ink-900);
 }
+.dark .auth-divider { background: var(--ink-200); }
 
-.auth-error {
-  @apply mt-4 px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm;
+.auth-error,
+.login-error {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--tint-rose);
+  border: 1.5px solid var(--ink-900);
+  border-radius: 10px;
+  color: var(--danger-600);
+  font-size: 14px;
+  font-weight: 500;
+}
+.dark .auth-error,
+.dark .login-error {
+  background: rgba(200, 56, 47, 0.18);
+  border-color: var(--ink-200);
+  color: #F08680;
 }
 
 .auth-footer-text {
-  @apply mt-6 text-center text-sm text-slate-500 dark:text-slate-400;
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-500);
 }
-
-/* ── Auth background (purple variant) ───────────────────── */
-
-.auth-grid {
-  @apply absolute inset-0;
-  background-image:
-    linear-gradient(to right, rgba(143, 59, 246, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(143, 59, 246, 0.07) 1px, transparent 1px);
-  background-size: 50px 50px;
-}
-
-.dark .auth-grid {
-  background-image:
-    linear-gradient(to right, rgba(109, 40, 217, 0.15) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(109, 40, 217, 0.15) 1px, transparent 1px);
-}
-
-.auth-glow {
-  translate: -50% -50%;
-  background: radial-gradient(circle, rgba(184, 59, 246, 0.35) 0%, rgba(184, 59, 246, 0.08) 45%, transparent 70%);
-  animation: login-glow-pulse 5s ease-in-out infinite;
-}
-
-.dark .auth-glow {
-  background: radial-gradient(circle, rgba(109, 40, 217, 0.3) 0%, rgba(88, 28, 135, 0.1) 45%, transparent 70%);
-}
-
-/* ── Card ────────────────────────────────────────────────── */
-
-.login-card {
-  @apply relative z-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-lg w-full max-w-[440px] overflow-hidden mx-4;
-}
-
-.login-card-header {
-  @apply flex items-center gap-2.5 px-7 py-[1.125rem] border-b border-slate-200 dark:border-slate-700;
-}
-
-.login-logo-text {
-  @apply text-[0.9375rem] font-semibold text-slate-900 dark:text-slate-100 tracking-tight;
-}
+.dark .auth-footer-text { color: var(--ink-300); }
 
 .login-card-body {
-  @apply px-7 pt-8 pb-9;
-}
-
-.login-heading {
-  @apply text-[1.625rem] font-bold text-slate-900 dark:text-slate-100 leading-tight mb-7;
+  padding: 28px 28px 32px;
 }
 
 /* ── Google sign-in button ───────────────────────────────── */
-
 .login-google-btn {
-  @apply flex items-center justify-between w-full px-5 py-[0.9rem] text-slate-900 dark:text-slate-100 border border-slate-700 dark:border-slate-600 rounded-xl text-[0.9375rem] font-semibold cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 18px;
+  background: var(--paper);
+  color: var(--ink-900);
+  border: 1.5px solid var(--ink-900);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink-900);
+  transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out), background-color 80ms var(--ease-out);
 }
-
 .login-google-btn:hover:not(:disabled) {
-  background-color: #efefef;
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink-900);
+  background: var(--brand-50);
 }
+.login-google-btn:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink-900);
+}
+.login-google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+.dark .login-google-btn {
+  background: #14111F;
+  color: var(--ink-100);
+  border-color: var(--ink-200);
+  box-shadow: 3px 3px 0 var(--ink-300);
+}
 .dark .login-google-btn:hover:not(:disabled) {
-  background-color: #334155; /* slate-700 */
+  background: rgba(91, 63, 228, 0.18);
+  box-shadow: 0 0 0 var(--ink-300);
 }
 
 .login-google-btn-label {
-  @apply flex items-center gap-3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .arrow-right {
-  transition: transform 150ms ease;
+  transition: transform 150ms var(--ease-out);
 }
 
 .login-google-btn:hover:not(:disabled) .arrow-right {
-  transform: translateX(6px);
-}
-
-/* ── Error message ───────────────────────────────────────── */
-
-.login-error {
-  @apply mt-4 px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm;
+  transform: translateX(4px);
 }

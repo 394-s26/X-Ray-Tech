@@ -55,7 +55,7 @@ const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={requireAuth(<Dashboard />)} />
+        <Route path="/" element={requireAuth(appUser ? <Dashboard appUser={appUser} /> : <></>)} />
         <Route path="/credentials" element={requireAuth(<CredentialTracking />)} />
         <Route
           path="/certificates/new"
