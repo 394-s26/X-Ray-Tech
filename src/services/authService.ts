@@ -11,15 +11,18 @@ import { doc, getDoc, setDoc, runTransaction, serverTimestamp, arrayUnion, updat
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import { auth, db } from './firebase';
+import { markNotificationPermissionPromptAfterLogin } from './notifications';
 
 const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async (): Promise<void> => {
   await signInWithPopup(auth, googleProvider);
+  markNotificationPermissionPromptAfterLogin();
 };
 
 export const signInWithEmail = async (email: string, password: string): Promise<void> => {
   await signInWithEmailAndPassword(auth, email, password);
+  markNotificationPermissionPromptAfterLogin();
 };
 
 export const checkUsernameAvailable = async (username: string): Promise<boolean> => {

@@ -1,5 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  consumeNotificationPermissionPromptAfterLogin,
+  requestNotificationPermissionIfDefault,
+} from '../services/notifications';
 import { ChevronRightIcon, CheckIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
 import type { Certification } from '../types/certification';
@@ -332,6 +336,11 @@ function BrowseCourses() {
 
 export default function Dashboard() {
   const { certifications, loading } = useCertifications();
+
+  useEffect(() => {
+    if (!consumeNotificationPermissionPromptAfterLogin()) return;
+    requestNotificationPermissionIfDefault();
+  }, []);
 
   const arrtCredits = useMemo(
     () =>
