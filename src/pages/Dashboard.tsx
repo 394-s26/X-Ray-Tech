@@ -172,7 +172,7 @@ function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: Re
           <img
             src={logoSrc}
             alt={logoAlt ?? ''}
-            className="h-6 w-auto object-contain shrink-0 rounded-md bg-white/70 px-0.75 py-1"
+            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
           />
         )}
       </div>
