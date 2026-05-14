@@ -495,7 +495,7 @@ function DeleteConfirmDialog({
   );
 }
 
-export default function CertList({ name, fullName, accent, category }: CertListProps) {
+export default function CertList({ name, fullName, category }: CertListProps) {
   const { certifications, loading } = useCertifications(category);
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
