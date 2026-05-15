@@ -23,6 +23,22 @@ All shadows use low-opacity `ink/900` (#0E0B1F at 4–10%).
 4. **No colored shadows.** Never a purple shadow under a purple button. Shadows are ink-tinted only.
 5. **No inner shadows. No multi-layer "soft UI."** Neumorphism is banned everywhere in the brand.
 
+## Soft-brutalist offset shadows (product UI)
+
+Inputs, buttons, and cards in the product UI use a solid offset shadow rather than a blurred elevation shadow. Keep these consistent across components:
+
+| Token         | Value                       | Use                                                            |
+| ------------- | --------------------------- | -------------------------------------------------------------- |
+| `offset-sm`   | `2px 2px 0 var(--ink-900)`  | **Default.** Inputs, buttons, dashboard cards, auth-card surfaces. |
+| `offset-press`| `0 0 0 var(--ink-900)`      | Pressed / hover state, paired with `translate(2px, 2px)`.      |
+
+Rules:
+
+1. **Default offset is `2px`.** Do not introduce `3px+` offsets on new components — they read as too heavy next to dashboard cards (which use `2px`). The old `3px` offset is being phased out; match existing dashboard `.nb-card` shadow.
+2. **Focus state mirrors the offset, in brand.** On focus, use `1px 1px 0 var(--brand-600)` + `translate(1px, 1px)` so the field "settles" by exactly its shadow distance.
+3. **Pressed state collapses to `0 0 0`** and translates by the original offset — the element appears to push into the page.
+4. **Dark mode swaps the shadow color** to `var(--ink-300)` (or `var(--card-shadow-c)` when available). The offset stays `2px`.
+
 ## Anti-patterns
 
 - Three nested shadowed cards inside a section. Pick one elevation — usually `none` — and let the structure speak.

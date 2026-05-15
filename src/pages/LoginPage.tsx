@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AppLogoIcon, ArrowRightIcon, GoogleIcon } from '../services/svgIcons';
+import { ArrowRightIcon, GoogleIcon } from '../services/svgIcons';
 import { signInWithGoogle, signInWithEmail } from '../services/authService';
 import { AuthBackground } from './AuthBackground';
 import { EyeIcon, EyeOffIcon } from '../services/svgIcons';
+import BrandLogo from '../components/BrandLogo';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -41,8 +42,7 @@ export const LoginPage = () => {
     <AuthBackground>
       <div className="auth-card">
         <div className="auth-card-header">
-          <AppLogoIcon size={28} />
-          <span className="auth-card-title">X-Ray Tech</span>
+          <BrandLogo />
         </div>
 
         <div className="login-card-body">

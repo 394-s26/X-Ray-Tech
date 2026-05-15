@@ -111,14 +111,14 @@
   font-family: var(--font-sans);
   font-size: 15px;
   color: var(--ink-900);
-  box-shadow: 3px 3px 0 var(--ink-900);
+  box-shadow: 2px 2px 0 var(--ink-900);
   outline: none;
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out);
 }
 .auth-input::placeholder { color: var(--ink-400); }
 .auth-input:focus {
-  transform: translate(1.5px, 1.5px);
-  box-shadow: 1.5px 1.5px 0 var(--brand-600);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--brand-600);
   border-color: var(--brand-600);
 }
 .auth-input:disabled { opacity: 0.6; }
@@ -127,13 +127,13 @@
   background: #14111F;
   color: var(--ink-100);
   border-color: var(--ink-200);
-  box-shadow: 3px 3px 0 var(--ink-300);
+  box-shadow: 2px 2px 0 var(--ink-300);
 }
 
 .auth-input-error  { border-color: var(--danger-600); }
-.auth-input-error:focus { box-shadow: 1.5px 1.5px 0 var(--danger-600); border-color: var(--danger-600); }
+.auth-input-error:focus { box-shadow: 1px 1px 0 var(--danger-600); border-color: var(--danger-600); }
 .auth-input-success { border-color: var(--success-600); }
-.auth-input-success:focus { box-shadow: 1.5px 1.5px 0 var(--success-600); border-color: var(--success-600); }
+.auth-input-success:focus { box-shadow: 1px 1px 0 var(--success-600); border-color: var(--success-600); }
 
 .auth-divider {
   flex: 1;
@@ -186,16 +186,16 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 3px 3px 0 var(--ink-900);
+  box-shadow: 2px 2px 0 var(--ink-900);
   transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out), background-color 80ms var(--ease-out);
 }
 .login-google-btn:hover:not(:disabled) {
-  transform: translate(3px, 3px);
+  transform: translate(2px, 2px);
   box-shadow: 0 0 0 var(--ink-900);
   background: var(--brand-50);
 }
 .login-google-btn:active:not(:disabled) {
-  transform: translate(3px, 3px);
+  transform: translate(2px, 2px);
   box-shadow: 0 0 0 var(--ink-900);
 }
 .login-google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -204,7 +204,7 @@
   background: #14111F;
   color: var(--ink-100);
   border-color: var(--ink-200);
-  box-shadow: 3px 3px 0 var(--ink-300);
+  box-shadow: 2px 2px 0 var(--ink-300);
 }
 .dark .login-google-btn:hover:not(:disabled) {
   background: rgba(91, 63, 228, 0.18);

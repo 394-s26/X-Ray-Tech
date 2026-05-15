@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { AppLogoIcon, ArrowRightIcon, EyeIcon, EyeOffIcon, GoogleIcon } from '../services/svgIcons';
+import { ArrowRightIcon, EyeIcon, EyeOffIcon, GoogleIcon } from '../services/svgIcons';
 import { registerWithEmail, checkUsernameAvailable, signInWithGoogle } from '../services/authService';
 import { AuthBackground } from './AuthBackground';
+import BrandLogo from '../components/BrandLogo';
 import '../styles/pages/LoginPage.css';
 
 import MailChecker from 'mailchecker';
@@ -163,8 +164,7 @@ export const SignupPage = () => {
     <AuthBackground>
       <div className="auth-card">
         <div className="auth-card-header">
-          <AppLogoIcon size={28} />
-          <span className="auth-card-title">X-Ray Tech</span>
+          <BrandLogo />
         </div>
 
         <div className="px-7 pt-8 pb-9">
@@ -203,7 +203,7 @@ export const SignupPage = () => {
               <p className={`text-xs mb-1 px-1 h-1 ${usernameStatusColor}`}>{usernameStatusMessage}</p>
             </div>
 
-            <div className="relative mt-6">
+            <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
