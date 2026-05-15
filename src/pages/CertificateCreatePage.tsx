@@ -31,6 +31,7 @@ export const CertificateCreatePage = () => {
   const [completedDate, setCompletedDate] = useState('');
   const [expiresDate, setExpiresDate] = useState('');
   const [points, setPoints] = useState('');
+  const [categoryType, setCategoryType] = useState('');
   const [categories, setCategories] = useState<CertificateCategory[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -53,6 +54,7 @@ export const CertificateCreatePage = () => {
     setCompletedDate('');
     setExpiresDate('');
     setPoints('');
+    setCategoryType('');
     setCategories([]);
     setBadFileType(false);
     setNoTextDetected(false);
@@ -73,6 +75,7 @@ export const CertificateCreatePage = () => {
       if (parsed.completedDate) setCompletedDate(parsed.completedDate);
       if (parsed.expirationDate) setExpiresDate(parsed.expirationDate);
       if (parsed.ceCredits !== null) setPoints(String(parsed.ceCredits));
+      if (parsed.categoryType) setCategoryType(parsed.categoryType);
     } catch {
       // pipeline.error is already set; user can still fill the form manually
     }
@@ -153,6 +156,7 @@ export const CertificateCreatePage = () => {
         completedDate,
         expirationDate: expiresDate,
         ceCredits: pointsNum,
+        categoryType: categoryType.trim() || null,
         categories,
       });
       const route = CATEGORY_ROUTE[categories[0]] ?? '/arrt';
@@ -390,6 +394,23 @@ export const CertificateCreatePage = () => {
               disabled={formDisabled || categories.includes('CPR')}
               className="form-number"
             />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor={`${formId}-category-type`} className="form-label">
+              Category type
+            </label>
+            <input
+              id={`${formId}-category-type`}
+              type="text"
+              placeholder="e.g. A+"
+              value={categoryType}
+              onChange={(e) => setCategoryType(e.target.value)}
+              disabled={formDisabled}
+              className="form-input"
+              autoComplete="off"
+            />
+            <p className="text-xs text-gray-500 dark:text-slate-400">Optional. Auto-filled from certificate (e.g. A, A+, 1).</p>
           </div>
 
           <div className="form-field">

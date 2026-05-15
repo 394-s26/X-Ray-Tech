@@ -10,6 +10,7 @@ export interface Certification {
   completedDate: string;
   expirationDate: string;
   ceCredits: number;
+  categoryType: string | null;
   categories: CertificateCategory[];
   photoStoragePath: string;
   photoURL: string;
