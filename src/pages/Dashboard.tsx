@@ -138,7 +138,7 @@ function CePointsCard({ completed, total }: CePointsCardProps) {
 
   return (
     <Link to="/iema" className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden">
-      <p className="overline text-[var(--brand-600)]">CE points</p>
+      <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
       <div className="flex flex-col items-start gap-3 @[250px]:flex-row @[250px]:items-center @[250px]:gap-5 min-w-0">
         <Donut percent={pct} />
         <div className="font-mono-brand text-3xl xl:text-4xl font-semibold tracking-tight text-[var(--ink-900)] leading-none whitespace-nowrap">
@@ -167,7 +167,7 @@ function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: Re
   return (
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="overline text-[var(--ink-900)]">{label}</p>
+        <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
         {logoSrc && (
           <img
             src={logoSrc}
@@ -203,7 +203,7 @@ function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, 
   return (
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="overline text-[var(--ink-900)]">{label}</p>
+        <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
         {logoSrc && (
           <img
             src={logoSrc}

@@ -154,3 +154,52 @@
   flex: 1;
   white-space: nowrap;
 }
+
+/* ── Notification bell ─────────────────────────────────── */
+.navbar-bell {
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+
+.dark .navbar-bell {
+  color: var(--ink-200);
+}
+
+.navbar-bell:hover {
+  background: var(--brand-50);
+  color: var(--ink-900);
+}
+
+.dark .navbar-bell:hover {
+  background: rgba(91, 63, 228, 0.18);
+  color: var(--ink-100);
+}
+
+.navbar-bell:focus-visible {
+  outline: 2px solid var(--brand-500, #5B3FE4);
+  outline-offset: 2px;
+}
+
+.navbar-bell__dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--danger-600, #DC2626);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
+.dark .navbar-bell__dot {
+  box-shadow: 0 0 0 2px #14111F;
+}
