@@ -222,14 +222,14 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
               <span className="text-xs text-[var(--ink-700)] truncate flex-1">
                 {row.label}
               </span>
-              <span className="hidden @[180px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)] shrink-0">
+              <span className="hidden @[220px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)] shrink-0">
                 {row.hours.toFixed(1)}h
               </span>
             </li>
           ))}
           <li className="flex items-center gap-2 pt-2 border-t border-[var(--ink-200)]">
             <span className="text-[11px] text-[var(--ink-500)] flex-1">Total</span>
-            <span className="hidden @[180px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)]">
+            <span className="font-mono-brand text-xs font-semibold text-[var(--ink-900)]">
               {completed}/{total}h
             </span>
           </li>
