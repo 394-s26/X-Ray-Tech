@@ -7,7 +7,7 @@ import type { AppUser } from '../types/auth';
 import arrtLogo from '../assets/arrt.png';
 import iemaLogo from '../assets/iema.png';
 
-const IEMA_TOTAL = 24;
+const IEMA_TOTAL = 48;
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -74,19 +74,42 @@ function earliestExpiryFor(certs: Certification[], category: CertificateCategory
 
 // ── Donut ────────────────────────────────────────────────────
 
+interface DonutSegment {
+  value: number;
+  color: string;
+}
+
 interface DonutProps {
   percent: number;
+  segments?: DonutSegment[];
+  total?: number;
+  label?: React.ReactNode;
   size?: number;
   strokeWidth?: number;
 }
 
-function Donut({ percent, size = 88, strokeWidth = 11 }: DonutProps) {
+function Donut({ percent, segments, total, label, size = 88, strokeWidth = 11 }: DonutProps) {
   const cx = size / 2;
   const cy = size / 2;
   const r = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * r;
   const pct = clampPct(percent);
-  const offset = circumference * (1 - pct / 100);
+
+  let arcs: { color: string; dasharray: string; dashoffset: number }[] = [];
+  if (segments && total && total > 0) {
+    let cumulative = 0;
+    arcs = segments.map((seg) => {
+      const portion = clampPct((seg.value / total) * 100) / 100;
+      const arcLength = portion * circumference;
+      const arc = {
+        color: seg.color,
+        dasharray: `${arcLength} ${circumference}`,
+        dashoffset: -cumulative * circumference,
+      };
+      cumulative += portion;
+      return arc;
+    });
+  }
 
   return (
     <div
@@ -100,21 +123,38 @@ function Donut({ percent, size = 88, strokeWidth = 11 }: DonutProps) {
           strokeWidth={strokeWidth}
           stroke="var(--ink-200)"
         />
-        <circle
-          cx={cx} cy={cy} r={r}
-          fill="none"
-          stroke="var(--brand-600)"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          transform={`rotate(-90 ${cx} ${cy})`}
-          style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
-        />
+        {arcs.length > 0 ? (
+          arcs.map((arc, i) => (
+            <circle
+              key={i}
+              cx={cx} cy={cy} r={r}
+              fill="none"
+              stroke={arc.color}
+              strokeWidth={strokeWidth}
+              strokeLinecap="butt"
+              strokeDasharray={arc.dasharray}
+              strokeDashoffset={arc.dashoffset}
+              transform={`rotate(-90 ${cx} ${cy})`}
+              style={{ transition: 'stroke-dasharray 0.6s ease-out, stroke-dashoffset 0.6s ease-out' }}
+            />
+          ))
+        ) : (
+          <circle
+            cx={cx} cy={cy} r={r}
+            fill="none"
+            stroke="var(--brand-600)"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - pct / 100)}
+            transform={`rotate(-90 ${cx} ${cy})`}
+            style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
+          />
+        )}
       </svg>
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <span className="font-mono-brand text-sm font-semibold text-[var(--ink-900)]">
-          {Math.round(pct)}%
+          {label ?? `${Math.round(pct)}%`}
         </span>
       </div>
     </div>
@@ -126,30 +166,75 @@ function Donut({ percent, size = 88, strokeWidth = 11 }: DonutProps) {
 interface CePointsCardProps {
   completed: number;
   total: number;
+  certifications: Certification[];
 }
 
-function CePointsCard({ completed, total }: CePointsCardProps) {
+function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
   const pct = total === 0 ? 0 : (completed / total) * 100;
-  const catATotal = 12;
-  const catBTotal = 12;
-  // Without a CAT A/B field in the data model, split roughly so CAT A fills first.
-  const catA = Math.min(completed, catATotal);
-  const catB = Math.max(0, Math.min(completed - catATotal, catBTotal));
+
+  const active = certifications.filter((c) => daysUntil(c.expirationDate) >= 0);
+
+  const iemaHours = active
+    .filter((c) => c.categories.includes('IEMA'))
+    .reduce((s, c) => s + c.ceCredits, 0);
+  const arrtHours = active
+    .filter((c) => c.categories.includes('ARRT'))
+    .reduce((s, c) => s + c.ceCredits, 0);
+
+  const IEMA_COLOR = 'var(--brand-600)';
+  const ARRT_COLOR = '#a78ef3';
+
+  const breakdown = [
+    { label: 'IEMA', hours: iemaHours, swatch: IEMA_COLOR },
+    { label: 'ARRT', hours: arrtHours, swatch: ARRT_COLOR },
+  ];
 
   return (
-    <Link to="/iema" className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden">
+    <Link
+      to="/credentials"
+      className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden"
+    >
       <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
-      <div className="flex flex-col items-start gap-3 @[250px]:flex-row @[250px]:items-center @[250px]:gap-5 min-w-0">
-        <Donut percent={pct} />
-        <div className="font-mono-brand text-3xl xl:text-4xl font-semibold tracking-tight text-[var(--ink-900)] leading-none whitespace-nowrap">
-          {completed}
-          <span className="text-[var(--ink-300)] mx-1">/</span>
-          {total}
-        </div>
+      <div className="flex-1 flex items-center gap-5 min-w-0">
+        <Donut
+          percent={pct}
+          total={total}
+          segments={[
+            { value: iemaHours, color: IEMA_COLOR },
+            { value: arrtHours, color: ARRT_COLOR },
+          ]}
+          label={
+            <>
+              {completed}
+              <span className="text-[var(--ink-300)]">/</span>
+              {total}
+            </>
+          }
+        />
+        <ul className="flex-1 flex flex-col gap-2 min-w-0">
+          {breakdown.map((row) => (
+            <li key={row.label} className="flex items-center gap-2 min-w-0">
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ background: row.swatch }}
+                aria-hidden="true"
+              />
+              <span className="text-xs text-[var(--ink-700)] truncate flex-1">
+                {row.label}
+              </span>
+              <span className="hidden @[180px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)] shrink-0">
+                {row.hours.toFixed(1)}h
+              </span>
+            </li>
+          ))}
+          <li className="flex items-center gap-2 pt-2 border-t border-[var(--ink-200)]">
+            <span className="text-[11px] text-[var(--ink-500)] flex-1">Total</span>
+            <span className="hidden @[180px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)]">
+              {completed}/{total}h
+            </span>
+          </li>
+        </ul>
       </div>
-      <p className="font-mono-brand text-[11px] text-[var(--ink-500)] tracking-wide">
-        CAT A {catA}/{catATotal} · CAT B {catB}/{catBTotal}
-      </p>
     </Link>
   );
 }
@@ -367,7 +452,11 @@ export default function Dashboard({ appUser }: DashboardProps) {
   const iemaCredits = useMemo(
     () =>
       certifications
-        .filter((c) => c.categories.includes('IEMA') && daysUntil(c.expirationDate) >= 0)
+        .filter(
+          (c) =>
+            (c.categories.includes('IEMA') || c.categories.includes('ARRT')) &&
+            daysUntil(c.expirationDate) >= 0,
+        )
         .reduce((sum, c) => sum + c.ceCredits, 0),
     [certifications],
   );
@@ -442,7 +531,7 @@ export default function Dashboard({ appUser }: DashboardProps) {
 
       {/* Top stat row */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
-        <CePointsCard completed={iemaCredits} total={IEMA_TOTAL} />
+        <CePointsCard completed={iemaCredits} total={IEMA_TOTAL} certifications={certifications} />
         <RenewalCard
           label="Days to IEMA renewal"
           daysRemaining={iemaDays}
