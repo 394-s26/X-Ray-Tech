@@ -44,10 +44,18 @@ function formatRenewalDate(dateString: string): string {
 }
 
 function formatDuration(days: number): { value: string; unit: string } {
-  if (days < 0) return { value: '0', unit: 'd' };
-  if (days < 60) return { value: String(days), unit: 'd' };
-  if (days < 365) return { value: String(Math.round(days / 30)), unit: 'mo' };
-  return { value: (days / 365).toFixed(1), unit: 'y' };
+  if (days < 0) return { value: '0', unit: 'days' };
+  if (days < 60) return { value: String(days), unit: days === 1 ? 'day' : 'days' };
+  if (days < 365) {
+    const months = Math.round(days / 30);
+    return { value: String(months), unit: months === 1 ? 'mo' : 'mos' };
+  }
+  const years = days / 365;
+  return { value: years.toFixed(1), unit: years === 1 ? 'yr' : 'yrs' };
+}
+
+function pluralizeHours(value: number): string {
+  return value === 1 ? 'hr' : 'hrs';
 }
 
 /** Returns the soft-brutalist tint class based on days remaining. */
@@ -205,7 +213,7 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
           ]}
           label={
             <>
-              {completed}
+              {Math.round(completed)}
               <span className="text-[var(--ink-300)]">/</span>
               {total}
             </>
@@ -223,14 +231,14 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
                 {row.label}
               </span>
               <span className="hidden @[220px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)] shrink-0">
-                {row.hours.toFixed(1)}h
+                {Math.round(row.hours)}h
               </span>
             </li>
           ))}
           <li className="flex items-center gap-2 pt-2 border-t border-[var(--ink-200)]">
             <span className="text-[11px] text-[var(--ink-500)] flex-1">Total</span>
             <span className="font-mono-brand text-xs font-semibold text-[var(--ink-900)]">
-              {completed}/{total}h
+              {Math.round(completed)}/{total}h
             </span>
           </li>
         </ul>
@@ -261,10 +269,15 @@ function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: Re
           />
         )}
       </div>
-      <div className="flex-1 flex items-end">
+      <div className="flex-1 flex items-end gap-2">
         <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
           {daysRemaining == null ? '—' : daysRemaining}
         </span>
+        {daysRemaining != null && (
+          <span className="font-mono-brand text-2xl sm:text-3xl font-semibold text-[var(--ink-900)] leading-none mb-0.5">
+            {daysRemaining === 1 ? 'day' : 'days'}
+          </span>
+        )}
       </div>
       <p className="font-mono-brand text-[11px] text-[var(--ink-700)] tracking-wide">
         {renewalDate ? `RENEWS ${formatRenewalDate(renewalDate)}` : 'NO RENEWAL ON FILE'}
@@ -363,8 +376,8 @@ function RecentCertifications({ certifications }: { certifications: Certificatio
                   <p className="text-[11px] text-[var(--ink-500)] truncate">{cert.providerName || category}</p>
                 </div>
                 {category && <CategoryBadge category={category} />}
-                <span className="font-mono-brand text-xs font-semibold text-[var(--ink-700)] w-12 text-right shrink-0">
-                  {cert.ceCredits.toFixed(1)} h
+                <span className="font-mono-brand text-xs font-semibold text-[var(--ink-700)] w-14 text-right shrink-0">
+                  {Math.round(cert.ceCredits)} {pluralizeHours(Math.round(cert.ceCredits))}
                 </span>
               </li>
             );
@@ -424,7 +437,7 @@ function Upcoming({ certifications }: { certifications: Certification[] }) {
                   <p className="text-sm font-medium text-[var(--ink-900)] truncate">{cert.certificateName}</p>
                   <p className="text-[11px] text-[var(--ink-500)] truncate">
                     {category}
-                    {cert.ceCredits ? <> · {cert.ceCredits.toFixed(1)} h</> : null}
+                    {cert.ceCredits ? <> · {Math.round(cert.ceCredits)} {pluralizeHours(Math.round(cert.ceCredits))}</> : null}
                   </p>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-[var(--paper)] ${badgeClass}`}>
@@ -505,13 +518,13 @@ export default function Dashboard({ appUser }: DashboardProps) {
             {statusGreeting(percent, firstName)}
           </h1>
           <p className="mt-2 text-sm lg:text-base text-[var(--ink-700)]">
-            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{iemaCredits}</span>
+            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(iemaCredits)}</span>
             {' '}of{' '}
             <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{IEMA_TOTAL}</span>
             {' '}CE points logged.{' '}
             {remaining > 0 && earliestIema ? (
               <>
-                <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{remaining}</span>
+                <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(remaining)}</span>
                 {' '}to go before your IEMA renews{' '}
                 <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{formatShortDate(earliestIema.expirationDate)}</span>.
               </>

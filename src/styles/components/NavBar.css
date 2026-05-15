@@ -1,35 +1,35 @@
 @reference "../index.css";
 
-/* ── Hamburger button (mobile) — soft-brutalist ─────────── */
+/* ── Hamburger button (mobile) — matches notification bell ── */
 .navbar-hamburger {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   display: grid;
   place-items: center;
-  border-radius: 10px;
-  border: 1.5px solid var(--ink-900);
-  color: var(--ink-900);
-  background: var(--paper);
-  box-shadow: 3px 3px 0 var(--ink-900);
-  transition: transform 80ms var(--ease-out), box-shadow 80ms var(--ease-out), background-color 120ms var(--ease-out);
+  border-radius: 9999px;
+  border: none;
+  color: var(--ink-700);
+  background: transparent;
+  transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out);
   cursor: pointer;
 }
 
 .dark .navbar-hamburger {
-  border-color: var(--ink-200);
-  color: var(--ink-100);
-  background: #14111F;
-  box-shadow: 3px 3px 0 var(--ink-300);
+  color: var(--ink-200);
 }
 
 .navbar-hamburger:hover {
-  transform: translate(3px, 3px);
-  box-shadow: 0 0 0 var(--ink-900);
   background: var(--brand-50);
+  color: var(--ink-900);
 }
 .dark .navbar-hamburger:hover {
   background: rgba(91, 63, 228, 0.18);
-  box-shadow: 0 0 0 var(--ink-300);
+  color: var(--ink-100);
+}
+
+.navbar-hamburger:focus-visible {
+  outline: 2px solid var(--brand-500, #5B3FE4);
+  outline-offset: 2px;
 }
 
 .navbar-hamburger__box {

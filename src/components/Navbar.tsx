@@ -89,6 +89,16 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handle = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) setMenuOpen(false);
+    };
+    handle(mq);
+    mq.addEventListener('change', handle);
+    return () => mq.removeEventListener('change', handle);
+  }, []);
+
   const handleThemeToggle = () => {
     setTheme(isDark ? 'light' : 'dark');
     close();
