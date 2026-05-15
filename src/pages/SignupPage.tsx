@@ -153,8 +153,15 @@ export const SignupPage = () => {
       await registerWithEmail(email, password, username);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
-      setError(msg === 'Username taken' ? 'That username was just taken. Please choose another.' : 'Registration failed. Please try again.');
-      console.log(msg);
+      const code = (err as { code?: string })?.code ?? '';
+      if (code === 'auth/email-already-in-use') {
+        setError('An account with that email already exists. Try logging in instead.');
+      } else if (msg === 'Username taken') {
+        setError('That username was just taken. Please choose another.');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
+      console.log(code || msg);
     } finally {
       setLoading(false);
     }
