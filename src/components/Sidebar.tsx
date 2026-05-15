@@ -133,29 +133,27 @@ const Sidebar = ({ appUser }: SidebarProps) => {
           {visiblePrimary.map((item) => (
             <NavItemLink key={item.to} item={item} />
           ))}
-          {isManager && (
-            <NavLink
-              to="/team"
-              end={false}
-              className={({ isActive }) =>
-                `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
-              }
-              style={{ backgroundColor: teamBg }}
-              onMouseEnter={() => setTeamHovered(true)}
-              onMouseLeave={() => setTeamHovered(false)}
-            >
-              <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
-              <span className="app-sidebar__nav-label app-sidebar__nav-label--long">
-                Manage Team
-                {team?.name && (
-                  <span className="app-sidebar__team-name">{team.name}</span>
-                )}
-              </span>
-              <span className="app-sidebar__nav-label app-sidebar__nav-label--short">
-                Team
-              </span>
-            </NavLink>
-          )}
+          <NavLink
+            to="/team"
+            end={false}
+            className={({ isActive }) =>
+              `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
+            }
+            style={{ backgroundColor: teamBg }}
+            onMouseEnter={() => setTeamHovered(true)}
+            onMouseLeave={() => setTeamHovered(false)}
+          >
+            <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
+            <span className="app-sidebar__nav-label app-sidebar__nav-label--long">
+              {isManager ? 'Manage Team' : 'View Team'}
+              {team?.name && (
+                <span className="app-sidebar__team-name">{team.name}</span>
+              )}
+            </span>
+            <span className="app-sidebar__nav-label app-sidebar__nav-label--short">
+              Team
+            </span>
+          </NavLink>
         </nav>
 
         <div className="app-sidebar__bottom">

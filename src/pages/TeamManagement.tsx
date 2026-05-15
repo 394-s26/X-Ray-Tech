@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import { CopyIcon, RotateCwIcon, FilterIcon } from '../services/svgIcons';
@@ -272,7 +271,6 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
     setStatusFilter('all');
   };
 
-  if (!isManager) return <Navigate to="/" replace />;
 
   const handleRegenerate = async () => {
     if (!team) return;
@@ -323,19 +321,21 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
                 >
                   <CopyIcon size={14} />
                 </button>
-                <button
-                  type="button"
-                  title="Regenerate team code"
-                  disabled={regenerating}
-                  onClick={handleRegenerate}
-                  onAnimationEnd={() => setRegenerateSpin(false)}
-                  className="text-gray-400 hover:text-primary dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-50 transition-colors"
-                >
-                  <RotateCwIcon
-                    size={14}
-                    className={regenerateSpin ? 'setup-flow__regenerate-spin' : ''}
-                  />
-                </button>
+                {isManager && (
+                  <button
+                    type="button"
+                    title="Regenerate team code"
+                    disabled={regenerating}
+                    onClick={handleRegenerate}
+                    onAnimationEnd={() => setRegenerateSpin(false)}
+                    className="text-gray-400 hover:text-primary dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-50 transition-colors"
+                  >
+                    <RotateCwIcon
+                      size={14}
+                      className={regenerateSpin ? 'setup-flow__regenerate-spin' : ''}
+                    />
+                  </button>
+                )}
               </span>
             )}
           </div>
