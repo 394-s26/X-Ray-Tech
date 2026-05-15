@@ -18,6 +18,7 @@ import iemaLogo from '../assets/iema.png';
 const CATEGORY_LOGO: Record<CertificateCategory, string> = {
   ARRT: arrtLogo,
   IEMA: iemaLogo,
+  CPR: '',
 };
 
 export interface CertListProps {
