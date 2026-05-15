@@ -3,6 +3,7 @@
 .brand-logo {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
   line-height: 1;
   user-select: none;
   font-family: var(--font-display);
@@ -16,6 +17,32 @@
   .brand-logo {
     font-size: 1.4rem;
   }
+}
+
+.brand-logo__mark {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .brand-logo__mark {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+.brand-logo__mark--dark {
+  display: none;
+}
+
+:where(.dark) .brand-logo__mark--light {
+  display: none;
+}
+
+:where(.dark) .brand-logo__mark--dark {
+  display: block;
 }
 
 .brand-logo__text {

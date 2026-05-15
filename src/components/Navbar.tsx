@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import {
+  BellIcon,
   MoonIcon,
   PlusIcon,
   SunIcon,
@@ -88,6 +89,16 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handle = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) setMenuOpen(false);
+    };
+    handle(mq);
+    mq.addEventListener('change', handle);
+    return () => mq.removeEventListener('change', handle);
+  }, []);
+
   const handleThemeToggle = () => {
     setTheme(isDark ? 'light' : 'dark');
     close();
@@ -120,6 +131,15 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
           menuOpen ? 'pointer-events-auto' : ''
         }`}
       >
+        <button
+          type="button"
+          className="navbar-bell"
+          aria-label="Notifications"
+        >
+          <BellIcon size={18} />
+          <span className="navbar-bell__dot" aria-hidden="true" />
+        </button>
+
         <div className="hidden lg:flex items-center gap-3">
           <ThemeToggle />
         </div>
