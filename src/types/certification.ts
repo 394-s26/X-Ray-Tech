@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase/firestore';
 
-export type CertificateCategory = 'IEMA' | 'ARRT';
+export type CertificateCategory = 'IEMA' | 'ARRT' | 'CPR';
 
 export interface Certification {
   id: string;
@@ -10,6 +10,7 @@ export interface Certification {
   completedDate: string;
   expirationDate: string;
   ceCredits: number;
+  categoryType: string | null;
   categories: CertificateCategory[];
   photoStoragePath: string;
   photoURL: string;
