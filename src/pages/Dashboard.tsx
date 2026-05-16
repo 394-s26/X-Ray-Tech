@@ -266,7 +266,7 @@ function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: Re
           <img
             src={logoSrc}
             alt={logoAlt ?? ''}
-            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
+            className="h-6 w-auto object-contain shrink-0 rounded-md px-1 py-1 bg-[#2B2D42] dark:bg-[#3D3F5C]"
           />
         )}
       </div>
@@ -307,7 +307,7 @@ function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, 
           <img
             src={logoSrc}
             alt={logoAlt ?? ''}
-            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
+            className="h-6 w-auto object-contain shrink-0 rounded-md px-1 py-1 bg-[#2B2D42] dark:bg-[#3D3F5C]"
           />
         )}
       </div>
