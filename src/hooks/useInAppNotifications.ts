@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { arrayUnion, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import type { AppUser } from '../types/auth';
 import { fetchAppUser } from '../services/authService';
 import { db } from '../services/firebase';
 import { buildInAppNotifications } from '../services/inAppNotificationRules';
 import type { InAppNotification } from '../types/notifications';
 import { useCertifications } from './useCertifications';
-
-const STORAGE_KEY = 'xraytech.dismissedNotificationIds';
 
 const SEVERITY_SORT: Record<InAppNotification['severity'], number> = {
   urgent: 0,
@@ -59,34 +57,38 @@ function savePendingTeamJoins(
   localStorage.setItem(pendingJoinsStorageKey(teamIdUpper), JSON.stringify(joins));
 }
 
-function loadDismissed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw) as string[];
-    return new Set(Array.isArray(arr) ? arr : []);
-  } catch {
-    return new Set();
-  }
-}
-
 export function useInAppNotifications(appUser: AppUser | null | undefined) {
   const { certifications, loading: certsLoading } = useCertifications();
-  const [dismissed, setDismissed] = useState<Set<string>>(() => loadDismissed());
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [teamMembers, setTeamMembers] = useState<AppUser[]>([]);
   const [joinEvents, setJoinEvents] = useState<{ uid: string; displayName: string }[]>([]);
 
-  const persistDismissed = useCallback((next: Set<string>) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
-    setDismissed(next);
-  }, []);
+  const userUid = appUser?.uid;
+  const userTeamCode = appUser?.teamCode;
+
+  useEffect(() => {
+    if (!userUid) return;
+    const unsub = onSnapshot(doc(db, 'users', userUid), (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data() as { dismissedNotificationIds?: string[] };
+      setDismissed(new Set(data.dismissedNotificationIds ?? []));
+    });
+    return () => {
+      unsub();
+      setDismissed(new Set());
+    };
+  }, [userUid]);
 
   const dismiss = useCallback(
     (id: string) => {
-      persistDismissed(new Set([...dismissed, id]));
+      if (userUid) {
+        updateDoc(doc(db, 'users', userUid), {
+          dismissedNotificationIds: arrayUnion(id),
+        });
+      }
       if (id.startsWith('team-join-')) {
         const uid = id.slice('team-join-'.length);
-        const tc = appUser?.teamCode?.toUpperCase();
+        const tc = userTeamCode?.toUpperCase();
         if (tc) {
           const next = loadPendingTeamJoins(tc).filter((j) => j.uid !== uid);
           savePendingTeamJoins(tc, next);
@@ -94,29 +96,24 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
         setJoinEvents((prev) => prev.filter((j) => j.uid !== uid));
       }
     },
-    [appUser?.teamCode, dismissed, persistDismissed],
+    [userUid, userTeamCode],
   );
 
   useEffect(() => {
-    if (!appUser || appUser.role !== 'manager' || !appUser.teamCode) {
-      setTeamMembers([]);
-      setJoinEvents([]);
-      return;
-    }
+    if (!appUser || appUser.role !== 'manager' || !appUser.teamCode) return;
 
     const teamIdUpper = appUser.teamCode.toUpperCase();
-    const dismissedNow = loadDismissed();
-    const restored = loadPendingTeamJoins(teamIdUpper).filter(
-      (j) => !dismissedNow.has(`team-join-${j.uid}`),
-    );
-    savePendingTeamJoins(teamIdUpper, restored);
-    setJoinEvents(restored);
-
     const teamRef = doc(db, 'teams', teamIdUpper);
     let cancelled = false;
+    let initialized = false;
 
     const unsub = onSnapshot(teamRef, async (snap) => {
-      if (!snap.exists() || cancelled) return;
+      if (cancelled) return;
+      if (!initialized) {
+        initialized = true;
+        setJoinEvents(loadPendingTeamJoins(teamIdUpper));
+      }
+      if (!snap.exists()) return;
       const data = snap.data() as { members?: string[]; teamLead?: string };
       const memberArr = data.members ?? [];
       const lead = data.teamLead ?? '';
@@ -168,6 +165,8 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
     return () => {
       cancelled = true;
       unsub();
+      setTeamMembers([]);
+      setJoinEvents([]);
     };
   }, [appUser?.uid, appUser?.role, appUser?.teamCode]);
 
