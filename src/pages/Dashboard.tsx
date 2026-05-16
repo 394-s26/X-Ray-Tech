@@ -1,401 +1,571 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRightIcon, CheckIcon } from '../services/svgIcons';
+import { PlusIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
-import type { Certification } from '../types/certification';
+import type { Certification, CertificateCategory } from '../types/certification';
+import type { AppUser } from '../types/auth';
+import arrtLogo from '../assets/arrt.png';
+import iemaLogo from '../assets/iema.png';
 
-const ARRT_TOTAL = 24;
-const IEMA_TOTAL = 24;
+const IEMA_TOTAL = 48;
 
-function statusMessage(percent: number): string {
-  if (percent >= 100) return 'Fully certified!';
-  if (percent > 85) return 'Almost there!';
-  if (percent > 70) return 'Getting close!';
-  return 'Needs work';
-}
+// ── Helpers ──────────────────────────────────────────────────
 
 function clampPct(percent: number): number {
   return Math.max(0, Math.min(100, percent));
 }
 
-const PURPLE_STOPS: { p: number; color: [number, number, number] }[] = [
-  { p: 0,   color: [235, 225, 250] },
-  { p: 50,  color: [167, 139, 218] },
-  { p: 75,  color: [118,  96, 160] },
-  { p: 100, color: [104,  72, 154] },
-];
-
-const PURPLE_DEEP_STOPS: { p: number; color: [number, number, number] }[] = [
-  { p: 0,   color: [118,  96, 160] },
-  { p: 50,  color: [104,  72, 154] },
-  { p: 75,  color: [91,   57, 144] },
-  { p: 100, color: [78,   42, 132] },
-];
-
-function interpolate(stops: typeof PURPLE_STOPS, percent: number): string {
-  const p = clampPct(percent);
-  for (let i = 1; i < stops.length; i++) {
-    if (p <= stops[i].p) {
-      const a = stops[i - 1];
-      const b = stops[i];
-      const t = (p - a.p) / (b.p - a.p);
-      const r = Math.round(a.color[0] + t * (b.color[0] - a.color[0]));
-      const g = Math.round(a.color[1] + t * (b.color[1] - a.color[1]));
-      const bl = Math.round(a.color[2] + t * (b.color[2] - a.color[2]));
-      return `rgb(${r}, ${g}, ${bl})`;
-    }
-  }
-  const last = stops[stops.length - 1].color;
-  return `rgb(${last[0]}, ${last[1]}, ${last[2]})`;
-}
-
-function donutRingColor(percent: number): string {
-  return interpolate(PURPLE_STOPS, percent);
-}
-
-function donutDeepColor(percent: number): string {
-  return interpolate(PURPLE_DEEP_STOPS, percent);
-}
-
-function purpleTier(percent: number): string {
-  if (percent >= 100) return 'var(--color-primary-light)';
-  if (percent >= 75)  return 'var(--color-brand)';
-  if (percent >= 50)  return 'var(--color-tertiary)';
-  return 'color-mix(in srgb, var(--color-slate-100) 45%, white)';
-}
-
-interface DonutProps {
-  percent: number;
-  size?: number;
-  strokeWidth?: number;
-  showCenter?: boolean;
-  filterId: string;
-}
-
-function Donut({ percent, size = 280, strokeWidth = 26, showCenter = true, filterId }: DonutProps) {
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * r;
-  const pct = clampPct(percent);
-  const offset = circumference * (1 - pct / 100);
-  const ring = donutRingColor(pct);
-  const deep = donutDeepColor(pct);
-  const meetingGoal = pct >= 100;
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full overflow-visible">
-        <defs>
-          <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor={ring} floodOpacity="0.45" />
-          </filter>
-        </defs>
-
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          strokeWidth={strokeWidth}
-          className="text-gray-200 dark:text-slate-700"
-          stroke="currentColor"
-        />
-
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke={ring}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          transform={`rotate(-90 ${cx} ${cy}) translate(0 ${size}) scale(1 -1)`}
-          filter={`url(#${filterId})`}
-          style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
-        />
-      </svg>
-
-      {showCenter && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span
-            className="text-7xl font-black tracking-tight leading-none"
-            style={{ color: deep }}
-          >
-            {Math.round(pct)}%
-          </span>
-          <span className="mt-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500 dark:text-slate-400">
-            {meetingGoal ? 'Meeting goal' : 'Not meeting goal'}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface CertCardProps {
-  name: string;
-  fullName: string;
-  completed: number;
-  total: number;
-  to: string;
-}
-
-function CertCard({ name, fullName, completed, total, to }: CertCardProps) {
-  const pct = total === 0 ? 0 : (completed / total) * 100;
-  const done = completed >= total;
-  const accent = purpleTier(pct);
-
-  return (
-    <Link
-      to={to}
-      className="group relative w-full h-full text-left rounded-2xl glass-panel hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all overflow-hidden p-4 pt-5 flex flex-col gap-2.5"
-      style={done ? { boxShadow: '0 6px 20px -8px rgba(100,116,139,0.45)' } : undefined}
-    >
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary dark:bg-secondary transition-colors" />
-
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-lg font-extrabold tracking-wide text-primary dark:text-slate-200">
-          {name}
-        </p>
-        {done ? (
-          <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-white bg-primary dark:bg-secondary px-2 py-1 rounded-full">
-            <CheckIcon size={10} />
-            Done
-          </span>
-        ) : (
-          <span className="text-[9px] font-bold uppercase tracking-wider text-primary dark:text-slate-100">
-            {Math.round(pct)}%
-          </span>
-        )}
-      </div>
-
-      <p className="text-[11px] leading-snug text-gray-500 dark:text-slate-300 line-clamp-2 min-h-[2.2em]">
-        {fullName}
-      </p>
-
-      <div className="mt-auto flex flex-col gap-2">
-        <div className="h-2 rounded-full bg-gray-200 dark:bg-slate-300 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500 bg-primary dark:bg-secondary"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <span
-            className="text-sm font-bold tabular-nums"
-            style={{ color: done ? accent : '#6b7280' }}
-          >
-            {completed}/{total}
-          </span>
-          <ChevronRightIcon
-            size={16}
-            className="text-gray-400 dark:text-slate-500 transition-transform group-hover:translate-x-0.5"
-          />
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ── Side widgets (desktop only) ──────────────────────────────
-
-type ExpiryTier = 'expired' | 'urgent' | 'warn' | 'ok';
-
-function tierFromDate(dateString: string): { tier: ExpiryTier; days: number } {
+function daysUntil(dateString: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const expiry = new Date(dateString + 'T00:00:00');
-  const days = Math.floor((expiry.getTime() - today.getTime()) / 86_400_000);
-  if (days < 0) return { tier: 'expired', days };
-  if (days < 30) return { tier: 'urgent', days };
-  if (days < 90) return { tier: 'warn', days };
-  return { tier: 'ok', days };
+  const target = new Date(dateString + 'T00:00:00');
+  return Math.floor((target.getTime() - today.getTime()) / 86_400_000);
 }
-
-const TIER_TEXT: Record<ExpiryTier, string> = {
-  expired: 'text-red-600 dark:text-red-400',
-  urgent: 'text-red-600 dark:text-red-400',
-  warn: 'text-amber-600 dark:text-amber-400',
-  ok: 'text-emerald-600 dark:text-emerald-400',
-};
-
-const TIER_DOT: Record<ExpiryTier, string> = {
-  expired: 'bg-red-500',
-  urgent: 'bg-red-500',
-  warn: 'bg-amber-500',
-  ok: 'bg-emerald-500',
-};
 
 function formatShortDate(dateString: string): string {
   return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
+    year: 'numeric',
   });
 }
 
-function UpcomingExpirations({ certifications }: { certifications: Certification[] }) {
-  const upcoming = useMemo(() => {
+function formatBriefDate(dateString: string): string {
+  return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+  });
+}
+
+function formatRenewalDate(dateString: string): string {
+  return new Date(dateString + 'T00:00:00')
+    .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    .toUpperCase();
+}
+
+function formatDuration(days: number): { value: string; unit: string } {
+  if (days < 0) return { value: '0', unit: 'days' };
+  if (days < 60) return { value: String(days), unit: days === 1 ? 'day' : 'days' };
+  if (days < 365) {
+    const months = Math.round(days / 30);
+    return { value: String(months), unit: months === 1 ? 'mo' : 'mos' };
+  }
+  const years = days / 365;
+  return { value: years.toFixed(1), unit: years === 1 ? 'yr' : 'yrs' };
+}
+
+function pluralizeHours(value: number): string {
+  return value === 1 ? 'hr' : 'hrs';
+}
+
+/** Returns the soft-brutalist tint class based on days remaining. */
+type Tint = 'tint-rose' | 'tint-sun' | 'tint-mint';
+function urgencyTint(days: number): Tint {
+  if (days < 90)  return 'tint-rose';
+  if (days < 365) return 'tint-sun';
+  return 'tint-mint';
+}
+
+function statusGreeting(percent: number, firstName: string): string {
+  if (percent >= 100) return `You're done, ${firstName}.`;
+  if (percent >= 75)  return `You're on track, ${firstName}.`;
+  if (percent >= 50)  return `Halfway there, ${firstName}.`;
+  return `Let's catch up, ${firstName}.`;
+}
+
+function earliestExpiryFor(certs: Certification[], category: CertificateCategory): Certification | null {
+  return certs
+    .filter((c) => c.categories.includes(category) && daysUntil(c.expirationDate) >= 0)
+    .sort((a, b) => a.expirationDate.localeCompare(b.expirationDate))[0]
+    ?? null;
+}
+
+// ── Donut ────────────────────────────────────────────────────
+
+interface DonutSegment {
+  value: number;
+  color: string;
+}
+
+interface DonutProps {
+  percent: number;
+  segments?: DonutSegment[];
+  total?: number;
+  label?: React.ReactNode;
+  size?: number;
+  strokeWidth?: number;
+}
+
+function Donut({ percent, segments, total, label, size = 88, strokeWidth = 11 }: DonutProps) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * r;
+  const pct = clampPct(percent);
+
+  let arcs: { color: string; dasharray: string; dashoffset: number }[] = [];
+  if (segments && total && total > 0) {
+    let cumulative = 0;
+    arcs = segments.map((seg) => {
+      const portion = clampPct((seg.value / total) * 100) / 100;
+      const arcLength = portion * circumference;
+      const arc = {
+        color: seg.color,
+        dasharray: `${arcLength} ${circumference}`,
+        dashoffset: -cumulative * circumference,
+      };
+      cumulative += portion;
+      return arc;
+    });
+  }
+
+  return (
+    <div
+      className="relative shrink-0"
+      style={{ width: size, height: size, flex: `0 0 ${size}px` }}
+    >
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+        <circle
+          cx={cx} cy={cy} r={r}
+          fill="none"
+          strokeWidth={strokeWidth}
+          stroke="var(--ink-200)"
+        />
+        {arcs.length > 0 ? (
+          arcs.map((arc, i) => (
+            <circle
+              key={i}
+              cx={cx} cy={cy} r={r}
+              fill="none"
+              stroke={arc.color}
+              strokeWidth={strokeWidth}
+              strokeLinecap="butt"
+              strokeDasharray={arc.dasharray}
+              strokeDashoffset={arc.dashoffset}
+              transform={`rotate(-90 ${cx} ${cy})`}
+              style={{ transition: 'stroke-dasharray 0.6s ease-out, stroke-dashoffset 0.6s ease-out' }}
+            />
+          ))
+        ) : (
+          <circle
+            cx={cx} cy={cy} r={r}
+            fill="none"
+            stroke="var(--brand-600)"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - pct / 100)}
+            transform={`rotate(-90 ${cx} ${cy})`}
+            style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
+          />
+        )}
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span className="font-mono-brand text-sm font-semibold text-[var(--ink-900)]">
+          {label ?? `${Math.round(pct)}%`}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── Top stat cards ───────────────────────────────────────────
+
+interface CePointsCardProps {
+  completed: number;
+  total: number;
+  certifications: Certification[];
+}
+
+function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
+  const pct = total === 0 ? 0 : (completed / total) * 100;
+
+  const active = certifications.filter((c) => daysUntil(c.expirationDate) >= 0);
+
+  const iemaHours = active
+    .filter((c) => c.categories.includes('IEMA'))
+    .reduce((s, c) => s + c.ceCredits, 0);
+  const arrtHours = active
+    .filter((c) => c.categories.includes('ARRT'))
+    .reduce((s, c) => s + c.ceCredits, 0);
+
+  const IEMA_COLOR = 'var(--brand-600)';
+  const ARRT_COLOR = '#a78ef3';
+
+  const breakdown = [
+    { label: 'IEMA', hours: iemaHours, swatch: IEMA_COLOR },
+    { label: 'ARRT', hours: arrtHours, swatch: ARRT_COLOR },
+  ];
+
+  return (
+    <Link
+      to="/credentials"
+      className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden"
+    >
+      <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
+      <div className="flex-1 flex items-center gap-5 min-w-0">
+        <Donut
+          percent={pct}
+          total={total}
+          segments={[
+            { value: iemaHours, color: IEMA_COLOR },
+            { value: arrtHours, color: ARRT_COLOR },
+          ]}
+          label={
+            <>
+              {Math.round(completed)}
+              <span className="text-[var(--ink-300)]">/</span>
+              {total}
+            </>
+          }
+        />
+        <ul className="flex-1 flex flex-col gap-2 min-w-0">
+          {breakdown.map((row) => (
+            <li key={row.label} className="flex items-center gap-2 min-w-0">
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ background: row.swatch }}
+                aria-hidden="true"
+              />
+              <span className="text-xs text-[var(--ink-700)] truncate flex-1">
+                {row.label}
+              </span>
+              <span className="hidden @[220px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)] shrink-0">
+                {Math.round(row.hours)}h
+              </span>
+            </li>
+          ))}
+          <li className="flex items-center gap-2 pt-2 border-t border-[var(--ink-200)]">
+            <span className="text-[11px] text-[var(--ink-500)] flex-1">Total</span>
+            <span className="font-mono-brand text-xs font-semibold text-[var(--ink-900)]">
+              {Math.round(completed)}/{total}h
+            </span>
+          </li>
+        </ul>
+      </div>
+    </Link>
+  );
+}
+
+interface RenewalCardProps {
+  label: string;
+  daysRemaining: number | null;
+  renewalDate: string | null;
+  logoSrc?: string;
+  logoAlt?: string;
+}
+
+function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: RenewalCardProps) {
+  const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
+  return (
+    <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
+        {logoSrc && (
+          <img
+            src={logoSrc}
+            alt={logoAlt ?? ''}
+            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
+          />
+        )}
+      </div>
+      <div className="flex-1 flex items-end gap-2">
+        <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
+          {daysRemaining == null ? '—' : daysRemaining}
+        </span>
+        {daysRemaining != null && (
+          <span className="font-mono-brand text-2xl sm:text-3xl font-semibold text-[var(--ink-900)] leading-none mb-0.5">
+            {daysRemaining === 1 ? 'day' : 'days'}
+          </span>
+        )}
+      </div>
+      <p className="font-mono-brand text-[11px] text-[var(--ink-700)] tracking-wide">
+        {renewalDate ? `RENEWS ${formatRenewalDate(renewalDate)}` : 'NO RENEWAL ON FILE'}
+      </p>
+    </div>
+  );
+}
+
+interface CertCycleCardProps {
+  label: string;
+  daysRemaining: number | null;
+  renewalDate: string | null;
+  cycleNote: string;
+  logoSrc?: string;
+  logoAlt?: string;
+}
+
+function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, logoAlt }: CertCycleCardProps) {
+  const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
+  const duration = daysRemaining == null ? null : formatDuration(daysRemaining);
+  return (
+    <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
+        {logoSrc && (
+          <img
+            src={logoSrc}
+            alt={logoAlt ?? ''}
+            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
+          />
+        )}
+      </div>
+      <div className="flex-1 flex items-end gap-2">
+        {duration ? (
+          <>
+            <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
+              {duration.value}
+            </span>
+            <span className="font-mono-brand text-2xl sm:text-3xl font-semibold text-[var(--ink-900)] leading-none mb-0.5">
+              {duration.unit}
+            </span>
+          </>
+        ) : (
+          <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-400)] leading-none">—</span>
+        )}
+      </div>
+      <p className="font-mono-brand text-[11px] text-[var(--ink-700)] tracking-wide">
+        {cycleNote}
+        {renewalDate && <> · NEXT {formatRenewalDate(renewalDate)}</>}
+      </p>
+    </div>
+  );
+}
+
+// ── Lower lists ──────────────────────────────────────────────
+
+function CategoryBadge({ category }: { category: CertificateCategory | string }) {
+  return (
+    <span className="font-mono-brand text-[10px] font-semibold tracking-wide px-1.5 py-0.5 rounded border border-[var(--ink-200)] text-[var(--ink-700)] bg-[var(--paper)]">
+      {category}
+    </span>
+  );
+}
+
+function RecentCertifications({ certifications }: { certifications: Certification[] }) {
+  const recent = useMemo(() => {
     return [...certifications]
-      .sort((a, b) => a.expirationDate.localeCompare(b.expirationDate))
-      .slice(0, 4);
+      .sort((a, b) => b.completedDate.localeCompare(a.completedDate))
+      .slice(0, 5);
   }, [certifications]);
 
   return (
-    <div className="rounded-2xl glass-panel p-5 flex flex-col">
-      <h3 className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500 mb-4">
-        Upcoming
-      </h3>
-      {upcoming.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-slate-500 mb-6">No certificates yet.</p>
+    <div className="nb-card p-5 flex flex-col gap-3 min-w-0">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="font-display text-lg font-semibold text-[var(--ink-900)]">
+          Recent certifications
+          <span className="ml-2 text-xs font-normal text-[var(--ink-500)]">this cycle</span>
+        </h3>
+        <Link to="/credentials" className="text-xs font-medium text-[var(--brand-700)] hover:underline whitespace-nowrap">
+          See all {certifications.length}{' '}›
+        </Link>
+      </div>
+      {recent.length === 0 ? (
+        <p className="text-sm text-[var(--ink-400)]">No certifications logged yet.</p>
       ) : (
-        <ul className="flex flex-col gap-3.5 mb-6">
-          {upcoming.map((cert) => {
-            const status = tierFromDate(cert.expirationDate);
+        <ul className="flex flex-col">
+          {recent.map((cert) => {
             const category = cert.categories[0] ?? '';
             return (
-              <li key={cert.id} className="flex items-start gap-3">
-                <span
-                  className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${TIER_DOT[status.tier]}`}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-primary dark:text-slate-100 truncate">
-                    {cert.certificateName}
-                  </p>
-                  <p className="text-[11px] mt-0.5 flex items-center gap-1.5">
-                    <span className={`font-semibold ${TIER_TEXT[status.tier]}`}>
-                      {status.tier === 'expired'
-                        ? `Expired ${formatShortDate(cert.expirationDate)}`
-                        : `${formatShortDate(cert.expirationDate)}`}
-                    </span>
-                    <span className="text-gray-400 dark:text-slate-500">
-                      · {category}
-                    </span>
-                  </p>
+              <li key={cert.id} className="flex items-center gap-3 py-2 border-t border-[var(--ink-200)] first:border-t-0">
+                <span className="font-mono-brand text-[11px] text-[var(--ink-500)] w-12 shrink-0 uppercase">
+                  {formatBriefDate(cert.completedDate)}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--ink-900)] truncate">{cert.certificateName}</p>
+                  <p className="text-[11px] text-[var(--ink-500)] truncate">{cert.providerName || category}</p>
                 </div>
+                {category && <CategoryBadge category={category} />}
+                <span className="font-mono-brand text-xs font-semibold text-[var(--ink-700)] w-14 text-right shrink-0">
+                  {Math.round(cert.ceCredits)} {pluralizeHours(Math.round(cert.ceCredits))}
+                </span>
               </li>
             );
           })}
         </ul>
       )}
-      <Link
-        to="/credentials"
-        className="global-btn default-btn ounded-full mt-auto text-center"
-      >
-        View all certificates
-      </Link>
     </div>
   );
 }
 
-const SAMPLE_COURSES = [
-  { name: 'Advanced CT Imaging', length: '4 weeks' },
-  { name: 'Pediatric Radiography', length: '3 weeks' },
-  { name: 'Quality Assurance Methods', length: '2 weeks' },
-];
+function Upcoming({ certifications }: { certifications: Certification[] }) {
+  const upcoming = useMemo(() => {
+    return [...certifications]
+      .filter((c) => {
+        const d = daysUntil(c.expirationDate);
+        return d >= 0 && d <= 90;
+      })
+      .sort((a, b) => a.expirationDate.localeCompare(b.expirationDate))
+      .slice(0, 5);
+  }, [certifications]);
 
-function BrowseCourses() {
   return (
-    <div className="rounded-2xl glass-panel p-5 flex flex-col">
-      <h3 className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-gray-400 dark:text-slate-500 mb-1">
-        Browse courses
-      </h3>
-      <p className="text-[11px] text-gray-500 dark:text-slate-400 mb-4">
-        Find your next certification
-      </p>
-      <ul className="flex flex-col gap-2.5 mb-5 flex-1">
-        {SAMPLE_COURSES.map((course) => (
-          <li
-            key={course.name}
-            className="flex items-center justify-between gap-2 text-xs"
-          >
-            <span className="font-semibold text-primary dark:text-slate-100 truncate">
-              {course.name}
-            </span>
-            <span className="text-[10px] text-gray-400 dark:text-slate-500 shrink-0">
-              {course.length}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <button
-        type="button"
-        className="global-btn default-btn outline rounded-full"
-      >
-        Explore catalog
-      </button>
+    <div className="nb-card p-5 flex flex-col gap-3 min-w-0">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="font-display text-lg font-semibold text-[var(--ink-900)]">
+          Upcoming
+          <span className="ml-2 text-xs font-normal text-[var(--ink-500)]">next 90 days</span>
+        </h3>
+      </div>
+      {upcoming.length === 0 ? (
+        <p className="text-sm text-[var(--ink-400)]">Nothing renews in the next 90 days.</p>
+      ) : (
+        <ul className="flex flex-col">
+          {upcoming.map((cert) => {
+            const days = daysUntil(cert.expirationDate);
+            const tier = days < 30 ? 'urgent' : days < 60 ? 'soon' : 'ok';
+            const dotClass =
+              tier === 'urgent'
+                ? 'bg-[var(--danger-600)]'
+                : tier === 'soon'
+                  ? 'bg-[var(--warn-600)]'
+                  : 'bg-[var(--success-600)]';
+            const badgeClass =
+              tier === 'urgent'
+                ? 'text-[var(--danger-600)] border-[var(--danger-600)]'
+                : tier === 'soon'
+                  ? 'text-[var(--warn-600)] border-[var(--warn-600)]'
+                  : 'text-[var(--success-600)] border-[var(--success-600)]';
+            const badgeLabel = tier === 'urgent' ? 'Urgent' : tier === 'soon' ? 'Soon' : 'On track';
+            const category = cert.categories[0] ?? '';
+            return (
+              <li key={cert.id} className="flex items-center gap-3 py-2 border-t border-[var(--ink-200)] first:border-t-0">
+                <span className="font-mono-brand text-[11px] text-[var(--ink-500)] w-12 shrink-0 uppercase">
+                  {formatBriefDate(cert.expirationDate)}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--ink-900)] truncate">{cert.certificateName}</p>
+                  <p className="text-[11px] text-[var(--ink-500)] truncate">
+                    {category}
+                    {cert.ceCredits ? <> · {Math.round(cert.ceCredits)} {pluralizeHours(Math.round(cert.ceCredits))}</> : null}
+                  </p>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-[var(--paper)] ${badgeClass}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+                  {badgeLabel}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
 
-export default function Dashboard() {
-  const { certifications, loading } = useCertifications();
+// ── Page ─────────────────────────────────────────────────────
 
-  const arrtCredits = useMemo(
-    () =>
-      certifications
-        .filter((c) => c.categories.includes('ARRT') && tierFromDate(c.expirationDate).tier !== 'expired')
-        .reduce((sum, c) => sum + c.ceCredits, 0),
-    [certifications],
-  );
+interface DashboardProps {
+  appUser: AppUser;
+}
+
+export default function Dashboard({ appUser }: DashboardProps) {
+  const { certifications, loading } = useCertifications();
 
   const iemaCredits = useMemo(
     () =>
       certifications
-        .filter((c) => c.categories.includes('IEMA') && tierFromDate(c.expirationDate).tier !== 'expired')
+        .filter(
+          (c) =>
+            (c.categories.includes('IEMA') || c.categories.includes('ARRT')) &&
+            daysUntil(c.expirationDate) >= 0,
+        )
         .reduce((sum, c) => sum + c.ceCredits, 0),
     [certifications],
   );
 
-  const totalCompleted = arrtCredits + iemaCredits;
-  const totalRequired = ARRT_TOTAL + IEMA_TOTAL;
-  const percent = totalRequired === 0 ? 0 : (totalCompleted / totalRequired) * 100;
+  const earliestIema = useMemo(() => earliestExpiryFor(certifications, 'IEMA'), [certifications]);
+  const earliestArrt = useMemo(() => earliestExpiryFor(certifications, 'ARRT'), [certifications]);
+
+  const iemaDays = earliestIema ? daysUntil(earliestIema.expirationDate) : null;
+  const arrtDays = earliestArrt ? daysUntil(earliestArrt.expirationDate) : null;
+
+  const percent = (iemaCredits / IEMA_TOTAL) * 100;
+  const remaining = Math.max(0, IEMA_TOTAL - iemaCredits);
+
+  const firstName = appUser.firstName?.trim() || appUser.username || 'there';
+
+  // Cycle window — bracket the user's current IEMA cycle around the earliest renewal.
+  const cycleEndYear = earliestIema
+    ? new Date(earliestIema.expirationDate + 'T00:00:00').getFullYear()
+    : new Date().getFullYear() + 1;
+  const cycleStartYear = cycleEndYear - 2;
 
   if (loading) {
     return (
-      <main className="min-h-[calc(100vh-6rem)] pt-4 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto flex items-center justify-center">
-        <span className="inline-block w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      <main className="min-h-[calc(100vh-6rem)] flex items-center justify-center px-5">
+        <span className="inline-block w-8 h-8 rounded-full border-2 border-[var(--brand-600)] border-t-transparent animate-spin" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-[calc(100vh-6rem)] pt-4 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
-      <section className="flex flex-col items-center">
-        <Donut percent={percent} filterId="main-donut" />
-        <p
-          className="mt-7 text-3xl font-extrabold tracking-tight"
-          style={{ color: donutDeepColor(percent) }}
+    <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
+      {/* Header */}
+      <p className="overline text-[var(--brand-600)] mb-4">
+        Cycle {cycleStartYear} – {cycleEndYear}
+        {iemaDays != null && (
+          <>
+            <span className="mx-2 text-[var(--ink-300)]">·</span>
+            <span className="font-mono-brand">{iemaDays}</span> days remaining
+          </>
+        )}
+      </p>
+
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-7">
+        <div className="min-w-0">
+          <h1 className="font-display text-3xl lg:text-4xl font-semibold tracking-tight text-[var(--ink-900)] leading-tight">
+            {statusGreeting(percent, firstName)}
+          </h1>
+          <p className="mt-2 text-sm lg:text-base text-[var(--ink-700)]">
+            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(iemaCredits)}</span>
+            {' '}of{' '}
+            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{IEMA_TOTAL}</span>
+            {' '}CE points logged.{' '}
+            {remaining > 0 && earliestIema ? (
+              <>
+                <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(remaining)}</span>
+                {' '}to go before your IEMA renews{' '}
+                <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{formatShortDate(earliestIema.expirationDate)}</span>.
+              </>
+            ) : (
+              <>You&rsquo;ve hit this cycle&rsquo;s requirement.</>
+            )}
+          </p>
+        </div>
+        <Link
+          to="/certificates/new"
+          className="nb-btn self-start lg:self-auto shrink-0"
         >
-          {statusMessage(percent)}
-        </p>
-        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-          {totalCompleted} of {totalRequired} credits complete
-        </p>
+          <PlusIcon size={16} />
+          Add certification
+        </Link>
+      </div>
+
+      {/* Top stat row */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
+        <CePointsCard completed={iemaCredits} total={IEMA_TOTAL} certifications={certifications} />
+        <RenewalCard
+          label="Days to IEMA renewal"
+          daysRemaining={iemaDays}
+          renewalDate={earliestIema?.expirationDate ?? null}
+          logoSrc={iemaLogo}
+          logoAlt="IEMA"
+        />
+        <CertCycleCard
+          label="ARRT certification"
+          daysRemaining={arrtDays}
+          renewalDate={earliestArrt?.expirationDate ?? null}
+          cycleNote="BIENNIAL"
+          logoSrc={arrtLogo}
+          logoAlt="ARRT"
+        />
       </section>
 
-      <section className="mt-10 w-full lg:max-w-3xl lg:mx-auto grid grid-cols-2 gap-3 lg:gap-4">
-        <CertCard
-          name="ARRT"
-          fullName="American Registry of Radiologic Technologists"
-          completed={arrtCredits}
-          total={ARRT_TOTAL}
-          to="/arrt"
-        />
-        <CertCard
-          name="IEMA"
-          fullName="Illinois Emergency Management Agency"
-          completed={iemaCredits}
-          total={IEMA_TOTAL}
-          to="/iema"
-        />
-      </section>
-
-      <section className="hidden lg:grid lg:grid-cols-2 lg:gap-4 mt-8 lg:max-w-3xl lg:mx-auto">
-        <UpcomingExpirations certifications={certifications} />
-        <BrowseCourses />
+      {/* Bottom lists */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 mt-5">
+        <RecentCertifications certifications={certifications} />
+        <Upcoming certifications={certifications} />
       </section>
     </main>
   );

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="X-Ray Tech mark">
+  <title>X-Ray Tech</title>
+  <!-- Outer iris ring — the lens / aperture boundary -->
+  <circle cx="32" cy="32" r="24" fill="none" stroke="#5B3FE4" stroke-width="2.5"/>
+  <!-- Six emission blades — radiating from the source, like X-ray rays through an aperture -->
+  <line x1="42.39" y1="38" x2="49.32" y2="42" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="32" y1="44" x2="32" y2="52" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="21.61" y1="38" x2="14.68" y2="42" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="21.61" y1="26" x2="14.68" y2="22" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="32" y1="20" x2="32" y2="12" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="42.39" y1="26" x2="49.32" y2="22" stroke="#5B3FE4" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Pupil / scan-source -->
+  <circle cx="32" cy="32" r="6" fill="#5B3FE4"/>
+</svg>

@@ -3,26 +3,58 @@
 .brand-logo {
   display: inline-flex;
   align-items: center;
+  gap: 0;
   line-height: 1;
   user-select: none;
-  font-family: 'Inter Tight', 'Host Grotesk', system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 1.35rem;
-  letter-spacing: -0.015em;
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  text-transform: none;
 }
 
 @media (min-width: 640px) {
   .brand-logo {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
+}
+
+.brand-logo__mark {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  margin-top: -8px;
+  margin-bottom: -8px;
+}
+
+@media (min-width: 640px) {
+  .brand-logo__mark {
+    width: 50px;
+    height: 50px;
+    margin-top: -10px;
+    margin-bottom: -10px;
+  }
+}
+
+.brand-logo__mark--dark {
+  display: none;
+}
+
+:where(.dark) .brand-logo__mark--light {
+  display: none;
+}
+
+:where(.dark) .brand-logo__mark--dark {
+  display: block;
 }
 
 .brand-logo__text {
   display: inline-block;
-  color: var(--color-primary);
+  color: var(--ink-900);
+  margin-left: -0.1rem;
 }
 
 :where(.dark) .brand-logo__text {
-  color: var(--color-secondary);
+  color: var(--ink-100);
 }

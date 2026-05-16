@@ -56,7 +56,7 @@ const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={requireAuth(<Dashboard />)} />
+        <Route path="/" element={requireAuth(appUser ? <Dashboard appUser={appUser} /> : <></>)} />
         <Route path="/credentials" element={requireAuth(<CredentialTracking />)} />
         <Route
           path="/certificates/new"
@@ -85,6 +85,17 @@ const Router = () => {
               fullName="Illinois Emergency Management Agency"
               accent="#0EA37E"
               category="IEMA"
+            />,
+          )}
+        />
+        <Route
+          path="/cpr"
+          element={requireAuth(
+            <CertList
+              name="CPR"
+              fullName="Cardiopulmonary Resuscitation"
+              accent="#DC2626"
+              category="CPR"
             />,
           )}
         />

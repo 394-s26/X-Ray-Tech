@@ -4,6 +4,7 @@ export interface ParsedCertificate {
   expirationDate: string | null;
   ceCredits: number | null;
   examName: string | null;
+  categoryType: string | null;
 }
 
 export interface ParsedScantron {
@@ -38,6 +39,8 @@ const KNOWN_PROVIDERS = [
   'CCI',
   'NBRC',
   'AHRA',
+  'American Heart Association',
+  'American Red Cross',
 ];
 
 const monthNamesAlt = Object.keys(MONTHS).join('|');
@@ -82,6 +85,13 @@ const parseDateNear = (text: string): string | null => {
     let year = +usSlash[3];
     if (year < 100) year += 2000;
     const iso = isValidIso(year, +usSlash[1], +usSlash[2]);
+    if (iso) return iso;
+  }
+
+  // MM/YYYY or MM-YYYY (e.g. CPR "Renew By: 01/2028") — default to 1st of month
+  const monthYear = text.match(/\b(\d{1,2})[/-](\d{4})\b/);
+  if (monthYear) {
+    const iso = isValidIso(+monthYear[2], +monthYear[1], 1);
     if (iso) return iso;
   }
 
@@ -139,13 +149,18 @@ export const extractProvider = (text: string): string | null => {
 const findDateAfterKeyword = (text: string, keywordRe: RegExp): string | null => {
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
-    if (keywordRe.test(lines[i])) {
-      const found = parseDateNear(lines[i]);
+    if (!keywordRe.test(lines[i])) continue;
+    // Check the keyword line itself first
+    const onSameLine = parseDateNear(lines[i]);
+    if (onSameLine) return onSameLine;
+    // Scan up to 3 subsequent lines, skipping blanks, to handle OCR-inserted gaps
+    let ahead = 0;
+    for (let j = i + 1; j < lines.length && ahead < 3; j++) {
+      const trimmed = lines[j].trim();
+      if (!trimmed) continue;
+      ahead++;
+      const found = parseDateNear(trimmed);
       if (found) return found;
-      if (i + 1 < lines.length) {
-        const nextFound = parseDateNear(lines[i + 1]);
-        if (nextFound) return nextFound;
-      }
     }
   }
   return null;
@@ -154,7 +169,7 @@ const findDateAfterKeyword = (text: string, keywordRe: RegExp): string | null =>
 export const extractCompletedDate = (text: string): string | null => {
   const dateAfter = findDateAfterKeyword(
     text,
-    /(?:completed|completion|date of completion|issued|issue date|granted on|awarded on|earned)/i,
+    /(?:completed|completion|date of completion|issued?(?:\s+date)?|granted on|awarded on|earned)/i,
   );
   if (dateAfter) return dateAfter;
   return parseDateNear(text);
@@ -163,7 +178,7 @@ export const extractCompletedDate = (text: string): string | null => {
 export const extractExpirationDate = (text: string): string | null => {
   return findDateAfterKeyword(
     text,
-    /(?:expir|valid until|valid through|good through|renewal due|renew by)/i,
+    /(?:expir|valid until|valid through|good through|renewal due|renew(?:\s*by)?|renewal)/i,
   );
 };
 
@@ -182,15 +197,39 @@ export const extractCeCredits = (text: string): number | null => {
   return null;
 };
 
+// Matches "BLS Provider", "ACLS Instructor", "PALS Renewal", etc.
+const CPR_CARD_RE = /\b((?:BLS|ACLS|PALS|NRP|HEARTSAVER|CPR(?:\s*(?:and|&|\/)\s*AED)?)\s+(?:Provider|Instructor|Renewal|Certification))\b/i;
+// Matches a standalone CPR program type on its own line
+const CPR_TYPE_RE = /\b(BLS|ACLS|PALS|NRP|HEARTSAVER|Basic\s+Life\s+Support|Advanced\s+Cardiac\s+Life\s+Support|Pediatric\s+Advanced\s+Life\s+Support)\b/i;
+
 export const extractExamName = (text: string): string | null => {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // Check first 8 lines for a specific CPR card type ("BLS Provider", etc.)
+  for (const line of lines.slice(0, 8)) {
+    const m = line.match(CPR_CARD_RE);
+    if (m) return m[1].trim().slice(0, 100);
+  }
+
+  // Fall back to a CPR program type keyword anywhere in the first 8 lines
+  for (const line of lines.slice(0, 8)) {
+    if (CPR_TYPE_RE.test(line)) return line.slice(0, 100);
+  }
+
+  // Generic keyword-based extraction for non-CPR certificates
   const m = text.match(/(?:exam|course|subject|certification|training|module|category)[:.\s]+(.+)/i);
   if (m) {
-    const cleaned = m[1]
-      .split(/[\n.]/)[0]
-      .trim()
-      .slice(0, 100);
+    const cleaned = m[1].split(/[\n.]/)[0].trim().slice(0, 100);
     if (cleaned.length >= 3) return cleaned;
   }
+
+  return null;
+};
+
+export const extractCategoryType = (text: string): string | null => {
+  // Matches "Category A+", "Category A", "Category 1", "Cat. A+", etc.
+  const m = text.match(/\bcat(?:egory)?\.?\s+([A-Z][+]?|\d+)\b/i);
+  if (m) return m[1].toUpperCase();
   return null;
 };
 
@@ -201,6 +240,7 @@ export const parseCertificateText = (text: string): ParsedCertificate => {
     expirationDate: extractExpirationDate(text),
     ceCredits: extractCeCredits(text),
     examName: extractExamName(text),
+    categoryType: extractCategoryType(text),
   };
 };
 

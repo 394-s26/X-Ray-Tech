@@ -22,13 +22,19 @@ const AGENCIES: ReadonlyArray<AgencyConfig> = [
     fullName: 'Illinois Emergency Management Agency',
     accent: '#0EA37E',
   },
+  {
+    to: '/cpr',
+    name: 'CPR',
+    fullName: 'Cardiopulmonary Resuscitation',
+    accent: '#DC2626',
+  },
 ];
 
 const CredentialTracking = () => {
   const { certifications } = useCertifications();
 
   const countFor = (name: string) =>
-    certifications.filter((c) => c.categories.includes(name as 'ARRT' | 'IEMA')).length;
+    certifications.filter((c) => c.categories.includes(name as 'ARRT' | 'IEMA' | 'CPR')).length;
 
   return (
     <main className="min-h-[calc(100vh-6rem)] pb-16 px-5 lg:px-10 w-full max-w-5xl mx-auto">
