@@ -1,6 +1,8 @@
 import { useId, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRightIcon, CertificateUploadIcon, PlusIcon } from '../services/svgIcons';
+import { Breadcrumb } from '../components/Breadcrumb';
+import { PageHeader } from '../components/PageHeader';
 import {
   createCertificateRecord,
   describeCertificateSaveError,
@@ -179,22 +181,16 @@ export const CertificateCreatePage = () => {
   };
 
   return (
-    <main className="min-h-[calc(100vh-6rem)] pb-16 px-5 lg:px-10 w-full max-w-3xl mx-auto">
-      <header className="mt-2 mb-8 flex items-center gap-3">
-        <span className="grid place-items-center w-11 h-11 rounded-2xl bg-primary/10 text-primary dark:bg-primary-light/20 dark:text-secondary">
-          <PlusIcon size={22} />
-        </span>
-        <div>
-          <h1 className="text-2xl font-bold text-primary dark:text-slate-50 leading-tight">
-            Add certificate
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400">
-            Upload a photo and we'll pre-fill the details from the certificate text.
-          </p>
-        </div>
-      </header>
+    <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
+      <Breadcrumb items={[{ name: 'Add Certificate', to: '' }]} />
 
-      <section className="rounded-2xl glass-panel p-5 lg:p-6 relative overflow-hidden">
+      <PageHeader
+        icon={<PlusIcon size={22} />}
+        title="Add certificate"
+        subtitle="Upload a photo and we'll pre-fill the details from the certificate text."
+      />
+
+      <section className="rounded-2xl glass-panel p-5 lg:p-6 relative overflow-hidden mx-auto max-w-180">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary dark:bg-secondary pointer-events-none" />
 
         <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-5 pt-2">

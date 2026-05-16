@@ -5,7 +5,7 @@ import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
 import CertList from '../pages/CertList.tsx';
 import Dashboard from './Dashboard';
-import CredentialTracking from './CredentialTracking';
+import CredentialTracking from './CertificationTracking';
 import TeamManagement from './TeamManagement';
 import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
@@ -56,7 +56,7 @@ const Router = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={requireAuth(appUser ? <Dashboard appUser={appUser} /> : <></>)} />
-        <Route path="/credentials" element={requireAuth(<CredentialTracking />)} />
+        <Route path="/certificates" element={requireAuth(<CredentialTracking />)} />
         <Route
           path="/certificates/new"
           element={requireAuth(<CertificateCreatePage />)}
