@@ -304,6 +304,18 @@ body, #root {
 .nb-btn.is-light { background: var(--card-bg); color: var(--fg); }
 .nb-btn.is-danger { background: var(--danger-600); }
 
+.nb-btn.is-accent {
+  background: #F59E0B;
+  color: #1B1320;
+  border-color: #1B1320;
+  box-shadow: 2px 2px 0 var(--card-shadow-c);
+}
+.nb-btn.is-accent:hover:not(:disabled),
+.nb-btn.is-accent:active:not(:disabled) {
+  box-shadow: 0 0 0 var(--card-shadow-c);
+}
+.dark .nb-btn.is-accent { border-color: #FFFFFF; }
+
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
@@ -333,8 +345,8 @@ body, #root {
 .dark .overlay-center { background: rgba(244, 243, 247, 0.06); }
 .dark .overlay-scrim { background: rgba(244, 243, 247, 0.06); }
 .overlay-panel--lg { @apply w-full md:w-3/4; }
-.overlay-panel--md { @apply w-full max-w-2xl; }
-.overlay-panel--sm { @apply w-full max-w-lg; }
+.overlay-panel--md { @apply w-full max-w-3xl; }
+.overlay-panel--sm { @apply w-full max-w-xl; }
 
 /* ── Glass panel kept as transparent compat shim ────────── */
 /* Existing components reference `.glass-panel`; map it to nb-card so

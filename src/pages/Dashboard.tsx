@@ -4,6 +4,7 @@ import { PlusIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
 import type { Certification, CertificateCategory } from '../types/certification';
 import type { AppUser } from '../types/auth';
+import { useSetupReminder } from '../components/setupReminderContext';
 import arrtLogo from '../assets/arrt.png';
 import iemaLogo from '../assets/iema.png';
 
@@ -199,7 +200,7 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
 
   return (
     <Link
-      to="/credentials"
+      to="/certificates"
       className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden"
     >
       <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
@@ -356,7 +357,7 @@ function RecentCertifications({ certifications }: { certifications: Certificatio
           Recent certifications
           <span className="ml-2 text-xs font-normal text-[var(--ink-500)]">this cycle</span>
         </h3>
-        <Link to="/credentials" className="text-xs font-medium text-[var(--brand-700)] hover:underline whitespace-nowrap">
+        <Link to="/certificates" className="text-xs font-medium text-[var(--brand-700)] hover:underline whitespace-nowrap">
           See all {certifications.length}{' '}›
         </Link>
       </div>
@@ -460,6 +461,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ appUser }: DashboardProps) {
+  const { openModal: openSetupModal, isSetupIncomplete } = useSetupReminder();
   const { certifications, loading } = useCertifications();
 
   const iemaCredits = useMemo(
@@ -533,13 +535,24 @@ export default function Dashboard({ appUser }: DashboardProps) {
             )}
           </p>
         </div>
-        <Link
-          to="/certificates/new"
-          className="nb-btn self-start lg:self-auto shrink-0"
-        >
-          <PlusIcon size={16} />
-          Add certification
-        </Link>
+        <div className="flex gap-2 self-start lg:self-auto shrink-0 flex-wrap">
+          {isSetupIncomplete && (
+            <button
+              type="button"
+              onClick={openSetupModal}
+              className="nb-btn is-accent"
+            >
+              Complete setup
+            </button>
+          )}
+          <Link
+            to="/certificates/new"
+            className="nb-btn"
+          >
+            <PlusIcon size={16} />
+            Add certification
+          </Link>
+        </div>
       </div>
 
       {/* Top stat row */}

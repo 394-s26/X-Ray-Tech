@@ -37,9 +37,9 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     mobileHidden: true,
   },
   {
-    to: '/credentials',
-    longLabel: 'Credential Tracking',
-    shortLabel: 'Credentials',
+    to: '/certificates',
+    longLabel: 'Certification Tracking',
+    shortLabel: 'Certifications',
     icon: (s) => <IdCardIcon size={s} />,
     mobileHidden: true,
   },
@@ -47,7 +47,7 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
 
 const ADD_CERT_ITEM: NavItem = {
   to: '/certificates/new',
-  longLabel: 'Add certificate',
+  longLabel: 'Add certification',
   shortLabel: 'Add cert',
   icon: (s) => <PlusIcon size={s} />,
   exact: true,

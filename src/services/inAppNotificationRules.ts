@@ -87,7 +87,7 @@ function pushCeUrgency(
     body,
     severity,
     scope,
-    href: '/credentials',
+    href: '/certificates',
   });
 }
 
@@ -116,7 +116,7 @@ function pushCyclePair(
     body: `A new biennial CE cycle follows this reporting period. Related timing: ${head}. Schedule exams or coursework early — ${license} and ${otherLicense} treat CE earned in the last month of a cycle differently (check each registry's rules).`,
     severity: 'info',
     scope,
-    href: '/credentials',
+    href: '/certificates',
   });
 }
 
@@ -153,7 +153,7 @@ export function buildInAppNotifications(params: BuildInAppNotificationsParams): 
       title: 'Multiple certificates expired',
       body: `${expired.length} uploaded certificates are past expiration. Replace or renew documentation so CE totals stay accurate.`,
       severity: 'urgent',
-      href: '/credentials',
+      href: '/certificates',
     });
   }
 
