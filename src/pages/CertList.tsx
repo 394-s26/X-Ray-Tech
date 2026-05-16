@@ -14,6 +14,13 @@ import { useCertifications } from '../hooks/useCertifications';
 import { deleteCertificationRecord, updateCertificationRecord } from '../services/certificateService';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
+import arrtLogo from '../assets/arrt.png';
+import iemaLogo from '../assets/iema.png';
+
+const CATEGORY_LOGOS: Partial<Record<CertificateCategory, string>> = {
+  ARRT: arrtLogo,
+  IEMA: iemaLogo,
+};
 
 
 export interface CertListProps {
@@ -586,12 +593,25 @@ export default function CertList({ name, fullName, category }: CertListProps) {
         ]}
       />
 
-      <PageHeader
-        icon={<CertificateIcon size={22} />}
-        title={name}
-        subtitle={fullName}
-        className="mt-2 mb-4"
-      />
+      {CATEGORY_LOGOS[category] ? (
+        <div className="mt-2 mb-4 flex items-end gap-2 flex-wrap">
+          <img
+            src={CATEGORY_LOGOS[category]}
+            alt={name}
+            className="h-12 sm:h-14 w-auto object-contain shrink-0"
+          />
+          <p className="text-sm sm:text-base text-gray-500 dark:text-slate-400 leading-tight pb-1">
+            {fullName}
+          </p>
+        </div>
+      ) : (
+        <PageHeader
+          icon={<CertificateIcon size={22} />}
+          title={name}
+          subtitle={fullName}
+          className="mt-2 mb-4"
+        />
+      )}
 
       <div className="mb-7 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
           <span>{loading ? '…' : `${filtered.length} records`}</span>

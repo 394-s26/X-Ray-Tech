@@ -5,8 +5,8 @@ import { useCertifications } from '../hooks/useCertifications';
 import type { Certification, CertificateCategory } from '../types/certification';
 import type { AppUser } from '../types/auth';
 import { useSetupReminder } from '../components/setupReminderContext';
-import arrtLogo from '../assets/arrt.png';
-import iemaLogo from '../assets/iema.png';
+import arrtLogoWhite from '../assets/arrtwhitetext.png';
+import iemaLogoWhite from '../assets/iemawhitetext.png';
 
 const IEMA_TOTAL = 48;
 
@@ -248,6 +248,19 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
   );
 }
 
+interface LogoChipProps {
+  src?: string;
+  alt?: string;
+}
+
+function LogoChip({ src, alt }: LogoChipProps) {
+  return (
+    <span className="inline-flex items-center justify-center shrink-0 rounded-md px-1 py-1 bg-[#2B2D42] dark:bg-[#3D3F5C]">
+      {src && <img src={src} alt={alt ?? ''} className="h-4 w-auto object-contain" />}
+    </span>
+  );
+}
+
 interface RenewalCardProps {
   label: string;
   daysRemaining: number | null;
@@ -262,13 +275,7 @@ function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: Re
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {logoSrc && (
-          <img
-            src={logoSrc}
-            alt={logoAlt ?? ''}
-            className="h-6 w-auto object-contain shrink-0 rounded-md px-1 py-1 bg-[#2B2D42] dark:bg-[#3D3F5C]"
-          />
-        )}
+        {logoSrc && <LogoChip src={logoSrc} alt={logoAlt} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
@@ -303,13 +310,7 @@ function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, 
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {logoSrc && (
-          <img
-            src={logoSrc}
-            alt={logoAlt ?? ''}
-            className="h-6 w-auto object-contain shrink-0 rounded-md px-1 py-1 bg-[#2B2D42] dark:bg-[#3D3F5C]"
-          />
-        )}
+        {logoSrc && <LogoChip src={logoSrc} alt={logoAlt} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         {duration ? (
@@ -562,7 +563,7 @@ export default function Dashboard({ appUser }: DashboardProps) {
           label="Days to IEMA renewal"
           daysRemaining={iemaDays}
           renewalDate={earliestIema?.expirationDate ?? null}
-          logoSrc={iemaLogo}
+          logoSrc={iemaLogoWhite}
           logoAlt="IEMA"
         />
         <CertCycleCard
@@ -570,7 +571,7 @@ export default function Dashboard({ appUser }: DashboardProps) {
           daysRemaining={arrtDays}
           renewalDate={earliestArrt?.expirationDate ?? null}
           cycleNote="BIENNIAL"
-          logoSrc={arrtLogo}
+          logoSrc={arrtLogoWhite}
           logoAlt="ARRT"
         />
       </section>
