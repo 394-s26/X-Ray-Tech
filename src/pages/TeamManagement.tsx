@@ -9,10 +9,12 @@ import {
   fetchUsersByUids,
   updateTeamCode,
 } from '../services/authService';
+import { TeamSetupCard } from '../components/TeamSetupCard';
 import '../styles/components/AccountSetupFlow.css';
 
 interface TeamManagementProps {
   appUser: AppUser;
+  onAppUserUpdate?: (user: AppUser) => void;
 }
 
 const generateTeamId = (existingIds: Set<string>): string => {
@@ -31,7 +33,7 @@ const generateTeamId = (existingIds: Set<string>): string => {
 const displayName = (u: AppUser): string =>
   u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.username;
 
-const TeamManagement = ({ appUser }: TeamManagementProps) => {
+const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
   const isManager = appUser.role === 'manager';
 
   const [team, setTeam] = useState<Team | null>(null);
@@ -48,7 +50,7 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
     let cancelled = false;
     (async () => {
       if (!appUser.teamCode) {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) { setTeam(null); setLoading(false); }
         return;
       }
       const t = await getTeamByCode(appUser.teamCode!);
@@ -90,6 +92,8 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
+  const hasNoTeam = !appUser.teamCode;
+
   return (
     <main className="min-h-[calc(100vh-6rem)] pb-16 px-5 lg:px-10 w-full max-w-5xl mx-auto">
       <header className="mt-2 mb-8 flex items-center gap-3">
@@ -98,24 +102,31 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
         </span>
         <div>
           <h1 className="text-2xl font-bold text-primary dark:text-slate-50 leading-tight">
-            {isManager ? 'Manage Team' : 'View Team'}
+            {hasNoTeam ? 'Your Team' : isManager ? 'Manage Team' : 'View Team'}
           </h1>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            {isManager
-              ? 'Invite teammates and review their certification progress.'
-              : "Check out which team you're currently a part of."}
+            {hasNoTeam
+              ? "You're not part of a team yet. Join one with a code, or create your own."
+              : isManager
+                ? 'Invite teammates and review their certification progress.'
+                : "Check out which team you're currently a part of."}
           </p>
         </div>
       </header>
 
-      {loading ? (
+      {hasNoTeam ? (
+        <TeamSetupCard
+          appUser={appUser}
+          onJoined={(updated) => onAppUserUpdate?.(updated)}
+        />
+      ) : loading ? (
         <div className="card card--md card--glass">
           <p className="text-sm text-gray-500 dark:text-slate-400">Loading team…</p>
         </div>
       ) : !team ? (
         <div className="card card--md card--glass">
           <p className="text-sm text-gray-700 dark:text-slate-200">
-            You are not part of a team yet.
+            We couldn't find the team for code <span className="font-mono">{appUser.teamCode}</span>.
           </p>
         </div>
       ) : (
