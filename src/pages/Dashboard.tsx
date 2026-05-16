@@ -4,6 +4,7 @@ import { PlusIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
 import type { Certification, CertificateCategory } from '../types/certification';
 import type { AppUser } from '../types/auth';
+import { useSetupReminder } from '../components/setupReminderContext';
 import arrtLogo from '../assets/arrt.png';
 import iemaLogo from '../assets/iema.png';
 
@@ -460,6 +461,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ appUser }: DashboardProps) {
+  const { openModal: openSetupModal, isSetupIncomplete } = useSetupReminder();
   const { certifications, loading } = useCertifications();
 
   const iemaCredits = useMemo(
@@ -533,13 +535,24 @@ export default function Dashboard({ appUser }: DashboardProps) {
             )}
           </p>
         </div>
-        <Link
-          to="/certificates/new"
-          className="nb-btn self-start lg:self-auto shrink-0 hidden lg:flex"
-        >
-          <PlusIcon size={16} />
-          Add certification
-        </Link>
+        <div className="flex gap-2 self-start lg:self-auto shrink-0 flex-wrap">
+          {isSetupIncomplete && (
+            <button
+              type="button"
+              onClick={openSetupModal}
+              className="nb-btn is-accent"
+            >
+              Complete setup
+            </button>
+          )}
+          <Link
+            to="/certificates/new"
+            className="nb-btn"
+          >
+            <PlusIcon size={16} />
+            Add certification
+          </Link>
+        </div>
       </div>
 
       {/* Top stat row */}

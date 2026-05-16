@@ -304,6 +304,18 @@ body, #root {
 .nb-btn.is-light { background: var(--card-bg); color: var(--fg); }
 .nb-btn.is-danger { background: var(--danger-600); }
 
+.nb-btn.is-accent {
+  background: #F59E0B;
+  color: #1B1320;
+  border-color: #1B1320;
+  box-shadow: 2px 2px 0 var(--card-shadow-c);
+}
+.nb-btn.is-accent:hover:not(:disabled),
+.nb-btn.is-accent:active:not(:disabled) {
+  box-shadow: 0 0 0 var(--card-shadow-c);
+}
+.dark .nb-btn.is-accent { border-color: #FFFFFF; }
+
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }

@@ -9,11 +9,13 @@ import {
   fetchAppUser,
   updateTeamCode,
 } from '../services/authService';
+import { TeamSetupCard } from '../components/TeamSetupCard';
 import { FAKE_TEAM, type TeamEmployee } from '../data/team';
 import '../styles/components/AccountSetupFlow.css';
 
 interface TeamManagementProps {
   appUser: AppUser;
+  onAppUserUpdate?: (user: AppUser) => void;
 }
 
 type Tier = 'red' | 'yellow' | 'green';
@@ -218,12 +220,13 @@ function EmployeeRow({ employee, onClick }: EmployeeRowProps) {
   );
 }
 
-const TeamManagement = ({ appUser }: TeamManagementProps) => {
+const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
   const isManager = appUser.role === 'manager';
 
   const [team, setTeam] = useState<Team | null>(null);
   const [teamCode, setTeamCode] = useState(appUser.teamCode ?? '');
   const [leadName, setLeadName] = useState('');
+  const [loading, setLoading] = useState(true);
   const [regenerateSpin, setRegenerateSpin] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -238,9 +241,19 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!appUser.teamCode) return;
+      if (!appUser.teamCode) {
+        if (!cancelled) {
+          setTeam(null);
+          setLoading(false);
+        }
+        return;
+      }
       const t = await getTeamByCode(appUser.teamCode);
-      if (cancelled || !t) return;
+      if (cancelled) return;
+      if (!t) {
+        setLoading(false);
+        return;
+      }
       setTeam(t);
       setTeamCode(t.id);
       const lead = await fetchAppUser(t.teamLead);
@@ -251,6 +264,7 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
             : lead.username,
         );
       }
+      if (!cancelled) setLoading(false);
     })();
     return () => {
       cancelled = true;
@@ -282,7 +296,6 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
     setStatusFilter('all');
   };
 
-
   const handleRegenerate = async () => {
     if (!team) return;
     setRegenerateError(null);
@@ -306,14 +319,74 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
+  const hasNoTeam = !appUser.teamCode;
+
+  // No-team state: show the setup card with its own header (no breadcrumb since there's no team to crumb to)
+  if (hasNoTeam) {
+    return (
+      <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
+        <PageHeader
+          icon={<TeamIcon size={22} />}
+          title="Your team"
+          subtitle="You're not part of a team yet. Join one with a code, or create your own."
+        />
+        <TeamSetupCard
+          appUser={appUser}
+          onJoined={(updated) => onAppUserUpdate?.(updated)}
+        />
+      </main>
+    );
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
+        <Breadcrumb items={[{ name: 'Team', to: '' }]} />
+        <PageHeader
+          icon={<TeamIcon size={22} />}
+          title="Your team"
+          subtitle="Loading…"
+        />
+        <div className="card card--md card--glass">
+          <p className="text-sm text-gray-500 dark:text-slate-400">Loading team…</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Team code exists but team couldn't be found
+  if (!team) {
+    return (
+      <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
+        <Breadcrumb items={[{ name: 'Team', to: '' }]} />
+        <PageHeader
+          icon={<TeamIcon size={22} />}
+          title="Your team"
+          subtitle="We couldn't load your team."
+        />
+        <div className="card card--md card--glass">
+          <p className="text-sm text-gray-700 dark:text-slate-200">
+            We couldn't find the team for code{' '}
+            <span className="font-mono">{appUser.teamCode}</span>.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
-      <Breadcrumb items={[{ name: team?.name ?? 'Team', to: '' }]} />
+      <Breadcrumb items={[{ name: team.name, to: '' }]} />
 
       <PageHeader
         icon={<TeamIcon size={22} />}
-        title={team?.name ?? 'Your team'}
-        subtitle="View and manage your team members."
+        title={team.name}
+        subtitle={
+          isManager
+            ? 'Invite teammates and review their certification progress.'
+            : 'View and manage your team members.'
+        }
       />
 
       <div className="mb-6">
@@ -322,7 +395,7 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
             <span
               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold"
               style={
-                team?.color
+                team.color
                   ? { backgroundColor: `${team.color}22`, color: darkenHex(team.color) }
                   : undefined
               }
@@ -330,44 +403,42 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
               Led by {leadName}
             </span>
           )}
-          {team && leadName && <span className="text-gray-300 dark:text-slate-600">·</span>}
-          {team && (
-            <span className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
-                Team code
-              </span>
-              <span
-                className="font-mono font-semibold tracking-widest"
-                style={team?.color ? { color: darkenHex(team.color) } : undefined}
-              >
-                {teamCode}
-              </span>
+          {leadName && <span className="text-gray-300 dark:text-slate-600">·</span>}
+          <span className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+              Team code
+            </span>
+            <span
+              className="font-mono font-semibold tracking-widest"
+              style={team.color ? { color: darkenHex(team.color) } : undefined}
+            >
+              {teamCode}
+            </span>
+            <button
+              type="button"
+              title={codeCopied ? 'Copied!' : 'Copy team code'}
+              onClick={handleCopy}
+              className="cursor-pointer text-gray-400 hover:text-primary dark:text-slate-500 dark:hover:text-slate-200 transition-colors"
+            >
+              <CopyIcon size={14} />
+            </button>
+            {isManager && (
               <button
                 type="button"
-                title={codeCopied ? 'Copied!' : 'Copy team code'}
-                onClick={handleCopy}
-                className="cursor-pointer text-gray-400 hover:text-primary dark:text-slate-500 dark:hover:text-slate-200 transition-colors"
+                title="Regenerate team code"
+                disabled={regenerating}
+                onClick={handleRegenerate}
+                onAnimationEnd={() => setRegenerateSpin(false)}
+                className="cursor-pointer text-gray-400 hover:text-primary dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-50 transition-colors"
               >
-                <CopyIcon size={14} />
+                <RotateCwIcon
+                  size={14}
+                  className={regenerateSpin ? 'setup-flow__regenerate-spin' : ''}
+                />
               </button>
-              {isManager && (
-                <button
-                  type="button"
-                  title="Regenerate team code"
-                  disabled={regenerating}
-                  onClick={handleRegenerate}
-                  onAnimationEnd={() => setRegenerateSpin(false)}
-                  className="cursor-pointer text-gray-400 hover:text-primary dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-50 transition-colors"
-                >
-                  <RotateCwIcon
-                    size={14}
-                    className={regenerateSpin ? 'setup-flow__regenerate-spin' : ''}
-                  />
-                </button>
-              )}
-            </span>
-          )}
-          {isManager && (team || leadName) && <span className="text-gray-300 dark:text-slate-600">·</span>}
+            )}
+          </span>
+          {isManager && <span className="text-gray-300 dark:text-slate-600">·</span>}
           {isManager && (
             <button
               type="button"

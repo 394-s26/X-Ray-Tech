@@ -49,7 +49,11 @@ const Router = () => {
     if (!user) return <Navigate to="/login" replace />;
     if (!appUser) return <></>;
     if (!appUser.setupCompleted) return <Navigate to="/setup" replace />;
-    return <AppLayout appUser={appUser}>{element}</AppLayout>;
+    return (
+      <AppLayout appUser={appUser} onAppUserUpdate={setAppUser}>
+        {element}
+      </AppLayout>
+    );
   };
 
   return (
@@ -63,7 +67,7 @@ const Router = () => {
         />
         <Route
           path="/team"
-          element={requireAuth(appUser ? <TeamManagement appUser={appUser} /> : <></>)}
+          element={requireAuth(appUser ? <TeamManagement appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
         <Route
           path="/arrt"
