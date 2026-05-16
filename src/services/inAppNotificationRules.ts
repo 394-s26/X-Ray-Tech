@@ -66,22 +66,19 @@ function pushCeUrgency(
   const scope = license;
   let title: string;
   let body: string;
-  let severity: InAppNotification['severity'] = 'warning';
+  const severity: InAppNotification['severity'] = tier === 3 ? 'urgent' : 'warning';
 
   const head = certHeadline(anchorCert);
 
   if (tier === 1) {
     title = `${license}: CE deadline in ${days} days`;
     body = `${head}. You still need more than 10 CE credits (${Math.ceil(remaining)} remaining) before then. Category A or A+ only.`;
-    severity = 'warning';
   } else if (tier === 2) {
     title = `${license}: CE deadline approaching`;
     body = `${head}. Within 60 days of that date you still need over 5 CE credits (${Math.ceil(remaining)} left).`;
-    severity = 'warning';
   } else {
     title = `${license}: Finish CE credits soon`;
     body = `${head} — under 30 days away. Fewer than 5 CE credits left (${Math.ceil(remaining)} remaining). Wrap up accredited courses now.`;
-    severity = 'urgent';
   }
 
   out.push({
