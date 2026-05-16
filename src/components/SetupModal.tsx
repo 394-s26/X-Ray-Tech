@@ -17,6 +17,13 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+const buildRecentYearOptions = (): number[] => {
+  const currentYear = new Date().getFullYear();
+  const years: number[] = [];
+  for (let y = currentYear; y >= currentYear - 9; y--) years.push(y);
+  return years;
+};
+
 const isLicenseMissing = (u: AppUser): boolean =>
   u.arrtCycleStartYear == null ||
   u.iemaCycleStartYear == null ||
@@ -147,6 +154,7 @@ interface SetupModalProps {
 const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
   const licenseMissing = isLicenseMissing(appUser);
   const teamMissing = isTeamMissing(appUser);
+  const iemaYearOptions = buildRecentYearOptions();
 
   const [arrtYear, setArrtYear] = useState(
     appUser.arrtCycleStartYear != null ? String(appUser.arrtCycleStartYear) : '',
@@ -249,16 +257,17 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
                 <label className="form-label">
                   Year your ARRT cycle began
                 </label>
-                <input
+                <select
                   className="form-input"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={4}
-                  placeholder="e.g. 2024"
                   value={arrtYear}
-                  onChange={(e) => setArrtYear(e.target.value.replace(/[^\d]/g, ''))}
+                  onChange={(e) => setArrtYear(e.target.value)}
                   disabled={savingLicense}
-                />
+                >
+                  <option value="">Select year…</option>
+                  {iemaYearOptions.map((y) => (
+                    <option key={y} value={String(y)}>{y}</option>
+                  ))}
+                </select>
                 <p className="text-xs text-gray-500 dark:text-slate-400">
                   {birth
                     ? <>Cycle starts in your birth month ({birth}).</>
@@ -271,16 +280,17 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
                   <label className="form-label">
                     Year your IEMA cycle began
                   </label>
-                  <input
+                  <select
                     className="form-input"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={4}
-                    placeholder="e.g. 2024"
                     value={iemaYear}
-                    onChange={(e) => setIemaYear(e.target.value.replace(/[^\d]/g, ''))}
+                    onChange={(e) => setIemaYear(e.target.value)}
                     disabled={savingLicense}
-                  />
+                  >
+                    <option value="">Select year…</option>
+                    {iemaYearOptions.map((y) => (
+                      <option key={y} value={String(y)}>{y}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-field">
                   <label className="form-label">

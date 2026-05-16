@@ -187,7 +187,7 @@ export const TeamSetupCard = ({
             type="button"
             className="global-btn default-btn self-start min-w-30"
             onClick={handleJoin}
-            disabled={submitting || !foundTeam}
+            disabled={submitting}
           >
             {submitting ? 'Joining…' : 'Join team'}
           </button>

@@ -32,6 +32,19 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+const daysInMonth = (monthNum: number): number => {
+  if (monthNum === 2) return 29;
+  if ([4, 6, 9, 11].includes(monthNum)) return 30;
+  return 31;
+};
+
+const buildRecentYearOptions = (): number[] => {
+  const currentYear = new Date().getFullYear();
+  const years: number[] = [];
+  for (let y = currentYear; y >= currentYear - 9; y--) years.push(y);
+  return years;
+};
+
 const monthLabelFromBirthday = (birthday: string | undefined | null): string | null => {
   if (!birthday) return null;
   const match = birthday.match(/^(\d{2})-\d{2}$/);
@@ -94,8 +107,16 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     iemaCycleStartYear: user.iemaCycleStartYear != null ? String(user.iemaCycleStartYear) : '',
     iemaCycleEndMonth: user.iemaCycleEndMonth != null ? String(user.iemaCycleEndMonth) : '',
   });
+  const initialBdMatch = (user.birthday ?? '').match(/^(\d{2})-(\d{2})$/);
+  const [birthMonth, setBirthMonth] = useState<string>(initialBdMatch ? initialBdMatch[1] : '');
+  const [birthDay, setBirthDay] = useState<string>(initialBdMatch ? initialBdMatch[2] : '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const next = birthMonth && birthDay ? `${birthMonth}-${birthDay}` : '';
+    setFormData(prev => (prev.birthday === next ? prev : { ...prev, birthday: next }));
+  }, [birthMonth, birthDay]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [foundTeam, setFoundTeam] = useState<{ name: string; manager: string; color: string } | null>(null);
   const [teamLookupLoading, setTeamLookupLoading] = useState(false);
@@ -158,7 +179,16 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     const errs: Record<string, string> = {};
     if (!formData.firstName.trim()) errs.firstName = 'First name is required.';
     if (!formData.lastName.trim()) errs.lastName = 'Last name is required.';
-    if (!formData.birthday.match(/^\d{2}-\d{2}$/)) errs.birthday = 'Enter a valid date (MM-DD).';
+    const bd = formData.birthday.match(/^(\d{2})-(\d{2})$/);
+    if (!bd) {
+      errs.birthday = 'Select your birth month and day.';
+    } else {
+      const m = parseInt(bd[1], 10);
+      const d = parseInt(bd[2], 10);
+      if (m < 1 || m > 12 || d < 1 || d > daysInMonth(m)) {
+        errs.birthday = 'Select a valid birth month and day.';
+      }
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -312,27 +342,45 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
           <p className="setup-flow__subtitle">This is used to determine your ARRT cycle.</p>
         </div>
 
-        <div className="setup-flow__birthday-field form-field max-w-45 w-full mt-2">
-          <div className="relative">
-            <input
-              className="form-input"
-              type="text"
-              placeholder="MM-DD"
-              maxLength={5}
-              value={formData.birthday}
-              onChange={e => {
-                let val = e.target.value.replace(/[^\d-]/g, '');
-                if (val.length === 2 && !val.includes('-') && formData.birthday.length === 1) {
-                  val = val + '-';
-                }
-                setField('birthday', val);
-              }}
-            />
-            {formatBirthdayPreview(formData.birthday) && (
-              <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-400 italic pointer-events-none">
-                {formatBirthdayPreview(formData.birthday)}
-              </span>
-            )}
+        <div className="setup-flow__birthday-field form-field w-full mt-2">
+          <div className="flex gap-3">
+            <div className="flex-1 max-w-50">
+              <select
+                className="form-input"
+                value={birthMonth}
+                onChange={e => {
+                  const m = e.target.value;
+                  setBirthMonth(m);
+                  if (m && birthDay && parseInt(birthDay, 10) > daysInMonth(parseInt(m, 10))) {
+                    setBirthDay('');
+                  }
+                  setErrors(prev => ({ ...prev, birthday: undefined as unknown as string }));
+                }}
+              >
+                <option value="">Month</option>
+                {MONTH_NAMES.map((name, i) => (
+                  <option key={name} value={String(i + 1).padStart(2, '0')}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="w-28">
+              <select
+                className="form-input"
+                value={birthDay}
+                onChange={e => {
+                  setBirthDay(e.target.value);
+                  setErrors(prev => ({ ...prev, birthday: undefined as unknown as string }));
+                }}
+              >
+                <option value="">Day</option>
+                {Array.from(
+                  { length: birthMonth ? daysInMonth(parseInt(birthMonth, 10)) : 31 },
+                  (_, i) => i + 1,
+                ).map(d => (
+                  <option key={d} value={String(d).padStart(2, '0')}>{d}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <p className="setup-flow__field-error">{errors.birthday}</p>
         </div>
@@ -342,6 +390,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   const renderLicenseStep = () => {
     const birthMonth = monthLabelFromBirthday(formData.birthday);
+    const iemaYearOptions = buildRecentYearOptions();
     return (
       <>
         <h2 className="setup-flow__title">Your license cycles</h2>
@@ -359,15 +408,16 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
           </div>
           <div className="form-field max-w-60 w-full">
             <label className="form-label">Year your current ARRT cycle began</label>
-            <input
+            <select
               className="form-input"
-              type="text"
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="e.g. 2024"
               value={formData.arrtCycleStartYear}
-              onChange={e => setField('arrtCycleStartYear', e.target.value.replace(/[^\d]/g, ''))}
-            />
+              onChange={e => setField('arrtCycleStartYear', e.target.value)}
+            >
+              <option value="">Select year…</option>
+              {iemaYearOptions.map(y => (
+                <option key={y} value={String(y)}>{y}</option>
+              ))}
+            </select>
             <p className="setup-flow__field-error">{errors.arrtCycleStartYear}</p>
           </div>
 
@@ -380,15 +430,16 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
           <div className="flex gap-4">
             <div className="form-field max-w-60 w-full">
               <label className="form-label">Year your current IEMA cycle began</label>
-              <input
+              <select
                 className="form-input"
-                type="text"
-                inputMode="numeric"
-                maxLength={4}
-                placeholder="e.g. 2024"
                 value={formData.iemaCycleStartYear}
-                onChange={e => setField('iemaCycleStartYear', e.target.value.replace(/[^\d]/g, ''))}
-              />
+                onChange={e => setField('iemaCycleStartYear', e.target.value)}
+              >
+                <option value="">Select year…</option>
+                {iemaYearOptions.map(y => (
+                  <option key={y} value={String(y)}>{y}</option>
+                ))}
+              </select>
               <p className="setup-flow__field-error">{errors.iemaCycleStartYear}</p>
             </div>
             <div className="form-field max-w-60 w-full">
