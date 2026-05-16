@@ -137,6 +137,7 @@ const Router = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
     </BrowserRouter>
   );
 };

@@ -597,15 +597,16 @@ export default function CertList({ name, fullName, category }: CertListProps) {
             aria-label="Filter records"
             aria-expanded={filtersOpen}
             className={
-              'flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors ' +
+              'shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider transition-colors ' +
               (filtersOpen || activeCount > 0
-                ? 'text-[#7C49D5] dark:text-[#A876FF] bg-[#7C49D5]/10 dark:bg-[#A876FF]/15'
-                : 'text-gray-400 dark:text-slate-500 hover:text-[#7C49D5] dark:hover:text-[#A876FF]')
+                ? 'border-[#7C49D5] dark:border-[#A876FF] text-[#7C49D5] dark:text-[#A876FF] bg-[#7C49D5]/10 dark:bg-[#A876FF]/15'
+                : 'border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF]')
             }
           >
             <FilterIcon size={14} />
+            Filter
             {activeCount > 0 && (
-              <span className="text-[10px] font-bold tabular-nums leading-none">
+              <span className="ml-0.5 min-w-[18px] h-[18px] inline-flex items-center justify-center px-1 rounded-full bg-[#7C49D5] dark:bg-[#A876FF] text-white text-[10px] tabular-nums leading-none">
                 {activeCount}
               </span>
             )}
