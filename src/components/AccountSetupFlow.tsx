@@ -147,7 +147,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         return false;
       }
       if (!foundTeam) {
-        setErrors({ teamCode: 'No team found with that code.' });
+        setErrors({});
         return false;
       }
       return true;
