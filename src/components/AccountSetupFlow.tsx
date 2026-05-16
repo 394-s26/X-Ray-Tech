@@ -159,17 +159,6 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     return () => { cancelled = true; clearTimeout(timer); };
   }, [formData.teamCode]);
 
-  const formatBirthdayPreview = (val: string): string | null => {
-    const match = val.match(/^(\d{2})-(\d{2})$/);
-    if (!match) return null;
-    const month = parseInt(match[1], 10);
-    const day = parseInt(match[2], 10);
-    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-    const monthName = new Date(2000, month - 1).toLocaleString('default', { month: 'long' });
-    const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th';
-    return `${monthName} ${day}${suffix}`;
-  };
-
   const setField = <K extends keyof SetupFormData>(key: K, value: SetupFormData[K]) => {
     setFormData(prev => ({ ...prev, [key]: value }));
     setErrors(prev => ({ ...prev, [key]: undefined as unknown as string }));
