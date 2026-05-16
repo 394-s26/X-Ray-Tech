@@ -200,7 +200,7 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
 
   return (
     <Link
-      to="/credentials"
+      to="/certificates"
       className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden"
     >
       <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
@@ -357,7 +357,7 @@ function RecentCertifications({ certifications }: { certifications: Certificatio
           Recent certifications
           <span className="ml-2 text-xs font-normal text-[var(--ink-500)]">this cycle</span>
         </h3>
-        <Link to="/credentials" className="text-xs font-medium text-[var(--brand-700)] hover:underline whitespace-nowrap">
+        <Link to="/certificates" className="text-xs font-medium text-[var(--brand-700)] hover:underline whitespace-nowrap">
           See all {certifications.length}{' '}›
         </Link>
       </div>

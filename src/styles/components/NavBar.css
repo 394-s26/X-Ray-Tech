@@ -189,17 +189,27 @@
   outline-offset: 2px;
 }
 
-.navbar-bell__dot {
+.navbar-bell__badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 7px;
-  height: 7px;
+  top: 3px;
+  right: 1px;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 4px;
   border-radius: 9999px;
   background: var(--danger-600, #DC2626);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono-brand, ui-monospace, monospace);
+  letter-spacing: -0.02em;
+  display: grid;
+  place-items: center;
+  line-height: 1;
   box-shadow: 0 0 0 2px var(--paper);
+  pointer-events: none;
 }
 
-.dark .navbar-bell__dot {
+.dark .navbar-bell__badge {
   box-shadow: 0 0 0 2px #14111F;
 }

@@ -345,8 +345,8 @@ body, #root {
 .dark .overlay-center { background: rgba(244, 243, 247, 0.06); }
 .dark .overlay-scrim { background: rgba(244, 243, 247, 0.06); }
 .overlay-panel--lg { @apply w-full md:w-3/4; }
-.overlay-panel--md { @apply w-full max-w-2xl; }
-.overlay-panel--sm { @apply w-full max-w-lg; }
+.overlay-panel--md { @apply w-full max-w-3xl; }
+.overlay-panel--sm { @apply w-full max-w-xl; }
 
 /* ── Glass panel kept as transparent compat shim ────────── */
 /* Existing components reference `.glass-panel`; map it to nb-card so
