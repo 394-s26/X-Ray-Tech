@@ -86,11 +86,9 @@ export default function InAppNotificationList({
 
                 <p
                   id={regionId}
-                  className={`leading-snug text-[var(--ink-600)] dark:text-[var(--ink-400)] ${
-                    expandable && !isOpen ? 'text-[11px] line-clamp-2' : 'text-xs'
-                  }`}
+                  className="text-xs leading-snug text-[var(--ink-600)] dark:text-[var(--ink-400)]"
                 >
-                  {n.body}
+                  {expandable && !isOpen ? `${n.body.slice(0, 30)}...` : n.body}
                 </p>
 
                 {(expandable || n.href) && (
