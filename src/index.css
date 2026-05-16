@@ -316,6 +316,30 @@ body, #root {
 }
 .dark .nb-btn.is-accent { border-color: #FFFFFF; }
 
+/* Disabled "Complete setup" — softens to a neutral state and animates back in
+   when the modal flips to is-accent (all sections complete). */
+.setup-modal__finish {
+  transition:
+    background-color 240ms var(--ease-out),
+    color 240ms var(--ease-out),
+    border-color 240ms var(--ease-out),
+    box-shadow 240ms var(--ease-out);
+}
+.setup-modal__finish:disabled {
+  opacity: 1; /* override .nb-btn:disabled opacity so the color change reads cleanly */
+  background: var(--ink-200);
+  color: var(--ink-500);
+  border-color: var(--ink-300);
+  box-shadow: 2px 2px 0 var(--ink-300);
+  cursor: not-allowed;
+}
+.dark .setup-modal__finish:disabled {
+  background: #2D2A3D;
+  color: #9A95A6;
+  border-color: #4A4659;
+  box-shadow: 2px 2px 0 #4A4659;
+}
+
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }

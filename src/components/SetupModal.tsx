@@ -159,7 +159,6 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
   );
   const [licenseError, setLicenseError] = useState<string | null>(null);
   const [savingLicense, setSavingLicense] = useState(false);
-  const [licenseSaved, setLicenseSaved] = useState(!licenseMissing);
 
   const birth = birthMonthLabel(appUser.birthday);
 
@@ -188,7 +187,6 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
     try {
       await updateUserProfile(appUser.uid, update);
       onAppUserUpdate({ ...appUser, ...update });
-      setLicenseSaved(true);
     } catch {
       setLicenseError('Could not save. Please try again.');
     } finally {
@@ -243,7 +241,7 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
           {/* License cycles */}
           {licenseMissing ? (
             <ChecklistSection
-              done={licenseSaved}
+              done={false}
               title="Add your license cycles"
               subtitle="So we can pin CE deadlines to the right dates."
             >
@@ -347,10 +345,13 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
         >
           <button
             type="button"
-            className="nb-btn is-accent w-full max-w-md justify-center"
+            className={`nb-btn w-full max-w-md justify-center setup-modal__finish${
+              !licenseMissing && !teamMissing ? ' is-accent' : ''
+            }`}
+            disabled={licenseMissing || teamMissing}
             onClick={onClose}
           >
-            {!licenseMissing && !teamMissing ? 'Done' : 'Complete setup'}
+            Complete setup
           </button>
           <button
             type="button"

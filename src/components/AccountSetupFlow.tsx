@@ -267,8 +267,10 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   const renderProfileStep = () => (
     <>
-      <h2 className="setup-flow__title">Let's set up your profile</h2>
-      <p className="setup-flow__subtitle">What should we call you?</p>
+      <div>
+        <h2 className="setup-flow__title" style={{ marginBottom: 0 }}>Let's set up your profile</h2>
+        <p className="setup-flow__subtitle mt-1">What should we call you?</p>
+      </div>
       <div className="setup-flow__body">
         <div className="setup-flow__name-row flex gap-4 justify-between">
           <div className="form-field">
@@ -306,25 +308,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         </div>
 
         <div className="w-full mt-10">
-          <div className="flex items-center gap-2">
-            <p className="setup-flow__mini-title">When is your birthday? <span className="text-red-500">*</span></p>
-            <div className="relative group setup-flow__info-wrapper">
-              <button
-                type="button"
-                className="setup-flow__info-btn"
-                aria-label="Why we ask"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                </svg>
-              </button>
-              <span className="setup-flow__copy-tooltip">
-                This is used to determine your ARRT cycle.
-              </span>
-            </div>
-          </div>
+          <p className="setup-flow__mini-title">When is your birthday? <span className="text-red-500">*</span></p>
+          <p className="setup-flow__subtitle">This is used to determine your ARRT cycle.</p>
         </div>
 
         <div className="setup-flow__birthday-field form-field max-w-45 w-full mt-2">
