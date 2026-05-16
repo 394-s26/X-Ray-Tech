@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import type { AppUser } from '../types/auth';
 import { fetchAppUser } from '../services/authService';
@@ -7,6 +7,27 @@ import { buildInAppNotifications } from '../services/inAppNotificationRules';
 import { useCertifications } from './useCertifications';
 
 const STORAGE_KEY = 'xraytech.dismissedNotificationIds';
+
+/** Baseline member UID list per team — survives refresh so joins notify after reopening the app. */
+function knownMembersStorageKey(teamIdUpper: string): string {
+  return `xraytech.teamKnownMembers.${teamIdUpper}`;
+}
+
+function loadKnownMemberIds(teamIdUpper: string): string[] | null {
+  try {
+    const raw = localStorage.getItem(knownMembersStorageKey(teamIdUpper));
+    if (raw === null) return null;
+    const arr = JSON.parse(raw) as string[];
+    return Array.isArray(arr) ? arr : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveKnownMemberIds(teamIdUpper: string, memberIds: string[]): void {
+  const sorted = [...new Set(memberIds)].sort();
+  localStorage.setItem(knownMembersStorageKey(teamIdUpper), JSON.stringify(sorted));
+}
 
 function loadDismissed(): Set<string> {
   try {
@@ -25,9 +46,6 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
   const [teamMembers, setTeamMembers] = useState<AppUser[]>([]);
   const [joinEvents, setJoinEvents] = useState<{ uid: string; displayName: string }[]>([]);
 
-  const prevMembersRef = useRef<Set<string> | null>(null);
-  const skipFirstTeamSnapRef = useRef(true);
-
   const persistDismissed = useCallback((next: Set<string>) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
     setDismissed(next);
@@ -41,34 +59,31 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
   );
 
   useEffect(() => {
-    skipFirstTeamSnapRef.current = true;
-    prevMembersRef.current = null;
-
     if (!appUser || appUser.role !== 'manager' || !appUser.teamCode) {
       setTeamMembers([]);
       setJoinEvents([]);
       return;
     }
 
-    const teamRef = doc(db, 'teams', appUser.teamCode.toUpperCase());
+    const teamIdUpper = appUser.teamCode.toUpperCase();
+    const teamRef = doc(db, 'teams', teamIdUpper);
     let cancelled = false;
 
     const unsub = onSnapshot(teamRef, async (snap) => {
       if (!snap.exists() || cancelled) return;
       const data = snap.data() as { members?: string[]; teamLead?: string };
-      const members = data.members ?? [];
+      const memberArr = data.members ?? [];
       const lead = data.teamLead ?? '';
-      const memberSet = new Set(members);
 
-      if (skipFirstTeamSnapRef.current) {
-        skipFirstTeamSnapRef.current = false;
-        prevMembersRef.current = memberSet;
+      const storedKnown = loadKnownMemberIds(teamIdUpper);
+
+      if (storedKnown === null) {
+        saveKnownMemberIds(teamIdUpper, memberArr);
       } else {
-        const prev = prevMembersRef.current ?? new Set<string>();
-        const added = [...memberSet].filter(
-          (uid) => !prev.has(uid) && uid !== lead && uid !== appUser.uid,
+        const storedSet = new Set(storedKnown);
+        const added = memberArr.filter(
+          (uid) => !storedSet.has(uid) && uid !== lead && uid !== appUser.uid,
         );
-        prevMembersRef.current = memberSet;
 
         if (added.length > 0) {
           const profiles = await Promise.all(added.map((uid) => fetchAppUser(uid)));
@@ -91,9 +106,10 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
             return merged;
           });
         }
+        saveKnownMemberIds(teamIdUpper, memberArr);
       }
 
-      const uidsToFetch = members.filter((uid) => uid !== appUser.uid);
+      const uidsToFetch = memberArr.filter((uid) => uid !== appUser.uid);
       if (uidsToFetch.length === 0) {
         if (!cancelled) setTeamMembers([]);
         return;
