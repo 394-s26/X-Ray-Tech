@@ -344,29 +344,31 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setFilterOpen((o) => !o)}
-          aria-label="Filter members"
-          aria-expanded={filterOpen}
-          className={
-            'shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider transition-colors ' +
-            (filterOpen || activeFilterCount > 0
-              ? 'border-[#7C49D5] dark:border-[#A876FF] text-[#7C49D5] dark:text-[#A876FF] bg-[#7C49D5]/10 dark:bg-[#A876FF]/15'
-              : 'border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF]')
-          }
-        >
-          <FilterIcon size={14} />
-          Filter
-          {activeFilterCount > 0 && (
-            <span className="ml-0.5 min-w-[18px] h-[18px] inline-flex items-center justify-center px-1 rounded-full bg-[#7C49D5] dark:bg-[#A876FF] text-white text-[10px] tabular-nums leading-none">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
+        {isManager && (
+          <button
+            type="button"
+            onClick={() => setFilterOpen((o) => !o)}
+            aria-label="Filter members"
+            aria-expanded={filterOpen}
+            className={
+              'shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider transition-colors ' +
+              (filterOpen || activeFilterCount > 0
+                ? 'border-[#7C49D5] dark:border-[#A876FF] text-[#7C49D5] dark:text-[#A876FF] bg-[#7C49D5]/10 dark:bg-[#A876FF]/15'
+                : 'border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF]')
+            }
+          >
+            <FilterIcon size={14} />
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="ml-0.5 min-w-[18px] h-[18px] inline-flex items-center justify-center px-1 rounded-full bg-[#7C49D5] dark:bg-[#A876FF] text-white text-[10px] tabular-nums leading-none">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
-      {filterOpen && (
+      {isManager && filterOpen && (
         <div className="mb-6 rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-4 flex flex-col gap-3">
           <div className="form-field">
             <label className="form-label">Search by name</label>
@@ -425,32 +427,37 @@ const TeamManagement = ({ appUser }: TeamManagementProps) => {
             <h2 className="text-base font-bold text-primary dark:text-slate-100">
               Team members
             </h2>
-            <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
-              Sorted by soonest upcoming expiry
-            </p>
+            {isManager && (
+              <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
+                Sorted by soonest upcoming expiry
+              </p>
+            )}
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
-            {filteredTeam.length}
-            {filteredTeam.length !== sortedTeam.length && `/${sortedTeam.length}`} members
+            {isManager
+              ? `${filteredTeam.length}${filteredTeam.length !== sortedTeam.length ? `/${sortedTeam.length}` : ''} members`
+              : `${sortedTeam.length} members`}
           </p>
         </div>
 
-        {filteredTeam.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
-            No members match these filters.
-          </p>
-        ) : (
-          <ul className="flex flex-col">
-            {filteredTeam.map((emp) => (
-              <li key={emp.id}>
-                <EmployeeRow employee={emp} onClick={() => setSelected(emp)} />
-              </li>
-            ))}
-          </ul>
+        {isManager && (
+          filteredTeam.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
+              No members match these filters.
+            </p>
+          ) : (
+            <ul className="flex flex-col">
+              {filteredTeam.map((emp) => (
+                <li key={emp.id}>
+                  <EmployeeRow employee={emp} onClick={() => setSelected(emp)} />
+                </li>
+              ))}
+            </ul>
+          )
         )}
       </section>
 
-      {selected && (
+      {isManager && selected && (
         <EmployeeModal employee={selected} onClose={() => setSelected(null)} />
       )}
     </main>
