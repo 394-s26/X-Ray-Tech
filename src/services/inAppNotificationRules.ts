@@ -172,7 +172,7 @@ export function buildInAppNotifications(params: BuildInAppNotificationsParams): 
       out.push({
         id: `team-probation-${member.uid}-${end}`,
         title: 'Team member in CE probation',
-        body: `${displayUserName(member)} is in a documented CE probation window until ${formatShort(end)}. Align staffing and CE completion with policy (confirm probation length with Michelle for your organization).`,
+        body: `${displayUserName(member)} is in a documented CE probation window until ${formatShort(end)}. Align staffing and CE completion with your organization's policy.`,
         severity: 'warning',
         scope: 'Team',
         href: '/team',

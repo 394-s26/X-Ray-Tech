@@ -4,9 +4,16 @@ import type { AppUser } from '../types/auth';
 import { fetchAppUser } from '../services/authService';
 import { db } from '../services/firebase';
 import { buildInAppNotifications } from '../services/inAppNotificationRules';
+import type { InAppNotification } from '../types/notifications';
 import { useCertifications } from './useCertifications';
 
 const STORAGE_KEY = 'xraytech.dismissedNotificationIds';
+
+const SEVERITY_SORT: Record<InAppNotification['severity'], number> = {
+  urgent: 0,
+  warning: 1,
+  info: 2,
+};
 
 /** Baseline member UID list per team — survives refresh so joins notify after reopening the app. */
 function knownMembersStorageKey(teamIdUpper: string): string {
@@ -27,6 +34,29 @@ function loadKnownMemberIds(teamIdUpper: string): string[] | null {
 function saveKnownMemberIds(teamIdUpper: string, memberIds: string[]): void {
   const sorted = [...new Set(memberIds)].sort();
   localStorage.setItem(knownMembersStorageKey(teamIdUpper), JSON.stringify(sorted));
+}
+
+/** Pending join rows until manager dismisses — survives refresh (probation-style persistence). */
+function pendingJoinsStorageKey(teamIdUpper: string): string {
+  return `xraytech.pendingTeamJoins.${teamIdUpper}`;
+}
+
+function loadPendingTeamJoins(teamIdUpper: string): { uid: string; displayName: string }[] {
+  try {
+    const raw = localStorage.getItem(pendingJoinsStorageKey(teamIdUpper));
+    if (!raw) return [];
+    const arr = JSON.parse(raw) as { uid: string; displayName: string }[];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePendingTeamJoins(
+  teamIdUpper: string,
+  joins: { uid: string; displayName: string }[],
+): void {
+  localStorage.setItem(pendingJoinsStorageKey(teamIdUpper), JSON.stringify(joins));
 }
 
 function loadDismissed(): Set<string> {
@@ -54,8 +84,17 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
   const dismiss = useCallback(
     (id: string) => {
       persistDismissed(new Set([...dismissed, id]));
+      if (id.startsWith('team-join-')) {
+        const uid = id.slice('team-join-'.length);
+        const tc = appUser?.teamCode?.toUpperCase();
+        if (tc) {
+          const next = loadPendingTeamJoins(tc).filter((j) => j.uid !== uid);
+          savePendingTeamJoins(tc, next);
+        }
+        setJoinEvents((prev) => prev.filter((j) => j.uid !== uid));
+      }
     },
-    [dismissed, persistDismissed],
+    [appUser?.teamCode, dismissed, persistDismissed],
   );
 
   useEffect(() => {
@@ -66,6 +105,13 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
     }
 
     const teamIdUpper = appUser.teamCode.toUpperCase();
+    const dismissedNow = loadDismissed();
+    const restored = loadPendingTeamJoins(teamIdUpper).filter(
+      (j) => !dismissedNow.has(`team-join-${j.uid}`),
+    );
+    savePendingTeamJoins(teamIdUpper, restored);
+    setJoinEvents(restored);
+
     const teamRef = doc(db, 'teams', teamIdUpper);
     let cancelled = false;
 
@@ -103,6 +149,7 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
             for (const j of joins) {
               if (!existing.has(j.uid)) merged.push(j);
             }
+            savePendingTeamJoins(teamIdUpper, merged);
             return merged;
           });
         }
@@ -134,10 +181,18 @@ export function useInAppNotifications(appUser: AppUser | null | undefined) {
     });
   }, [appUser, certifications, teamMembers, joinEvents]);
 
-  const visible = useMemo(
-    () => allNotifications.filter((n) => !dismissed.has(n.id)),
-    [allNotifications, dismissed],
-  );
+  /** Urgent first; within the same severity, newer rows (later in build order) first — team joins etc. were appended last. */
+  const visible = useMemo(() => {
+    const indexed = allNotifications
+      .map((n, i) => ({ n, i }))
+      .filter(({ n }) => !dismissed.has(n.id));
+    indexed.sort((a, b) => {
+      const bySev = SEVERITY_SORT[a.n.severity] - SEVERITY_SORT[b.n.severity];
+      if (bySev !== 0) return bySev;
+      return b.i - a.i;
+    });
+    return indexed.map(({ n }) => n);
+  }, [allNotifications, dismissed]);
 
   return {
     notifications: visible,

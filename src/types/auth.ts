@@ -26,7 +26,7 @@ export interface AppUser {
 
   /**
    * ISO date YYYY-MM-DD — end of ARRT-style CE probation window for this user, if applicable.
-   * See license_ce_logic.md (ARRT probation ~6 months). Confirm hospital team policy with Michelle.
+   * See license_ce_logic.md (ARRT probation ~6 months when CE is incomplete at cycle end).
    */
   ceProbationEndsAt?: string | null;
 }
