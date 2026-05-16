@@ -7,6 +7,8 @@ import type { AppUser } from '../types/auth';
 import { useSetupReminder } from '../components/setupReminderContext';
 import arrtLogoWhite from '../assets/arrtwhitetext.png';
 import iemaLogoWhite from '../assets/iemawhitetext.png';
+import arrtLogoBlack from '../assets/arrtblacktext.png';
+import iemaLogoBlack from '../assets/iemablacktext.png';
 
 const IEMA_TOTAL = 48;
 
@@ -249,14 +251,20 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
 }
 
 interface LogoChipProps {
-  src?: string;
+  srcLight?: string;
+  srcDark?: string;
   alt?: string;
 }
 
-function LogoChip({ src, alt }: LogoChipProps) {
+function LogoChip({ srcLight, srcDark, alt }: LogoChipProps) {
   return (
-    <span className="inline-flex items-center justify-center shrink-0 rounded-md px-1 py-1 bg-[#2B2D42] dark:bg-[#3D3F5C]">
-      {src && <img src={src} alt={alt ?? ''} className="h-4 w-auto object-contain" />}
+    <span className="inline-flex items-center justify-center shrink-0 rounded-md px-1 py-1 bg-[#e5e3ec] dark:bg-[#3D3F5C]">
+      {srcLight && (
+        <img src={srcLight} alt={alt ?? ''} className="h-4 w-auto object-contain block dark:hidden" />
+      )}
+      {srcDark && (
+        <img src={srcDark} alt={alt ?? ''} className="h-4 w-auto object-contain hidden dark:block" />
+      )}
     </span>
   );
 }
@@ -265,17 +273,18 @@ interface RenewalCardProps {
   label: string;
   daysRemaining: number | null;
   renewalDate: string | null;
-  logoSrc?: string;
+  logoLight?: string;
+  logoDark?: string;
   logoAlt?: string;
 }
 
-function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: RenewalCardProps) {
+function RenewalCard({ label, daysRemaining, renewalDate, logoLight, logoDark, logoAlt }: RenewalCardProps) {
   const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
   return (
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {logoSrc && <LogoChip src={logoSrc} alt={logoAlt} />}
+        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
@@ -299,18 +308,19 @@ interface CertCycleCardProps {
   daysRemaining: number | null;
   renewalDate: string | null;
   cycleNote: string;
-  logoSrc?: string;
+  logoLight?: string;
+  logoDark?: string;
   logoAlt?: string;
 }
 
-function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, logoAlt }: CertCycleCardProps) {
+function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoLight, logoDark, logoAlt }: CertCycleCardProps) {
   const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
   const duration = daysRemaining == null ? null : formatDuration(daysRemaining);
   return (
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {logoSrc && <LogoChip src={logoSrc} alt={logoAlt} />}
+        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         {duration ? (
@@ -563,7 +573,8 @@ export default function Dashboard({ appUser }: DashboardProps) {
           label="Days to IEMA renewal"
           daysRemaining={iemaDays}
           renewalDate={earliestIema?.expirationDate ?? null}
-          logoSrc={iemaLogoWhite}
+          logoLight={iemaLogoBlack}
+          logoDark={iemaLogoWhite}
           logoAlt="IEMA"
         />
         <CertCycleCard
@@ -571,7 +582,8 @@ export default function Dashboard({ appUser }: DashboardProps) {
           daysRemaining={arrtDays}
           renewalDate={earliestArrt?.expirationDate ?? null}
           cycleNote="BIENNIAL"
-          logoSrc={arrtLogoWhite}
+          logoLight={arrtLogoBlack}
+          logoDark={arrtLogoWhite}
           logoAlt="ARRT"
         />
       </section>
