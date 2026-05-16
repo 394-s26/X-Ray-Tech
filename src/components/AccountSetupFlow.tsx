@@ -235,8 +235,25 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         </div>
 
         <div className="w-full mt-10">
-          <p className="setup-flow__mini-title ">When is your birthday?</p>
-          <p className="setup-flow__subtitle">We'll use this to determine when your license expires.</p>
+          <div className="flex items-center gap-2">
+            <p className="setup-flow__mini-title">When is your birthday?</p>
+            <div className="relative group setup-flow__info-wrapper">
+              <button
+                type="button"
+                className="setup-flow__info-btn"
+                aria-label="Why we ask"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+              </button>
+              <span className="setup-flow__copy-tooltip">
+                This is used to determine your ARRT cycle.
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="setup-flow__birthday-field form-field max-w-45 w-full mt-2">
@@ -306,7 +323,12 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
               value={formData.teamCode}
               onChange={e => setField('teamCode', e.target.value.toUpperCase())}
             />
-            <p className="setup-flow__field-error">{errors.teamCode}</p>
+            <p className="setup-flow__field-error">
+              {errors.teamCode
+                || (formData.teamCode.trim() && !teamLookupLoading && !foundTeam
+                  ? 'No matching team found for that code.'
+                  : '')}
+            </p>
           </div>
 
           {formData.teamCode.trim() && (
@@ -319,9 +341,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
                 manager={foundTeam.manager}
                 color={foundTeam.color}
               />
-            ) : (
-              <p className="setup-flow__field-error">No matching team found for that code.</p>
-            )
+            ) : null
           )}
         </div>
       ) : (

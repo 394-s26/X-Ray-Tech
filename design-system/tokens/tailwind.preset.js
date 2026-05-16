@@ -46,7 +46,7 @@ module.exports = {
         success: { 100: '#E2F5EC', 600: '#1F9D6B' },
         warn:    { 100: '#FBF2DC', 600: '#C08415' },
         danger:  { 100: '#FAE4E2', 600: '#C8382F' },
-        info:    { 100: '#E5DDFC', 600: '#5B3FE4' },
+        info:    { 100: '#E0EDFE', 600: '#3B84FB' },
       },
       fontFamily: {
         display: ['Geist', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],

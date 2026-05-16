@@ -57,7 +57,8 @@ This is your original royal purple, retained for equity. It pairs cleanly with t
 | `warn/600`    | `#C08415` | Warning text + icon. "Expires in 30 days."   |
 | `danger/100`  | `#FAE4E2` | Danger surface (expired)                     |
 | `danger/600`  | `#C8382F` | Danger text + icon. "Expired."               |
-| `info/600`    | `#5B3FE4` | Equal to `brand/600` — info uses brand color  |
+| `info/100`    | `#E0EDFE` | Info surface (tooltip bg tint, info badge bg) |
+| `info/600`    | `#3B84FB` | Info icons + inline help indicators (the small ⓘ button next to a field label). Distinct from `brand/600` so info affordances don't compete with primary CTAs. |
 
 ## Where the primary goes
 
