@@ -254,11 +254,20 @@ interface LogoChipProps {
   srcLight?: string;
   srcDark?: string;
   alt?: string;
+  tint?: 'tint-paper' | Tint;
 }
 
-function LogoChip({ srcLight, srcDark, alt }: LogoChipProps) {
+const LOGO_CHIP_BG: Record<NonNullable<LogoChipProps['tint']>, string> = {
+  'tint-mint':  'bg-[#c9d4c0]',
+  'tint-rose':  'bg-[#e8c9cb]',
+  'tint-sun':   'bg-[#f0e4c2]',
+  'tint-paper': 'bg-[#e5e3ec]',
+};
+
+function LogoChip({ srcLight, srcDark, alt, tint = 'tint-paper' }: LogoChipProps) {
+  const lightBg = LOGO_CHIP_BG[tint] ?? LOGO_CHIP_BG['tint-paper'];
   return (
-    <span className="inline-flex items-center justify-center shrink-0 rounded-md px-1 py-1 bg-[#e5e3ec] dark:bg-[#3D3F5C]">
+    <span className={`inline-flex items-center justify-center shrink-0 rounded-md px-1 py-1 ${lightBg} dark:bg-[#3D3F5C]`}>
       {srcLight && (
         <img src={srcLight} alt={alt ?? ''} className="h-4 w-auto object-contain block dark:hidden" />
       )}
@@ -284,7 +293,7 @@ function RenewalCard({ label, daysRemaining, renewalDate, logoLight, logoDark, l
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} />}
+        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} tint={tint} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
@@ -320,7 +329,7 @@ function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoLight
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} />}
+        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} tint={tint} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         {duration ? (
