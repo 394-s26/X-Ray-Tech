@@ -1,11 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  consumeNotificationPermissionPromptAfterLogin,
-  requestNotificationPermissionIfDefault,
-} from '../services/notifications';
 import { PlusIcon } from '../services/svgIcons';
-import { ChevronRightIcon, CheckIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
 import type { Certification, CertificateCategory } from '../types/certification';
 import type { AppUser } from '../types/auth';
@@ -14,6 +9,7 @@ import arrtLogoWhite from '../assets/arrtwhitetext.png';
 import iemaLogoWhite from '../assets/iemawhitetext.png';
 import arrtLogoBlack from '../assets/arrtblacktext.png';
 import iemaLogoBlack from '../assets/iemablacktext.png';
+import { consumeNotificationPermissionPromptAfterLogin, requestNotificationPermissionIfDefault } from '../services/notifications';
 
 const IEMA_TOTAL = 48;
 
@@ -486,11 +482,12 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ appUser }: DashboardProps) {
+
   useEffect(() => {
     if (!consumeNotificationPermissionPromptAfterLogin()) return;
-    requestNotificationPermissionIfDefault();
+    void requestNotificationPermissionIfDefault();
   }, []);
-
+  
   const { openModal: openSetupModal, isSetupIncomplete } = useSetupReminder();
   const { certifications, loading } = useCertifications();
 

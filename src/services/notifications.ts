@@ -1,11 +1,9 @@
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
+import { app } from './firebase';
+import { registerMessagingServiceWorker } from './firebaseMessagingSw';
 
 const NOTIFY_AFTER_LOGIN_KEY = 'xray-tech:notify-permission-after-login';
 
-/**
- * Call after a successful sign-in on the login page so the dashboard can
- * prompt once (including users who still complete account setup first).
- */
 export function markNotificationPermissionPromptAfterLogin(): void {
   try {
     sessionStorage.setItem(NOTIFY_AFTER_LOGIN_KEY, '1');
@@ -14,7 +12,6 @@ export function markNotificationPermissionPromptAfterLogin(): void {
   }
 }
 
-/** Returns true once, then clears the flag. */
 export function consumeNotificationPermissionPromptAfterLogin(): boolean {
   try {
     if (!sessionStorage.getItem(NOTIFY_AFTER_LOGIN_KEY)) return false;
@@ -25,42 +22,70 @@ export function consumeNotificationPermissionPromptAfterLogin(): boolean {
   }
 }
 
-const messaging = getMessaging();
+function readVapidKey(): string | undefined {
+  const key =
+    (import.meta.env.VITE_FCM_VAPID_KEY ?? import.meta.env.VITE_FCM_VAPID_ID) as
+      | string
+      | undefined;
+  return key?.trim() || undefined;
+}
+
+const messaging = getMessaging(app);
 
 onMessage(messaging, (payload) => {
-  console.log('Received foreground payload:', payload);
-  alert(`Notification: ${payload.notification?.title}\n${payload.notification?.body}`);
+  console.log('[FCM] Foreground message:', payload);
+  const title = payload.notification?.title ?? 'X-Ray Tech';
+  const body = payload.notification?.body ?? '';
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/favicon.svg' });
+  }
 });
 
 /**
- * Prompts for Web Notification permission only when the user has not
- * already granted or denied (browser "default" state).
+ * After login: ensure permission, register SW with env config, obtain FCM token.
+ * Runs when permission is default (prompt) or already granted (re-sync token).
  */
-export function requestNotificationPermissionIfDefault(): void {
-  if (typeof Notification === 'undefined') return;
-  if (Notification.permission !== 'default') return;
-  void Notification.requestPermission().then((permission) => {
-    if (permission === 'granted') {
-      console.log('Notification permission granted.');
-      
-      // 2. Now retrieve the token
-      getToken(messaging, { vapidKey: import.meta.env.VITE_FCM_VAPID_ID })
-        .then((currentToken) => {
-          if (currentToken) {
-            // This is your actual token! Print it, save it, or send it to your server.
-            console.log('Your FCM Registration Token:', currentToken);
+export async function requestNotificationPermissionIfDefault(): Promise<void> {
+  if (typeof Notification === 'undefined') {
+    console.warn('[FCM] Notifications API not available.');
+    return;
+  }
 
-            
-          } else {
-            console.log('No registration token available.');
-          }
-        })
-        .catch((err) => {
-          console.error('An error occurred while retrieving token. ', err);
-        });
-  
+  const supported = await isSupported().catch(() => false);
+  if (!supported) {
+    console.warn('[FCM] Firebase Messaging is not supported in this browser.');
+    return;
+  }
+
+  let permission = Notification.permission;
+  if (permission === 'default') {
+    permission = await Notification.requestPermission();
+  }
+
+  if (permission !== 'granted') {
+    console.log('[FCM] Notification permission not granted:', permission);
+    return;
+  }
+
+  const vapidKey = readVapidKey();
+  if (!vapidKey) {
+    console.warn('[FCM] Set VITE_FCM_VAPID_KEY (or VITE_FCM_VAPID_ID) in .env.');
+    return;
+  }
+
+  try {
+    const registration = await registerMessagingServiceWorker();
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+
+    if (token) {
+      console.log('[FCM] Registration token:', token);
     } else {
-      console.log('Unable to get permission to notify.');
+      console.warn('[FCM] getToken returned empty — check SW console for init errors.');
     }
-  });;
+  } catch (err) {
+    console.error('[FCM] Setup failed:', err);
+  }
 }
