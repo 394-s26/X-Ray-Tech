@@ -51,10 +51,10 @@ function formatDuration(days: number): { value: string; unit: string } {
   if (days < 60) return { value: String(days), unit: days === 1 ? 'day' : 'days' };
   if (days < 365) {
     const months = Math.round(days / 30);
-    return { value: String(months), unit: months === 1 ? 'mo' : 'mos' };
+    return { value: String(months), unit: months === 1 ? 'month' : 'months' };
   }
   const years = days / 365;
-  return { value: years.toFixed(1), unit: years === 1 ? 'yr' : 'yrs' };
+  return { value: years.toFixed(1), unit: years === 1 ? 'year' : 'years' };
 }
 
 function pluralizeHours(value: number): string {
