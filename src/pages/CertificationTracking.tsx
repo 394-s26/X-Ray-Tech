@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, IdCardIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
+import { Breadcrumb } from '../components/Breadcrumb';
+import { PageHeader } from '../components/PageHeader';
 
 interface AgencyConfig {
   to: string;
@@ -22,29 +24,29 @@ const AGENCIES: ReadonlyArray<AgencyConfig> = [
     fullName: 'Illinois Emergency Management Agency',
     accent: '#0EA37E',
   },
+  {
+    to: '/cpr',
+    name: 'CPR',
+    fullName: 'Cardiopulmonary Resuscitation',
+    accent: '#DC2626',
+  },
 ];
 
 const CredentialTracking = () => {
   const { certifications } = useCertifications();
 
   const countFor = (name: string) =>
-    certifications.filter((c) => c.categories.includes(name as 'ARRT' | 'IEMA')).length;
+    certifications.filter((c) => c.categories.includes(name as 'ARRT' | 'IEMA' | 'CPR')).length;
 
   return (
-    <main className="min-h-[calc(100vh-6rem)] pb-16 px-5 lg:px-10 w-full max-w-5xl mx-auto">
-      <header className="mt-2 mb-8 flex items-center gap-3">
-        <span className="grid place-items-center w-11 h-11 rounded-2xl bg-primary/10 text-primary dark:bg-primary-light/20 dark:text-secondary">
-          <IdCardIcon size={22} />
-        </span>
-        <div>
-          <h1 className="text-2xl font-bold text-primary dark:text-slate-50 leading-tight">
-            Credential Tracking
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400">
-            Browse and manage certificates by issuing agency.
-          </p>
-        </div>
-      </header>
+    <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
+      <Breadcrumb items={[{ name: 'Certification Tracking', to: '' }]} />
+
+      <PageHeader
+        icon={<IdCardIcon size={22} />}
+        title="Certification Tracking"
+        subtitle="Browse and manage certificates by issuing agency."
+      />
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {AGENCIES.map((agency) => (

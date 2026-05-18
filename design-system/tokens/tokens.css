@@ -1,0 +1,150 @@
+/*
+ * X-Ray Tech Design System — CSS custom properties
+ *
+ * Drop this at the top of your global stylesheet. Consume via var(--xraytech-*).
+ * Source of truth: design-system/tokens/tokens.json
+ */
+
+:root {
+  /* ── Brand (electric violet) ───────────────────────── */
+  --xraytech-brand-50:  #F4F0FE;
+  --xraytech-brand-100: #E5DDFC;
+  --xraytech-brand-200: #C9B8F8;
+  --xraytech-brand-300: #A78EF3;
+  --xraytech-brand-400: #8366ED;
+  --xraytech-brand-500: #6E50E9;
+  --xraytech-brand-600: #5B3FE4;  /* primary */
+  --xraytech-brand-700: #4A2FCC;
+  --xraytech-brand-800: #3A23A8;
+  --xraytech-brand-900: #1C0F5C;
+
+  /* Heritage royal purple — used for h1/h2 headings, chart fills */
+  --xraytech-ink-purple: #4E2A84;
+
+  /* ── Ink (text) ────────────────────────────────────── */
+  --xraytech-ink-100: #F4F3F7;
+  --xraytech-ink-200: #E5E3EC;
+  --xraytech-ink-300: #C9C5D2;
+  --xraytech-ink-400: #9A95A6;
+  --xraytech-ink-500: #6C677A;
+  --xraytech-ink-600: #4A4659;
+  --xraytech-ink-700: #2D2A3D;
+  --xraytech-ink-900: #0E0B1F;
+
+  /* ── Surfaces ──────────────────────────────────────── */
+  --xraytech-paper:     #FFFFFF;
+  --xraytech-surface:   #FAFAFC;
+  --xraytech-line:      #E5E3EC;
+  --xraytech-line-soft: #F0EEF5;
+
+  /* ── Semantic ──────────────────────────────────────── */
+  --xraytech-success-100: #E2F5EC;
+  --xraytech-success-600: #1F9D6B;
+  --xraytech-warn-100:    #FBF2DC;
+  --xraytech-warn-600:    #C08415;
+  --xraytech-danger-100:  #FAE4E2;
+  --xraytech-danger-600:  #C8382F;
+  --xraytech-info-100:    #E0EDFE;
+  --xraytech-info-600:    #3B84FB;  /* info icons / inline help indicators */
+
+  /* ── Type ──────────────────────────────────────────── */
+  --xraytech-font-display: 'Geist', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --xraytech-font-sans:    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --xraytech-font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --xraytech-weight-regular:  400;
+  --xraytech-weight-medium:   500;
+  --xraytech-weight-semibold: 600;
+  --xraytech-weight-bold:     700;
+
+  /* ── Spacing (4px base) ────────────────────────────── */
+  --xraytech-space-0:   0px;
+  --xraytech-space-0_5: 2px;
+  --xraytech-space-1:   4px;
+  --xraytech-space-1_5: 6px;
+  --xraytech-space-2:   8px;
+  --xraytech-space-3:   12px;
+  --xraytech-space-4:   16px;
+  --xraytech-space-5:   20px;
+  --xraytech-space-6:   24px;
+  --xraytech-space-8:   32px;
+  --xraytech-space-10:  40px;
+  --xraytech-space-12:  48px;
+  --xraytech-space-16:  64px;
+  --xraytech-space-20:  80px;
+  --xraytech-space-24:  96px;
+  --xraytech-space-32:  128px;
+  --xraytech-space-40:  160px;
+
+  /* ── Radius ────────────────────────────────────────── */
+  --xraytech-radius-none: 0px;
+  --xraytech-radius-xs:   4px;
+  --xraytech-radius-sm:   6px;
+  --xraytech-radius-md:   8px;
+  --xraytech-radius-lg:   12px;
+  --xraytech-radius-xl:   20px;
+  --xraytech-radius-full: 9999px;
+
+  /* ── Shadow (low-opacity ink-900) ──────────────────── */
+  --xraytech-shadow-none: none;
+  --xraytech-shadow-xs:   0 1px 2px rgba(14, 11, 31, 0.04);
+  --xraytech-shadow-sm:   0 1px 3px rgba(14, 11, 31, 0.06), 0 1px 2px rgba(14, 11, 31, 0.04);
+  --xraytech-shadow-md:   0 4px 12px rgba(14, 11, 31, 0.06), 0 2px 4px rgba(14, 11, 31, 0.04);
+  --xraytech-shadow-lg:   0 12px 32px rgba(14, 11, 31, 0.08), 0 4px 8px rgba(14, 11, 31, 0.04);
+  --xraytech-shadow-xl:   0 24px 48px rgba(14, 11, 31, 0.10), 0 8px 16px rgba(14, 11, 31, 0.06);
+
+  /* ── Motion ────────────────────────────────────────── */
+  --xraytech-dur-xs: 80ms;
+  --xraytech-dur-sm: 160ms;
+  --xraytech-dur-md: 240ms;
+  --xraytech-dur-lg: 480ms;
+  --xraytech-dur-xl: 720ms;
+
+  --xraytech-ease-out:      cubic-bezier(0.22, 1, 0.36, 1);
+  --xraytech-ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
+  --xraytech-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Container ─────────────────────────────────────── */
+  --xraytech-container-max:     1200px;
+  --xraytech-container-reading: 680px;
+  --xraytech-gutter-mobile:     16px;
+  --xraytech-gutter-desktop:    24px;
+}
+
+/* ── Base ─────────────────────────────────────────────── */
+html, body {
+  font-family: var(--xraytech-font-sans);
+  color: var(--xraytech-ink-900);
+  background: var(--xraytech-paper);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Type utility classes ─────────────────────────────── */
+.display-xl { font-family: var(--xraytech-font-display); font-size: 72px; line-height: 80px; font-weight: 600; letter-spacing: -0.02em; }
+.display-lg { font-family: var(--xraytech-font-display); font-size: 56px; line-height: 64px; font-weight: 600; letter-spacing: -0.02em; }
+.h1         { font-family: var(--xraytech-font-display); font-size: 40px; line-height: 48px; font-weight: 600; letter-spacing: -0.015em; }
+.h2         { font-family: var(--xraytech-font-display); font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.015em; }
+.h3         { font-family: var(--xraytech-font-display); font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.015em; }
+.h4         { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.015em; }
+.body-lg    { font-size: 18px; line-height: 28px; font-weight: 400; }
+.body-md    { font-size: 16px; line-height: 24px; font-weight: 400; }
+.body-sm    { font-size: 14px; line-height: 20px; font-weight: 400; }
+.caption    { font-size: 12px; line-height: 16px; font-weight: 500; }
+.overline   { font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.mono-xl    { font-family: var(--xraytech-font-mono); font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em; }
+.mono-lg    { font-family: var(--xraytech-font-mono); font-size: 24px; line-height: 32px; font-weight: 500; }
+.mono-md    { font-family: var(--xraytech-font-mono); font-size: 14px; line-height: 20px; font-weight: 400; }
+.mono-sm    { font-family: var(--xraytech-font-mono); font-size: 12px; line-height: 16px; font-weight: 400; }
+
+/* ── Reduced motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

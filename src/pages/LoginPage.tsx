@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AppLogoIcon, ArrowRightIcon, GoogleIcon } from '../services/svgIcons';
+import { ArrowRightIcon, GoogleIcon } from '../services/svgIcons';
 import { signInWithGoogle, signInWithEmail } from '../services/authService';
 import { AuthBackground } from './AuthBackground';
 import { EyeIcon, EyeOffIcon } from '../services/svgIcons';
+import BrandLogo from '../components/BrandLogo';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -41,12 +42,11 @@ export const LoginPage = () => {
     <AuthBackground>
       <div className="auth-card">
         <div className="auth-card-header">
-          <AppLogoIcon size={28} />
-          <span className="auth-card-title">X-Ray Tech</span>
+          <BrandLogo />
         </div>
 
         <div className="login-card-body">
-          <h1 className="auth-heading">Welcome back.</h1>
+          <h1 className="auth-heading">Welcome back</h1>
 
           <form onSubmit={handleEmailSignIn} className="flex flex-col gap-3 mb-5">
             <input
@@ -72,7 +72,7 @@ export const LoginPage = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ink-500)] hover:text-[var(--ink-900)] dark:hover:text-slate-200 transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
@@ -82,7 +82,8 @@ export const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-between default-btn py-3 px-4 rounded-xl cursor-pointer"
+              className="global-btn default-btn"
+              style={{ justifyContent: 'space-between' }}
             >
               <span>{loading ? 'Logging in…' : 'Log in'}</span>
               <ArrowRightIcon size={18} />
@@ -91,7 +92,7 @@ export const LoginPage = () => {
 
           <div className="flex items-center gap-3 mb-5">
             <div className="auth-divider" />
-            <span className="text-xs text-slate-400 font-medium">or</span>
+            <span className="text-xs font-medium text-[var(--ink-500)] dark:text-slate-400">or</span>
             <div className="auth-divider" />
           </div>
 
@@ -110,9 +111,9 @@ export const LoginPage = () => {
           {error && <p className="auth-error">{error}</p>}
 
           <p className="auth-footer-text">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
-              Sign up
+            New here?{' '}
+            <Link to="/signup" className="text-[var(--brand-600)] dark:text-[var(--brand-300)] hover:underline font-semibold">
+              Create an account
             </Link>
             .
           </p>

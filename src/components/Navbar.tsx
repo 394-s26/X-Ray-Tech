@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import {
+  BellIcon,
   MoonIcon,
   PlusIcon,
   SunIcon,
@@ -10,6 +11,8 @@ import {
 } from '../services/svgIcons';
 import ThemeToggle from './ThemeToggle';
 import BrandLogo from './BrandLogo';
+import NotificationBell from './NotificationBell';
+import type { AppUser } from '../types/auth';
 import '../styles/components/NavBar.css';
 
 interface HamburgerButtonProps {
@@ -65,9 +68,10 @@ function MenuItem({ icon, label, onClick, to }: MenuItemProps) {
 
 interface NavbarProps {
   mode?: 'full' | 'minimal';
+  appUser?: AppUser | null;
 }
 
-export default function Navbar({ mode = 'full' }: NavbarProps) {
+export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
@@ -88,6 +92,16 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handle = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) setMenuOpen(false);
+    };
+    handle(mq);
+    mq.addEventListener('change', handle);
+    return () => mq.removeEventListener('change', handle);
+  }, []);
+
   const handleThemeToggle = () => {
     setTheme(isDark ? 'light' : 'dark');
     close();
@@ -95,7 +109,7 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
 
   if (mode === 'minimal') {
     return (
-      <nav className="sticky top-0 z-50 flex items-center justify-end px-4 sm:px-5 py-3 sm:py-4 m-3 rounded-2xl">
+      <nav className="sticky top-0 z-50 flex items-center justify-end px-4 sm:px-6 py-3 sm:py-4 bg-[var(--paper)] border-b border-[var(--ink-200)] dark:bg-[#14111F] dark:border-[var(--ink-700)]">
         <ThemeToggle />
       </nav>
     );
@@ -103,7 +117,7 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
 
   return (
     <nav
-      className={`sticky top-0 z-50 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 m-3 rounded-2xl ${
+      className={`sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-[var(--paper)] border-b border-[var(--ink-200)] dark:bg-[#14111F] dark:border-[var(--ink-700)] ${
         menuOpen ? 'pointer-events-none' : ''
       }`}
     >
@@ -120,6 +134,14 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
           menuOpen ? 'pointer-events-auto' : ''
         }`}
       >
+        {appUser ? (
+          <NotificationBell appUser={appUser} />
+        ) : (
+          <button type="button" className="navbar-bell" aria-label="Notifications (sign in)">
+            <BellIcon size={18} />
+          </button>
+        )}
+
         <div className="hidden lg:flex items-center gap-3">
           <ThemeToggle />
         </div>

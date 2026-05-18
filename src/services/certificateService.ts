@@ -40,6 +40,7 @@ export interface CreateCertificateInput {
   completedDate: string;
   expirationDate: string;
   ceCredits: number;
+  categoryType: string | null;
   categories: CertificateCategory[];
 }
 
@@ -78,6 +79,7 @@ export const createCertificateRecord = async (
     completedDate: input.completedDate,
     expirationDate: input.expirationDate,
     ceCredits: input.ceCredits,
+    categoryType: input.categoryType,
     categories: input.categories,
     photoStoragePath: path,
     photoURL,
@@ -200,6 +202,7 @@ export const updateCertificationRecord = async (
     completedDate?: string;
     expirationDate?: string;
     ceCredits?: number;
+    categoryType?: string | null;
     categories?: CertificateCategory[];
   },
 ): Promise<void> => {
