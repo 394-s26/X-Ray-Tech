@@ -12,6 +12,7 @@ import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import { auth, db } from './firebase';
 import { markNotificationPermissionPromptAfterLogin } from './notifications';
+import { deleteCurrentDeviceFcmToken } from './fcmTokenService';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -54,6 +55,14 @@ export const registerWithEmail = async (
 };
 
 export const signOut = async (): Promise<void> => {
+  const uid = auth.currentUser?.uid;
+  if (uid) {
+    try {
+      await deleteCurrentDeviceFcmToken(uid);
+    } catch {
+      /* best-effort */
+    }
+  }
   await firebaseSignOut(auth);
 };
 
