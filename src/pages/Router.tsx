@@ -11,6 +11,7 @@ import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
+import LandingPage from './LandingPage';
 import AppLayout from '../components/AppLayout';
 
 const Router = () => {
@@ -139,6 +140,7 @@ const Router = () => {
             )
           }
         />
+        <Route path="/landing" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
