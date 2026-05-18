@@ -60,7 +60,7 @@ export default function NotificationBell({ appUser }: NotificationBellProps) {
 
       {open && (
         <div
-          className="notification-bell-panel absolute right-0 top-[calc(100%+10px)] z-[60] w-[min(calc(100vw-2rem),22rem)] rounded-xl border-[1.5px] border-[var(--ink-900)] bg-[var(--paper)] shadow-[3px_3px_0_var(--ink-900)] dark:border-[var(--ink-200)] dark:bg-[#14111F] dark:shadow-[3px_3px_0_var(--ink-400)]"
+          className="notification-bell-panel absolute right-0 top-[calc(100%+10px)] z-[60] w-[min(calc(100vw-2rem),22rem)] overflow-hidden rounded-xl border-[1.5px] border-[var(--ink-900)] bg-[var(--paper)] shadow-[3px_3px_0_var(--ink-900)] dark:border-[var(--ink-200)] dark:bg-[#14111F] dark:shadow-[3px_3px_0_var(--ink-400)]"
           role="dialog"
           aria-label="In-app notifications"
         >
