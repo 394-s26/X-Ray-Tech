@@ -33,6 +33,16 @@ const firebaseConfig = {
   appId: requiredFirebaseEnv.VITE_FIREBASE_APP_ID,
 };
 
+// 1. Stringify the config object
+const jsonString = JSON.stringify(firebaseConfig);
+
+// 2. Safely encode it to support all UTF-8 characters
+const base64Config = btoa(encodeURIComponent(jsonString));
+
+// 3. Register the Service Worker with the safe string
+const swUrl = `/firebase-messaging-sw.js?firebaseConfig=${base64Config}`;
+navigator.serviceWorker.register(swUrl);
+
 export const app = initializeApp(firebaseConfig);
 
 export const db = initializeFirestore(app, {});
