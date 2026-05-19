@@ -1,0 +1,83 @@
+[
+  {
+    "id": "arrt-ct-radiation-safety",
+    "title": "CT Radiation Safety",
+    "description": "Covers radiation protection principles specific to CT imaging, including dose optimization strategies, shielding requirements, and patient safety protocols.",
+    "agency": "ARRT",
+    "credits": 15,
+    "approvalEnds": "2026-12-31",
+    "link": "https://apps.arrt.org/FindCE/listing.aspx"
+  },
+  {
+    "id": "arrt-mri-safety-principles",
+    "title": "MRI Safety Principles",
+    "description": "Comprehensive review of MRI safety zones, ferromagnetic screening procedures, and management of patients with implanted devices.",
+    "agency": "ARRT",
+    "credits": 20,
+    "approvalEnds": "2027-03-15",
+    "link": "https://apps.arrt.org/FindCE/listing.aspx"
+  },
+  {
+    "id": "arrt-fluoroscopy-fundamentals",
+    "title": "Fluoroscopy Fundamentals",
+    "description": "Practical training on real-time imaging techniques, contrast agent administration, and dose management during fluoroscopic procedures.",
+    "agency": "ARRT",
+    "credits": 12,
+    "approvalEnds": "2026-09-30",
+    "link": "https://apps.arrt.org/FindCE/listing.aspx"
+  },
+  {
+    "id": "arrt-pediatric-imaging",
+    "title": "Pediatric Imaging Techniques",
+    "description": "Best practices for imaging pediatric patients, including age-appropriate positioning, immobilization, and ALARA dose reduction strategies.",
+    "agency": "ARRT",
+    "credits": 10,
+    "approvalEnds": "2027-06-30",
+    "link": "https://apps.arrt.org/FindCE/listing.aspx"
+  },
+  {
+    "id": "iema-radiological-response",
+    "title": "Emergency Radiological Response",
+    "description": "Prepares technologists to respond to radiological emergencies, including decontamination procedures, triage, and coordination with emergency management personnel.",
+    "agency": "IEMA",
+    "credits": 8,
+    "approvalEnds": "2026-11-30",
+    "link": "https://ce4rt.com/"
+  },
+  {
+    "id": "iema-radiation-emergency-planning",
+    "title": "Radiation Emergency Planning",
+    "description": "Introduction to state and local radiation emergency plans, evacuation zones, protective action decision-making, and interagency communication.",
+    "agency": "IEMA",
+    "credits": 6,
+    "approvalEnds": "2027-01-31",
+    "link": "https://ce4rt.com/"
+  },
+  {
+    "id": "iema-nuclear-plant-ops",
+    "title": "Nuclear Power Plant Emergency Operations",
+    "description": "Familiarization with nuclear facility emergency classifications, public protective actions, and the role of medical personnel in the emergency planning zone.",
+    "agency": "IEMA",
+    "credits": 10,
+    "approvalEnds": "2026-08-31",
+    "link": "https://ce4rt.com/"
+  },
+  {
+    "id": "cpr-acls",
+    "title": "Advanced Cardiovascular Life Support (ACLS)",
+    "description": "Advanced resuscitation training including cardiac arrest algorithms, team dynamics, airway management, and post-cardiac arrest care.",
+    "agency": "CPR",
+    "credits": 8,
+    "approvalEnds": "2027-02-28",
+    "link": "https://www.heart.org/"
+  },
+  {
+    "id": "cpr-pals",
+    "title": "Pediatric Advanced Life Support (PALS)",
+    "description": "Systematic approach to pediatric assessment and resuscitation, covering respiratory emergencies, shock, cardiac arrest, and post-resuscitation stabilization.",
+    "agency": "CPR",
+    "credits": 8,
+    "approvalEnds": "2026-10-31",
+    "link": "https://www.heart.org/"
+  }
+]

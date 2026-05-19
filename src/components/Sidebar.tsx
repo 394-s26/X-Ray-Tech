@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import UserAvatar from './UserAvatar';
 import {
   LayoutGridIcon,
   IdCardIcon,
+  GraduationCapIcon,
   PlusIcon,
   TeamIcon,
   SettingsIcon,
@@ -41,6 +42,13 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     longLabel: 'Certification Tracking',
     shortLabel: 'Certifications',
     icon: (s) => <IdCardIcon size={s} />,
+    mobileHidden: true,
+  },
+  {
+    to: '/browse',
+    longLabel: 'Browse Certifications',
+    shortLabel: 'Browse',
+    icon: (s) => <GraduationCapIcon size={s} />,
     mobileHidden: true,
   },
 ];
@@ -92,6 +100,8 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
 const Sidebar = ({ appUser }: SidebarProps) => {
   const isManager = appUser.role === 'manager';
   const navigate = useNavigate();
+  const location = useLocation();
+  const isProfileActive = location.pathname === '/profile';
   const [team, setTeam] = useState<Team | null>(null);
   const [teamHovered, setTeamHovered] = useState(false);
 
@@ -113,9 +123,10 @@ const Sidebar = ({ appUser }: SidebarProps) => {
       <div className="app-sidebar__inner">
         <button
           type="button"
-          className="app-sidebar__profile"
+          className={`app-sidebar__profile${isProfileActive ? ' app-sidebar__profile--active' : ''}`}
           onClick={() => navigate('/profile')}
           aria-label="Go to profile"
+          style={isProfileActive && appUser.colorCode ? { backgroundColor: `${appUser.colorCode}1A` } : undefined}
         >
           <UserAvatar user={appUser} size="lg" bordered />
           <div className="min-w-0 flex-1">

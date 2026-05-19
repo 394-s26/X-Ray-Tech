@@ -12,6 +12,7 @@ import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
 import { ProfilePage } from './ProfilePage';
+import { BrowseCertificationsPage } from './BrowseCertificationsPage';
 import AppLayout from '../components/AppLayout';
 
 const Router = () => {
@@ -144,6 +145,7 @@ const Router = () => {
           path="/profile"
           element={requireAuth(appUser ? <ProfilePage appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
+        <Route path="/browse" element={requireAuth(<BrowseCertificationsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
