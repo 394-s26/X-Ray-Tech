@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import xrayTechImage from '../assets/xraytech.jpg';
+import iemaBlackText from '../assets/iemablacktext.png';
+import iemaWhiteText from '../assets/iemawhitetext.png';
 import '../styles/pages/LandingPage.css';
 
 const PALETTES = {
@@ -123,25 +125,17 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
   gl.uniform3fv(uA, pal.accentA);
   gl.uniform3fv(uB, pal.accentB);
 
-  function resize() {
-    const rect = canvas.getBoundingClientRect();
-    const cssW = Math.max(1, rect.width);
-    const cssH = Math.max(1, rect.height);
-    const dprCap = window.innerWidth < 700 ? 1.25 : 1.5;
-    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
-    canvas.width = Math.floor(cssW * dpr);
-    canvas.height = Math.floor(cssH * dpr);
-    gl!.viewport(0, 0, canvas.width, canvas.height);
-    gl!.uniform2f(uRes, canvas.width, canvas.height);
-  }
+  let needsResize = true;
+  const scheduleResize = () => {
+    needsResize = true;
+  };
 
   let resizeObserver: ResizeObserver | null = null;
-  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('resize', scheduleResize, { passive: true });
   if (typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(resize);
+    resizeObserver = new ResizeObserver(scheduleResize);
     resizeObserver.observe(canvas);
   }
-  resize();
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const targetFps = window.innerWidth < 700 || reduced ? 30 : 60;
@@ -151,11 +145,40 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
   let rafId = 0;
   let cancelled = false;
 
+  function applyResize(): boolean {
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.max(1, rect.width);
+    const cssH = Math.max(1, rect.height);
+    const dprCap = window.innerWidth < 700 ? 1.25 : 1.5;
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+    const w = Math.floor(cssW * dpr);
+    const h = Math.floor(cssH * dpr);
+    if (w === canvas.width && h === canvas.height) return false;
+    canvas.width = w;
+    canvas.height = h;
+    gl!.viewport(0, 0, w, h);
+    gl!.uniform2f(uRes, w, h);
+    return true;
+  }
+
+  function draw() {
+    gl!.uniform1f(uTime, (performance.now() - t0) / 1000);
+    gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
+  }
+
   function tick(now: number) {
     if (cancelled) return;
-    if (!last || now - last >= minDelta) {
-      gl!.uniform1f(uTime, (performance.now() - t0) / 1000);
-      gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
+    let drewThisFrame = false;
+    if (needsResize) {
+      needsResize = false;
+      if (applyResize()) {
+        draw();
+        last = now;
+        drewThisFrame = true;
+      }
+    }
+    if (!drewThisFrame && (!last || now - last >= minDelta)) {
+      draw();
       last = now;
     }
     rafId = requestAnimationFrame(tick);
@@ -165,28 +188,45 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
   return () => {
     cancelled = true;
     cancelAnimationFrame(rafId);
-    window.removeEventListener('resize', resize);
+    window.removeEventListener('resize', scheduleResize);
     resizeObserver?.disconnect();
   };
 }
 
 function pinHazeHeight(haze: HTMLElement, visual: HTMLElement): () => void {
-  function sync() {
+  let scheduled = false;
+  let lastHeight = -1;
+  let cancelled = false;
+
+  function apply() {
+    scheduled = false;
+    if (cancelled) return;
     const r = visual.getBoundingClientRect();
     const docTop = window.scrollY + r.top;
     const overlap = Math.min(120, r.height * 0.18);
-    haze.style.height = Math.max(320, docTop + overlap) + 'px';
+    const next = Math.max(320, Math.round(docTop + overlap));
+    if (next === lastHeight) return;
+    lastHeight = next;
+    haze.style.height = next + 'px';
   }
-  sync();
-  window.addEventListener('resize', sync, { passive: true });
+
+  function schedule() {
+    if (scheduled || cancelled) return;
+    scheduled = true;
+    requestAnimationFrame(apply);
+  }
+
+  schedule();
+  window.addEventListener('resize', schedule, { passive: true });
   let observer: ResizeObserver | null = null;
   if (typeof ResizeObserver !== 'undefined') {
-    observer = new ResizeObserver(sync);
+    observer = new ResizeObserver(schedule);
     observer.observe(visual);
   }
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sync);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
   return () => {
-    window.removeEventListener('resize', sync);
+    cancelled = true;
+    window.removeEventListener('resize', schedule);
     observer?.disconnect();
   };
 }
@@ -257,26 +297,6 @@ export default function LandingPage() {
         .from(balanceRef.current, { y: 32, duration: 0.8, ease: 'expo.out' }, 1.35)
         .to(photoRef.current, { opacity: 1, duration: 0.9 }, 1.3)
         .from(photoRef.current, { scale: 1.04, duration: 1.2, ease: 'expo.out' }, 1.3);
-
-      gsap.to(pillRef.current, { y: '+=8', duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 2.4 });
-      gsap.to(balanceRef.current, { y: '-=6', duration: 3.8, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 2.8 });
-
-      if (matchMedia('(pointer: fine)').matches && pillRef.current && balanceRef.current) {
-        const px = gsap.quickTo(pillRef.current, 'x', { duration: 0.6, ease: 'power3' });
-        const py = gsap.quickTo(pillRef.current, 'y', { duration: 0.6, ease: 'power3' });
-        const bx = gsap.quickTo(balanceRef.current, 'x', { duration: 0.7, ease: 'power3' });
-        const by = gsap.quickTo(balanceRef.current, 'y', { duration: 0.7, ease: 'power3' });
-        const onMove = (e: MouseEvent) => {
-          const cx = (e.clientX / window.innerWidth - 0.5) * 2;
-          const cy = (e.clientY / window.innerHeight - 0.5) * 2;
-          px(cx * 10);
-          py(cy * 6);
-          bx(cx * 14);
-          by(cy * 8);
-        };
-        window.addEventListener('mousemove', onMove);
-        return () => window.removeEventListener('mousemove', onMove);
-      }
     });
 
     return () => {
@@ -292,10 +312,7 @@ export default function LandingPage() {
 
       <nav className="lp-nav">
         <Link to="/" className="lp-logo">
-          <span className="lp-logo-mark">
-            <img src="/xraytech-mark.png" alt="" className="lp-mark-light" />
-            <img src="/xraytech-mark-badge.png" alt="" className="lp-mark-dark" />
-          </span>
+          <img src="/logoNoBg.png" alt="" className="lp-logo-img" />
           <span>X-Ray Tech</span>
         </Link>
         <div className="lp-nav-links">
@@ -306,7 +323,7 @@ export default function LandingPage() {
         </div>
         <div className="lp-nav-actions">
           <Link to="/login" className="lp-text-link">Log in</Link>
-          <Link to="/signup" className="lp-cta-dark is-brand">Create account</Link>
+          <Link to="/signup" className="lp-text-link">Create account</Link>
         </div>
       </nav>
 
@@ -324,48 +341,68 @@ export default function LandingPage() {
 
           <div ref={ctaRef} className="lp-hero-cta-wrap">
             <Link to="/signup" className="lp-cta-dark is-brand">Create your account</Link>
-            <Link to="/login" className="lp-cta-ghost">Sign in</Link>
+            <Link to="/login" className="lp-cta-light">Sign in</Link>
           </div>
 
           <div ref={visualRef} className="lp-visual">
             <div className="lp-cards-col">
-              <div ref={pillRef} className="lp-pill-card">
-                <div className="lp-labels">
-                  <span className="lp-top">Cycle 2024 – 2026</span>
-                  <span className="lp-bot">License vault</span>
+              <div ref={pillRef} className="lp-iema-card">
+                <div className="lp-iema-head">
+                  <h3 className="lp-iema-title">Days to IEMA renewal</h3>
+                  <span className="lp-iema-badge">
+                    <img src={iemaBlackText} alt="IEMA" className="lp-iema-mark-light" />
+                    <img src={iemaWhiteText} alt="IEMA" className="lp-iema-mark-dark" />
+                  </span>
                 </div>
-                <div className="lp-lock-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
+                <div className="lp-iema-number">
+                  <span className="lp-iema-num">87</span>
+                  <span className="lp-iema-unit">days</span>
                 </div>
+                <span className="lp-iema-meta">Renews Aug 13, 2026</span>
               </div>
 
               <div ref={balanceRef} className="lp-balance-card">
-                <span className="lp-renewal-pill">87 days</span>
-                <span className="lp-label">CE points logged</span>
-                <span className="lp-amount">
-                  40<span className="lp-total"> / 48</span>
-                </span>
-                <span className="lp-ce-row">
-                  <span className="lp-ce-dot" />
-                  <span className="lp-agency">IEMA</span>
-                  <span className="lp-sep">·</span>
-                  <span>Renews Aug 13, 2026</span>
-                </span>
-                <div className="lp-holder-row">
-                  <div className="lp-holder-avatar">AH</div>
-                  <div className="lp-holder-text">
-                    <span className="lp-label">Technologist</span>
-                    <span className="lp-name">Adnan Hassan</span>
+                <span className="lp-balance-title">CE points</span>
+                <div className="lp-balance-body">
+                  <div className="lp-donut">
+                    <svg className="lp-donut-svg" viewBox="0 0 100 100" aria-hidden="true">
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="var(--ink-200)" strokeWidth="14" />
+                      <g transform="rotate(-90 50 50)">
+                        <circle
+                          cx="50" cy="50" r="40" fill="none"
+                          stroke="var(--brand-600)" strokeWidth="14"
+                          strokeDasharray="104.72 251.33" strokeDashoffset="0"
+                        />
+                        <circle
+                          cx="50" cy="50" r="40" fill="none"
+                          stroke="var(--brand-300)" strokeWidth="14"
+                          strokeDasharray="104.72 251.33" strokeDashoffset="-104.72"
+                        />
+                      </g>
+                    </svg>
+                    <span className="lp-donut-label">40 / 48</span>
+                  </div>
+                  <div className="lp-legend">
+                    <div className="lp-legend-row">
+                      <span className="lp-legend-dot is-iema" />
+                      <span className="lp-legend-name">IEMA</span>
+                      <span className="lp-legend-val">20h</span>
+                    </div>
+                    <div className="lp-legend-row">
+                      <span className="lp-legend-dot is-arrt" />
+                      <span className="lp-legend-name">ARRT</span>
+                      <span className="lp-legend-val">20h</span>
+                    </div>
+                    <div className="lp-legend-total">
+                      <span className="lp-legend-total-label">Total</span>
+                      <span className="lp-legend-total-val">40/48h</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             <div ref={photoRef} className="lp-photo">
-              <span className="lp-photo-tag">Live dashboard</span>
               <img src={xrayTechImage} alt="X-Ray Tech dashboard preview" />
             </div>
           </div>
@@ -375,8 +412,7 @@ export default function LandingPage() {
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <Link to="/" className="lp-footer-brand">
-            <img src="/xraytech-mark.png" alt="" className="lp-mark-light" />
-            <img src="/xraytech-mark-badge.png" alt="" className="lp-mark-dark" />
+            <img src="/logoNoBg.png" alt="" className="lp-logo-img" />
             <span>X-Ray Tech</span>
           </Link>
           <ul>
@@ -386,7 +422,7 @@ export default function LandingPage() {
             <li><Link className="lp-flink" to="/signup">Create account</Link></li>
             <li><Link className="lp-flink" to="/login">Log in</Link></li>
           </ul>
-          <span className="lp-footer-copy">© 2026 X-Ray Tech</span>
+          <span className="lp-footer-copy">Northwestern University · CS394 Project · 2026</span>
         </div>
       </footer>
     </div>
