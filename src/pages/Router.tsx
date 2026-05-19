@@ -11,6 +11,7 @@ import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
+import { ProfilePage } from './ProfilePage';
 import AppLayout from '../components/AppLayout';
 
 const Router = () => {
@@ -138,6 +139,10 @@ const Router = () => {
               <Navigate to="/" replace />
             )
           }
+        />
+        <Route
+          path="/profile"
+          element={requireAuth(appUser ? <ProfilePage appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

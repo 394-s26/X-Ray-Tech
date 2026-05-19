@@ -212,6 +212,21 @@
     box-shadow: 0 0 0 var(--ink-300);
   }
 
+  .app-sidebar__profile--active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--ink-900);
+  }
+  .dark .app-sidebar__profile--active {
+    box-shadow: 0 0 0 var(--ink-300);
+  }
+  .app-sidebar__profile--active:hover {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--ink-900);
+  }
+  .dark .app-sidebar__profile--active:hover {
+    box-shadow: 0 0 0 var(--ink-300);
+  }
+
   .app-sidebar__profile-chevron {
     flex-shrink: 0;
     color: var(--ink-400);
