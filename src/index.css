@@ -531,6 +531,7 @@ body, #root {
 /* ── Forms ───────────────────────────────────────────────── */
 .form-label {
   display: block;
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   color: var(--ink-700);

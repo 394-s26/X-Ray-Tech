@@ -79,8 +79,8 @@ const StrengthPill = ({ met, label, mobileLabel }: { met: boolean; label: string
 // ── Section card wrapper ──────────────────────────────────────
 
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="bg-white dark:bg-[var(--card-bg)] border border-[var(--ink-200)] dark:border-[var(--card-border)] rounded-2xl p-6 flex flex-col gap-5">
-    <h2 className="text-base font-semibold text-[var(--ink-900)] dark:text-[var(--fg)]">{title}</h2>
+  <div className="nb-card p-6 flex flex-col gap-5">
+    <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--ink-900)] dark:text-[var(--fg)]">{title}</h2>
     {children}
   </div>
 );
