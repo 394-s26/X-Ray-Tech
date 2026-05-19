@@ -42,6 +42,12 @@
   pointer-events: none;
   -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
   mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+  opacity: 0;
+  transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-page .lp-haze.is-ready {
+  opacity: 1;
 }
 
 .landing-page .lp-nav,
@@ -284,7 +290,7 @@
 .landing-page .lp-balance-card {
   border-radius: 16px;
   border: 1.5px solid var(--lp-ink);
-  box-shadow: 2px 2px 0 var(--lp-ink);
+  box-shadow: none;
   padding: 1.25rem 1.4rem 1.3rem;
   display: flex;
   flex-direction: column;
@@ -297,7 +303,7 @@
 
 /* IEMA renewal countdown card */
 .landing-page .lp-iema-card {
-  background: var(--tint-rose);
+  background: var(--tint-sun);
   justify-content: space-between;
 }
 

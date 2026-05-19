@@ -2,8 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import xrayTechImage from '../assets/xraytech.jpg';
-import iemaBlackText from '../assets/iemablacktext.png';
-import iemaWhiteText from '../assets/iemawhitetext.png';
+import arrtBlackText from '../assets/arrtblacktext.png';
 import '../styles/pages/LandingPage.css';
 
 const PALETTES = {
@@ -45,20 +44,50 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
     }
 
     float blobField(vec2 p, float t, float aspect) {
-      vec2 c1 = vec2((0.25 + 0.18 * sin(t * 0.70 + 0.0)) * aspect,
-                      0.30 + 0.22 * cos(t * 0.55 + 1.7));
-      vec2 c2 = vec2((0.80 + 0.15 * cos(t * 0.60 + 2.3)) * aspect,
-                      0.25 + 0.20 * sin(t * 0.80 + 0.4));
-      vec2 c3 = vec2((0.55 + 0.30 * sin(t * 0.45 + 4.1)) * aspect,
-                      0.55 + 0.18 * cos(t * 0.65 + 2.9));
-      vec2 c4 = vec2((0.15 + 0.25 * cos(t * 0.35 + 5.2)) * aspect,
-                      0.70 + 0.20 * sin(t * 0.50 + 3.6));
+      // wave displacement — adds an erratic, undulating distortion to the sampling field
+      vec2 wave = vec2(
+        0.06 * sin(p.y * 6.0 + t * 1.8) + 0.04 * sin(p.x * 9.0 + t * 2.4),
+        0.06 * cos(p.x * 5.0 + t * 1.6) + 0.04 * cos(p.y * 8.0 + t * 2.2)
+      );
+      p += wave;
+      vec2 c1 = vec2((0.20 + 0.22 * sin(t * 1.40 + 0.0) + 0.06 * sin(t * 3.10 + 1.2)) * aspect,
+                      0.28 + 0.26 * cos(t * 1.10 + 1.7) + 0.05 * cos(t * 3.40 + 0.3));
+      vec2 c2 = vec2((0.82 + 0.20 * cos(t * 1.20 + 2.3) + 0.05 * sin(t * 2.90 + 4.1)) * aspect,
+                      0.22 + 0.24 * sin(t * 1.60 + 0.4) + 0.05 * cos(t * 3.20 + 2.5));
+      vec2 c3 = vec2((0.52 + 0.34 * sin(t * 0.90 + 4.1) + 0.06 * cos(t * 2.70 + 0.6)) * aspect,
+                      0.55 + 0.22 * cos(t * 1.30 + 2.9) + 0.05 * sin(t * 3.00 + 5.2));
+      vec2 c4 = vec2((0.12 + 0.28 * cos(t * 0.70 + 5.2) + 0.06 * sin(t * 2.50 + 1.9)) * aspect,
+                      0.72 + 0.24 * sin(t * 1.00 + 3.6) + 0.05 * cos(t * 3.30 + 4.6));
+      vec2 c5 = vec2((0.70 + 0.26 * sin(t * 1.00 + 1.1) + 0.06 * cos(t * 2.80 + 3.7)) * aspect,
+                      0.78 + 0.22 * cos(t * 0.80 + 2.2) + 0.05 * sin(t * 3.10 + 0.8));
+      vec2 c6 = vec2((0.40 + 0.24 * cos(t * 1.24 + 3.3) + 0.06 * sin(t * 2.90 + 5.5)) * aspect,
+                      0.12 + 0.18 * sin(t * 1.44 + 5.0) + 0.05 * cos(t * 3.50 + 1.1));
+      vec2 c7 = vec2((0.92 + 0.22 * sin(t * 0.84 + 4.7) + 0.05 * cos(t * 3.00 + 2.1)) * aspect,
+                      0.60 + 0.26 * cos(t * 1.16 + 0.9) + 0.05 * sin(t * 3.20 + 3.7));
+      vec2 c8 = vec2((0.30 + 0.26 * cos(t * 1.10 + 2.6) + 0.06 * sin(t * 2.60 + 4.2)) * aspect,
+                      0.45 + 0.24 * sin(t * 0.96 + 4.4) + 0.05 * cos(t * 3.10 + 0.7));
+      vec2 c9 = vec2((0.05 + 0.24 * sin(t * 1.32 + 0.8) + 0.05 * cos(t * 2.80 + 5.1)) * aspect,
+                      0.50 + 0.26 * cos(t * 1.04 + 3.1) + 0.05 * sin(t * 3.30 + 2.4));
+      vec2 c10 = vec2((0.65 + 0.28 * cos(t * 0.96 + 5.5) + 0.06 * sin(t * 2.70 + 0.2)) * aspect,
+                       0.40 + 0.22 * sin(t * 1.36 + 1.4) + 0.05 * cos(t * 3.40 + 4.0));
+      vec2 c11 = vec2((0.45 + 0.30 * sin(t * 1.16 + 2.0) + 0.06 * cos(t * 2.90 + 1.7)) * aspect,
+                       0.88 + 0.16 * cos(t * 0.88 + 4.8) + 0.05 * sin(t * 3.20 + 3.0));
+      vec2 c12 = vec2((0.88 + 0.22 * cos(t * 1.40 + 0.5) + 0.05 * sin(t * 3.00 + 2.6)) * aspect,
+                       0.92 + 0.16 * sin(t * 1.04 + 2.7) + 0.05 * cos(t * 3.30 + 5.3));
       float h = 0.0;
       h += blob(p, c1, 0.55);
       h += blob(p, c2, 0.50);
       h += blob(p, c3, 0.60);
       h += blob(p, c4, 0.45);
-      return clamp(h * 0.55, 0.0, 1.0);
+      h += blob(p, c5, 0.50);
+      h += blob(p, c6, 0.42);
+      h += blob(p, c7, 0.48);
+      h += blob(p, c8, 0.52);
+      h += blob(p, c9, 0.46);
+      h += blob(p, c10, 0.50);
+      h += blob(p, c11, 0.44);
+      h += blob(p, c12, 0.40);
+      return clamp(h * 0.32, 0.0, 1.0);
     }
 
     void main() {
@@ -120,7 +149,7 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
 
   const pal = PALETTES.violet;
   gl.uniform1f(uIntensity, 1.0);
-  gl.uniform1f(uSpeed, 1.6);
+  gl.uniform1f(uSpeed, 8.0);
   gl.uniform3fv(uCanvas, pal.canvas);
   gl.uniform3fv(uA, pal.accentA);
   gl.uniform3fv(uB, pal.accentB);
@@ -144,6 +173,7 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
   const t0 = performance.now();
   let rafId = 0;
   let cancelled = false;
+  let revealed = false;
 
   function applyResize(): boolean {
     const rect = canvas.getBoundingClientRect();
@@ -180,6 +210,11 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
     if (!drewThisFrame && (!last || now - last >= minDelta)) {
       draw();
       last = now;
+      drewThisFrame = true;
+    }
+    if (drewThisFrame && !revealed) {
+      revealed = true;
+      requestAnimationFrame(() => canvas.classList.add('is-ready'));
     }
     rafId = requestAnimationFrame(tick);
   }
@@ -346,21 +381,6 @@ export default function LandingPage() {
 
           <div ref={visualRef} className="lp-visual">
             <div className="lp-cards-col">
-              <div ref={pillRef} className="lp-iema-card">
-                <div className="lp-iema-head">
-                  <h3 className="lp-iema-title">Days to IEMA renewal</h3>
-                  <span className="lp-iema-badge">
-                    <img src={iemaBlackText} alt="IEMA" className="lp-iema-mark-light" />
-                    <img src={iemaWhiteText} alt="IEMA" className="lp-iema-mark-dark" />
-                  </span>
-                </div>
-                <div className="lp-iema-number">
-                  <span className="lp-iema-num">87</span>
-                  <span className="lp-iema-unit">days</span>
-                </div>
-                <span className="lp-iema-meta">Renews Aug 13, 2026</span>
-              </div>
-
               <div ref={balanceRef} className="lp-balance-card">
                 <span className="lp-balance-title">CE points</span>
                 <div className="lp-balance-body">
@@ -399,6 +419,20 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div ref={pillRef} className="lp-iema-card">
+                <div className="lp-iema-head">
+                  <h3 className="lp-iema-title">Days to ARRT Renewal</h3>
+                  <span className="lp-iema-badge">
+                    <img src={arrtBlackText} alt="ARRT" className="lp-iema-mark-light" />
+                  </span>
+                </div>
+                <div className="lp-iema-number">
+                  <span className="lp-iema-num">87</span>
+                  <span className="lp-iema-unit">days</span>
+                </div>
+                <span className="lp-iema-meta">Renews Aug 13, 2026</span>
               </div>
             </div>
 
