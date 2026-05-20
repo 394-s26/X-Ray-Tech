@@ -5,6 +5,9 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  applyActionCode,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, runTransaction, serverTimestamp, arrayUnion, updateDoc } from 'firebase/firestore';
@@ -52,6 +55,18 @@ export const registerWithEmail = async (
 
 export const signOut = async (): Promise<void> => {
   await firebaseSignOut(auth);
+};
+
+export const sendPasswordReset = async (email: string): Promise<void> => {
+  await sendPasswordResetEmail(auth, email);
+};
+
+export const confirmPasswordResetWithCode = async (oobCode: string, newPassword: string): Promise<void> => {
+  await confirmPasswordReset(auth, oobCode, newPassword);
+};
+
+export const applyAuthActionCode = async (oobCode: string): Promise<void> => {
+  await applyActionCode(auth, oobCode);
 };
 
 export const fetchAppUser = async (uid: string): Promise<AppUser | null> => {
