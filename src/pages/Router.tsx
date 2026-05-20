@@ -13,6 +13,7 @@ import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
 import { ForgotPasswordPage } from './ForgotPasswordPage';
 import { AuthActionPage } from './AuthActionPage';
+import ProfilePage from './ProfilePage';
 import AppLayout from '../components/AppLayout';
 
 const Router = () => {
@@ -70,6 +71,10 @@ const Router = () => {
         <Route
           path="/team"
           element={requireAuth(appUser ? <TeamManagement appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
+        />
+        <Route
+          path="/profile"
+          element={requireAuth(appUser ? <ProfilePage appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
         <Route
           path="/arrt"

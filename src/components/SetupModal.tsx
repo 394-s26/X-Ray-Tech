@@ -165,6 +165,8 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
   const [iemaMonth, setIemaMonth] = useState(
     appUser.iemaCycleEndMonth != null ? String(appUser.iemaCycleEndMonth) : '',
   );
+  const [arrtIdNumber, setArrtIdNumber] = useState(appUser.arrtIdNumber ?? '');
+  const [iemaIdNumber, setIemaIdNumber] = useState(appUser.iemaIdNumber ?? '');
   const [licenseError, setLicenseError] = useState<string | null>(null);
   const [savingLicense, setSavingLicense] = useState(false);
 
@@ -181,13 +183,22 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
     if (iemaYear.trim() && !iemaMonth.trim()) { setLicenseError('Pick the IEMA cycle end month.'); return; }
     if (iemaMonth.trim() && !iemaYear.trim()) { setLicenseError('Enter the year your IEMA cycle began.'); return; }
 
-    const update: Partial<AppUser> = {};
+    const update: Partial<AppUser> = {
+      arrtIdNumber: arrtIdNumber.trim() || null,
+      iemaIdNumber: iemaIdNumber.trim() || null,
+    };
     if (arrtYear.trim()) update.arrtCycleStartYear = parseInt(arrtYear, 10);
     if (iemaYear.trim()) update.iemaCycleStartYear = parseInt(iemaYear, 10);
     if (iemaMonth.trim()) update.iemaCycleEndMonth = parseInt(iemaMonth, 10);
 
-    if (Object.keys(update).length === 0) {
-      setLicenseError('Add at least one cycle, or click "Maybe later" to skip.');
+    const hasCycle =
+      update.arrtCycleStartYear != null ||
+      update.iemaCycleStartYear != null ||
+      update.iemaCycleEndMonth != null;
+    const hasId = !!(update.arrtIdNumber || update.iemaIdNumber);
+
+    if (!hasCycle && !hasId) {
+      setLicenseError('Add cycle dates or ID numbers, or click "Maybe later" to skip.');
       return;
     }
 
@@ -310,6 +321,37 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
                   <p className="text-xs text-gray-500 dark:text-slate-400">
                     Same month you were first accredited.
                   </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="form-field">
+                  <label className="form-label">
+                    ARRT identification number <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    placeholder="e.g. 1234567"
+                    value={arrtIdNumber}
+                    onChange={(e) => setArrtIdNumber(e.target.value)}
+                    disabled={savingLicense}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label">
+                    IEMA identification number <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    placeholder="e.g. IL-12345"
+                    value={iemaIdNumber}
+                    onChange={(e) => setIemaIdNumber(e.target.value)}
+                    disabled={savingLicense}
+                    autoComplete="off"
+                  />
                 </div>
               </div>
 

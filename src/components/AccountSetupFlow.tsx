@@ -22,6 +22,8 @@ interface SetupFormData {
   arrtCycleStartYear: string;
   iemaCycleStartYear: string;
   iemaCycleEndMonth: string;
+  arrtIdNumber: string;
+  iemaIdNumber: string;
 }
 
 type Step = 1 | 2 | 3 | 4;
@@ -106,6 +108,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     arrtCycleStartYear: user.arrtCycleStartYear != null ? String(user.arrtCycleStartYear) : '',
     iemaCycleStartYear: user.iemaCycleStartYear != null ? String(user.iemaCycleStartYear) : '',
     iemaCycleEndMonth: user.iemaCycleEndMonth != null ? String(user.iemaCycleEndMonth) : '',
+    arrtIdNumber: user.arrtIdNumber ?? '',
+    iemaIdNumber: user.iemaIdNumber ?? '',
   });
   const initialBdMatch = (user.birthday ?? '').match(/^(\d{2})-(\d{2})$/);
   const [birthMonth, setBirthMonth] = useState<string>(initialBdMatch ? initialBdMatch[1] : '');
@@ -260,6 +264,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         iemaCycleEndMonth: licenseSkipped || !formData.iemaCycleEndMonth.trim()
           ? null
           : parseInt(formData.iemaCycleEndMonth, 10),
+        arrtIdNumber: formData.arrtIdNumber.trim() || null,
+        iemaIdNumber: formData.iemaIdNumber.trim() || null,
         setupCompleted: true,
       };
       if (!teamSkipped) {
@@ -445,6 +451,41 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
               </select>
               <p className="setup-flow__field-hint">This is the same month you were first accredited.</p>
               <p className="setup-flow__field-error">{errors.iemaCycleEndMonth}</p>
+            </div>
+          </div>
+
+          <div className="w-full mt-6">
+            <p className="setup-flow__mini-title">Identification numbers</p>
+            <p className="setup-flow__field-hint" style={{ marginLeft: 0, marginTop: 4 }}>
+              Optional — your ARRT and IEMA registry or state ID numbers.
+            </p>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-4">
+            <div className="form-field w-full">
+              <label className="form-label">
+                ARRT identification number <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="e.g. 1234567"
+                value={formData.arrtIdNumber}
+                onChange={e => setField('arrtIdNumber', e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="form-field w-full">
+              <label className="form-label">
+                IEMA identification number <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="e.g. IL-12345"
+                value={formData.iemaIdNumber}
+                onChange={e => setField('iemaIdNumber', e.target.value)}
+                autoComplete="off"
+              />
             </div>
           </div>
         </div>
