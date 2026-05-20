@@ -92,26 +92,25 @@ export default function InAppNotificationList({
                 </p>
 
                 {(expandable || n.href) && (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 w-full min-w-0">
-                    <div className="min-w-0">
-                      {expandable && (
-                        <button
-                          type="button"
-                          className="text-left text-[11px] font-semibold text-[var(--brand-700)] hover:underline dark:text-[var(--brand-300)] py-1 sm:py-0.5"
-                          aria-expanded={isOpen}
-                          aria-controls={regionId}
-                          onClick={() => toggleExpanded(n.id)}
-                        >
-                          {isOpen ? 'Show less' : 'Show full message'}
-                        </button>
-                      )}
-                    </div>
+                  <div className="mt-1 flex min-w-0 w-full flex-wrap items-baseline gap-x-3 gap-y-1">
+                    {expandable && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center text-left text-[11px] font-semibold leading-none text-[var(--brand-700)] hover:underline dark:text-[var(--brand-300)]"
+                        aria-expanded={isOpen}
+                        aria-controls={regionId}
+                        onClick={() => toggleExpanded(n.id)}
+                      >
+                        {isOpen ? 'Show less' : 'Show full message'}
+                      </button>
+                    )}
                     {n.href && (
                       <Link
                         to={n.href}
-                        className="shrink-0 text-[11px] font-semibold text-[var(--brand-700)] hover:underline dark:text-[var(--brand-300)] py-1 sm:py-0.5"
+                        className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold leading-none text-[var(--brand-700)] hover:underline dark:text-[var(--brand-300)]"
                       >
-                        Open →
+                        <span>Open</span>
+                        <span aria-hidden>→</span>
                       </Link>
                     )}
                   </div>

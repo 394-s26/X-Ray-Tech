@@ -78,7 +78,7 @@ export default function NotificationBell({ appUser }: NotificationBellProps) {
             onClick={() => setOpen(false)}
           />
           <div
-            className="notification-bell-panel fixed left-4 right-4 top-[calc(3.25rem+env(safe-area-inset-top,0px))] z-[60] flex max-h-[min(70dvh,calc(100dvh-4.5rem-env(safe-area-inset-bottom,0px)))] flex-col overflow-hidden rounded-xl border-[1.5px] border-[var(--ink-900)] bg-[var(--paper)] shadow-[3px_3px_0_var(--ink-900)] dark:border-[var(--ink-200)] dark:bg-[#14111F] dark:shadow-[3px_3px_0_var(--ink-400)] lg:absolute lg:left-auto lg:right-0 lg:top-[calc(100%+10px)] lg:w-[min(calc(100vw-2rem),22rem)] lg:max-h-none"
+            className="notification-bell-panel fixed left-4 right-4 top-[calc(3.25rem+env(safe-area-inset-top,0px))] z-[60] flex max-h-[min(70dvh,calc(100dvh-4.5rem-env(safe-area-inset-bottom,0px)))] flex-col overflow-hidden rounded-xl border border-[var(--ink-200)] bg-[var(--paper)] shadow-[0_4px_20px_rgba(14,11,31,0.1),0_1px_3px_rgba(14,11,31,0.06)] dark:border-[var(--ink-700)] dark:bg-[#14111F] dark:shadow-[0_4px_24px_rgba(0,0,0,0.45),0_1px_3px_rgba(0,0,0,0.3)] lg:absolute lg:left-auto lg:right-0 lg:top-[calc(100%+10px)] lg:w-[min(calc(100vw-2rem),22rem)] lg:max-h-none"
             role="dialog"
             aria-label="In-app notifications"
           >
