@@ -11,6 +11,8 @@ import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
+import { ForgotPasswordPage } from './ForgotPasswordPage';
+import { AuthActionPage } from './AuthActionPage';
 import AppLayout from '../components/AppLayout';
 
 const Router = () => {
@@ -139,6 +141,11 @@ const Router = () => {
             )
           }
         />
+        <Route
+          path="/forgot-password"
+          element={!user ? <ForgotPasswordPage /> : <Navigate to="/" replace />}
+        />
+        <Route path="/auth/action" element={<AuthActionPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

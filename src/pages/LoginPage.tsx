@@ -88,6 +88,15 @@ export const LoginPage = () => {
               <span>{loading ? 'Logging in…' : 'Log in'}</span>
               <ArrowRightIcon size={18} />
             </button>
+
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-[var(--ink-500)] dark:text-slate-400 hover:text-[var(--brand-600)] dark:hover:text-[var(--brand-300)] hover:underline transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </form>
 
           <div className="flex items-center gap-3 mb-5">
