@@ -182,7 +182,7 @@ all_courses = []
 categories = get_all_category_ids(session)
 print(f"Found {len(categories)} categories")
 
-for cat_id, cat_name in categories[:1]:
+for cat_id, cat_name in categories[:1]:  # TODO remove this when done debugging
     print(f"Scraping category {cat_id}: {cat_name}")
     courses = search_category(session, cat_id)
     all_courses.extend(courses)
