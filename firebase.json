@@ -20,6 +20,11 @@
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ]
+    },
+    {
+      "source": "functions-python",
+      "codebase": "python-functions",
+      "runtime": "python312"    
     }
   ],
   "hosting": {
