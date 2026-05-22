@@ -5,6 +5,10 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
+// FCM expiry notifications (call from a scheduled/triggered function when ready):
+// export { sendCertificateExpiryNotification } from "./fcm/sendCertificateExpiryNotification.js";
+// export { msUntilExpirationDate } from "./fcm/formatCertificateExpiryNotice.js";
+
 initializeApp();
 
 setGlobalOptions({ maxInstances: 10 });
