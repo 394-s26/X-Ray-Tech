@@ -76,7 +76,11 @@ export const CertificateCreatePage = () => {
       if (parsed.providerName) setCompanyName(parsed.providerName);
       if (parsed.completedDate) setCompletedDate(parsed.completedDate);
       if (parsed.expirationDate) setExpiresDate(parsed.expirationDate);
-      if (parsed.ceCredits !== null) setPoints(String(parsed.ceCredits));
+      if (categories.includes('CPR')) {
+        setPoints('0');
+      } else if (parsed.ceCredits !== null) {
+        setPoints(String(parsed.ceCredits));
+      }
       if (parsed.categoryType) {
         const normalized = parsed.categoryType.trim().toUpperCase();
         if (normalized === 'A' || normalized === 'A+' || normalized === 'N/A') {
@@ -125,7 +129,10 @@ export const CertificateCreatePage = () => {
     setCategories((prev) => {
       if (prev.includes(selected)) return prev.filter((c) => c !== selected);
       // CPR is mutually exclusive with ARRT/IEMA and vice versa
-      if (selected === 'CPR') return ['CPR'];
+      if (selected === 'CPR') {
+        setPoints('0');
+        return ['CPR'];
+      }
       return [...prev.filter((c) => c !== 'CPR'), selected];
     });
   };

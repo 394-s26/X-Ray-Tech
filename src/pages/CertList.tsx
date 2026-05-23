@@ -219,6 +219,7 @@ function CertDetailOverlay({
   const [isEditing, setIsEditing] = useState(startEditing);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(formFromCert);
+  const [restrictionModalMessage, setRestrictionModalMessage] = useState<string | null>(null);
 
   const status = expiryStatus(isEditing ? form.expirationDate : cert.expirationDate);
 
@@ -251,9 +252,42 @@ function CertDetailOverlay({
   const toggleCategory = (cat: CertificateCategory) =>
     setForm((prev) => {
       const already = prev.assignedCertifications.includes(cat);
-      if (already) return { ...prev, assignedCertifications: prev.assignedCertifications.filter((c) => c !== cat) };
+      if (already) {
+        if (prev.assignedCertifications.length === 1) {
+          return prev;
+        }
+        return {
+          ...prev,
+          assignedCertifications: prev.assignedCertifications.filter((c) => c !== cat),
+        };
+      }
+
+      const wasCreatedForArrtOrIema =
+        cert.categories.includes('ARRT') || cert.categories.includes('IEMA');
+      const wasCreatedForCprOnly =
+        cert.categories.includes('CPR') &&
+        !cert.categories.includes('ARRT') &&
+        !cert.categories.includes('IEMA');
+
+      if (cat === 'CPR' && wasCreatedForArrtOrIema) {
+        setRestrictionModalMessage(
+          'This certificate was created for ARRT or IEMA. To convert it to CPR, delete this upload first and re-upload it as CPR.',
+        );
+        return prev;
+      }
+
+      if (cat !== 'CPR' && wasCreatedForCprOnly) {
+        setRestrictionModalMessage(
+          'This certificate was created as CPR. To convert it to ARRT or IEMA, delete this upload first and re-upload it for the target license.',
+        );
+        return prev;
+      }
+
       if (cat === 'CPR') return { ...prev, assignedCertifications: ['CPR'] };
-      return { ...prev, assignedCertifications: [...prev.assignedCertifications.filter((c) => c !== 'CPR'), cat] };
+      return {
+        ...prev,
+        assignedCertifications: [...prev.assignedCertifications.filter((c) => c !== 'CPR'), cat],
+      };
     });
 
   const thumbnailBtn = (
@@ -411,26 +445,44 @@ function CertDetailOverlay({
                       {(['IEMA', 'ARRT', 'CPR'] as CertificateCategory[]).map((cat) => {
                         const isCprSelected = form.assignedCertifications.includes('CPR');
                         const isArrtIemaSelected = form.assignedCertifications.some((c) => c === 'ARRT' || c === 'IEMA');
+                        const certWasCreatedForCprOnly =
+                          cert.categories.includes('CPR') &&
+                          !cert.categories.includes('ARRT') &&
+                          !cert.categories.includes('IEMA');
                         const isGreyed =
-                          (cat === 'CPR' && isArrtIemaSelected) ||
-                          ((cat === 'ARRT' || cat === 'IEMA') && isCprSelected);
+                          cat !== 'CPR' && isCprSelected && !certWasCreatedForCprOnly;
+                        const cprBlocked =
+                          cat === 'CPR' &&
+                          isArrtIemaSelected &&
+                          (cert.categories.includes('ARRT') || cert.categories.includes('IEMA'));
+                        const cprToLicenseBlocked =
+                          cat !== 'CPR' &&
+                          certWasCreatedForCprOnly;
+                        const isOnlySelected =
+                          form.assignedCertifications.includes(cat) &&
+                          form.assignedCertifications.length === 1;
                         return (
                           <label
                             key={cat}
                             className={`flex flex-1 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                               form.assignedCertifications.includes(cat)
                                 ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
+                                : cprBlocked || cprToLicenseBlocked
+                                ? 'cursor-pointer border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-600 dark:bg-amber-500/10 dark:text-amber-300'
                                 : isGreyed
                                 ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-600'
                                 : 'cursor-pointer border-gray-200 bg-white text-gray-800 hover:border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200'
-                            } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            } ${saving || isOnlySelected ? 'opacity-90' : ''}`}
                           >
-                            <input type="checkbox" checked={form.assignedCertifications.includes(cat)} onChange={() => toggleCategory(cat)} disabled={saving || isGreyed} className="form-checkbox" />
+                            <input type="checkbox" checked={form.assignedCertifications.includes(cat)} onChange={() => toggleCategory(cat)} disabled={saving || isGreyed || isOnlySelected} className="form-checkbox" />
                             {cat}
                           </label>
                         );
                       })}
                     </div>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      CPR is exclusive; certificates cannot be converted between CPR and ARRT/IEMA. At least one license must remain selected.
+                    </p>
                   </div>
                 </div>
 
@@ -447,6 +499,30 @@ function CertDetailOverlay({
           </div>
         </div>
       </div>
+      {restrictionModalMessage && (
+        <div className="overlay-center" onClick={() => setRestrictionModalMessage(null)}>
+          <div
+            className="overlay-panel overlay-panel--sm rounded-2xl p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-primary dark:text-slate-100">
+              License conversion blocked
+            </h3>
+            <p className="mt-2 text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
+              {restrictionModalMessage}
+            </p>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setRestrictionModalMessage(null)}
+                className="global-btn default-btn max-w-30 py-2"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

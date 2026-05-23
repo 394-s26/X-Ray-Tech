@@ -16,7 +16,7 @@ import {
 import { EXPIRING_SOON_DAYS, getArchiveStatus, unusedPointsByLicense, type LifecycleStatus } from '../services/archiveLogic';
 import { renderPdfThumbnailFromUrl } from '../services/pdfRender';
 
-type StatusFilter = 'all' | 'expired' | 'arrt' | 'iema' | 'unreported';
+type StatusFilter = 'all' | 'expired' | 'used' | 'arrt' | 'iema';
 
 const MOBILE_PAGE_SIZE = 10;
 const DESKTOP_PAGE_SIZE = 12;
@@ -87,17 +87,31 @@ function PdfThumbnail({ url, alt }: { url: string; alt: string }) {
   );
 }
 
-type ChipTone = 'arrt' | 'iema' | 'cpr' | 'unreported';
+type ChipTone =
+  | 'arrtUsed'
+  | 'arrtAvailable'
+  | 'iemaUsed'
+  | 'iemaAvailable'
+  | 'cpr';
 
 function StatusChip({ tone, label }: { tone: ChipTone; label: string }) {
   const cls =
-    tone === 'unreported'
-      ? 'bg-[var(--ink-200)] text-[var(--ink-600)] dark:bg-[var(--ink-700)] dark:text-[var(--ink-200)]'
-      : 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100';
+    tone === 'arrtUsed' || tone === 'iemaUsed' || tone === 'cpr'
+      ? 'bg-gray-200 text-[var(--ink-700)] dark:bg-secondary/30 dark:text-[var(--ink-100)]'
+      : tone === 'arrtAvailable' || tone === 'iemaAvailable'
+        ? 'bg-gray-200 text-[var(--ink-700)] dark:bg-secondary/30 dark:text-[var(--ink-100)]'
+        : '';
+  const dotCls =
+    tone === 'arrtUsed' || tone === 'iemaUsed' || tone === 'cpr'
+      ? 'bg-red-500'
+      : tone === 'arrtAvailable' || tone === 'iemaAvailable'
+        ? 'bg-emerald-500'
+        : '';
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}
     >
+      <span className={`mr-1.5 size-1.5 rounded-full ${dotCls}`} aria-hidden="true" />
       {label}
     </span>
   );
@@ -109,9 +123,11 @@ const LIFECYCLE_LABEL: Record<LifecycleStatus, string> = {
   expired: 'Expired',
 };
 
-function LifecycleLabel({ status }: { status: LifecycleStatus }) {
+function LifecycleLabel({ status, used = false }: { status: LifecycleStatus; used?: boolean }) {
   const cls =
-    status === 'active'
+    used
+      ? 'bg-[var(--danger-100)] text-[var(--danger-600)]'
+      : status === 'active'
       ? 'bg-[var(--success-100)] text-[var(--success-600)]'
       : status === 'expiringSoon'
         ? 'bg-[var(--warn-100)] text-[var(--warn-600)]'
@@ -120,7 +136,7 @@ function LifecycleLabel({ status }: { status: LifecycleStatus }) {
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}
     >
-      {LIFECYCLE_LABEL[status]}
+      {used ? 'Used' : LIFECYCLE_LABEL[status]}
     </span>
   );
 }
@@ -133,6 +149,12 @@ function ArchiveCard({
   onOpen: (cert: Certification) => void;
 }) {
   const status = getArchiveStatus(cert);
+  const cprOnly =
+    cert.categories.includes('CPR') &&
+    !cert.categories.includes('ARRT') &&
+    !cert.categories.includes('IEMA');
+  const fullyUsed =
+    (cprOnly && status.usedByCpr) || (!cprOnly && status.usedByArrt && status.usedByIema);
   const isPdf = isPdfPath(cert.photoStoragePath);
   const expiryTooltip = status.expired
     ? `Expired ${formatDate(cert.expirationDate)}`
@@ -194,7 +216,7 @@ function ArchiveCard({
           {cert.certificateName}
         </span>
         <span className="shrink-0 flex items-center">
-          <LifecycleLabel status={status.lifecycle} />
+          <LifecycleLabel status={status.lifecycle} used={fullyUsed} />
         </span>
       </div>
 
@@ -213,10 +235,20 @@ function ArchiveCard({
 
       <div className="px-3 py-2.5 flex flex-col gap-2">
         <div className="flex flex-wrap gap-1">
-          {status.usedByArrt && <StatusChip tone="arrt" label="Used by ARRT" />}
-          {status.usedByIema && <StatusChip tone="iema" label="Used by IEMA" />}
-          {status.usedByCpr && <StatusChip tone="cpr" label="Used by CPR" />}
-          {status.unreported && <StatusChip tone="unreported" label="Unreported" />}
+          {status.unreported ? null : cprOnly ? (
+            <StatusChip tone="cpr" label="CPR Already Used" />
+          ) : (
+            <>
+              <StatusChip
+                tone={status.usedByArrt ? 'arrtUsed' : 'arrtAvailable'}
+                label={status.usedByArrt ? 'ARRT Already Used' : 'ARRT Available'}
+              />
+              <StatusChip
+                tone={status.usedByIema ? 'iemaUsed' : 'iemaAvailable'}
+                label={status.usedByIema ? 'IEMA Already Used' : 'IEMA Available'}
+              />
+            </>
+          )}
         </div>
         <p className="text-[11px] text-[var(--ink-500)] dark:text-[var(--ink-300)] leading-tight">
           Start {formatDate(cert.completedDate)} · End {formatDate(cert.expirationDate)} · {cert.ceCredits} hr
@@ -355,10 +387,16 @@ export default function Archive() {
           if (!hit) return false;
         }
         const s = getArchiveStatus(c);
+        const certIsCprOnly =
+          c.categories.includes('CPR') &&
+          !c.categories.includes('ARRT') &&
+          !c.categories.includes('IEMA');
+        const certFullyUsed =
+          (certIsCprOnly && s.usedByCpr) || (!certIsCprOnly && s.usedByArrt && s.usedByIema);
         if (statusFilter === 'expired' && !s.expired) return false;
+        if (statusFilter === 'used' && !certFullyUsed) return false;
         if (statusFilter === 'arrt' && !s.usedByArrt) return false;
         if (statusFilter === 'iema' && !s.usedByIema) return false;
-        if (statusFilter === 'unreported' && !s.unreported) return false;
 
         if (categoryFilter !== 'all' && !c.categories.includes(categoryFilter as 'ARRT' | 'IEMA' | 'CPR')) {
           return false;
@@ -455,9 +493,9 @@ export default function Archive() {
                   >
                     <option value="all">All</option>
                     <option value="expired">Expired</option>
+                    <option value="used">Used</option>
                     <option value="arrt">Used by ARRT</option>
                     <option value="iema">Used by IEMA</option>
-                    <option value="unreported">Unreported</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
