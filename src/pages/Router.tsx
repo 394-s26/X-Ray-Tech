@@ -60,7 +60,20 @@ const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={requireAuth(appUser ? <Dashboard appUser={appUser} /> : <></>)} />
+        <Route
+          path="/"
+          element={
+            user && appUser && appUser.setupCompleted ? (
+              <AppLayout appUser={appUser} onAppUserUpdate={setAppUser}>
+                <Dashboard appUser={appUser} />
+              </AppLayout>
+            ) : user && appUser && !appUser.setupCompleted ? (
+              <Navigate to="/setup" replace />
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
         <Route path="/certificates" element={requireAuth(<CredentialTracking />)} />
         <Route
           path="/certificates/new"
@@ -140,7 +153,7 @@ const Router = () => {
             )
           }
         />
-        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

@@ -1,9 +1,26 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
-import xrayTechImage from '../assets/xraytech.jpg';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import groupphoto from '../assets/groupphoto.jpg';
+import michelle from '../assets/michelle.jpg';
 import arrtBlackText from '../assets/arrtblacktext.png';
 import '../styles/pages/LandingPage.css';
+
+gsap.registerPlugin(ScrollToPlugin);
+
+// Email parts split + reassembled at runtime so static-HTML scrapers and
+// regex bots scanning the bundle for `\w+@\w+` find nothing.
+const MAIL_DOMAIN = 'u.northwestern.edu';
+const AT = String.fromCharCode(64);
+const DEVELOPERS: ReadonlyArray<{ name: string; user: string }> = [
+  { name: 'Adnan Alhabian', user: 'adnanalhabian2027' },
+  { name: 'Yusuf Ozdemir', user: 'yusuf.ozdemir' },
+  { name: 'Azan Malik', user: 'azanmalik2027' },
+  { name: 'Fiorelli Wong', user: 'fiorelliwong2027' },
+  { name: 'Aidan Zea', user: 'aidanzea2027' },
+];
+const buildEmail = (user: string) => user + AT + MAIL_DOMAIN;
 
 const PALETTES = {
   violet: {
@@ -341,6 +358,87 @@ export default function LandingPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>('.lp-main .lp-section'),
+    );
+    if (!sections.length) return;
+
+    sections.forEach((section) => {
+      const title = section.querySelector<HTMLElement>('.lp-section-title');
+      if (title) splitHeadline(title);
+    });
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const animateSection = (section: HTMLElement) => {
+      const title = section.querySelector<HTMLElement>('.lp-section-title');
+      const eyebrow = section.querySelector<HTMLElement>('.lp-section-lead-col .lp-eyebrow');
+      const lede = section.querySelector<HTMLElement>('.lp-section-lede');
+      const detail = section.querySelector<HTMLElement>('.lp-section-detail-col');
+      const chars = title ? Array.from(title.querySelectorAll<HTMLElement>('.lp-char')) : [];
+
+      if (reduced) {
+        gsap.set([eyebrow, lede, detail].filter(Boolean), { opacity: 1, y: 0 });
+        if (chars.length) gsap.set(chars, { y: '0%' });
+        return;
+      }
+
+      const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+      if (eyebrow) {
+        tl.to(eyebrow, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0)
+          .from(eyebrow, { y: 10, duration: 0.5, ease: 'power2.out' }, 0);
+      }
+      if (chars.length) {
+        tl.to(chars, { y: '0%', duration: 1.0, stagger: { amount: 0.45, from: 'start' } }, 0.05);
+      }
+      if (lede) {
+        tl.to(lede, { opacity: 1, duration: 0.55, ease: 'power2.out' }, 0.4)
+          .from(lede, { y: 14, duration: 0.55, ease: 'power2.out' }, 0.4);
+      }
+      if (detail) {
+        tl.to(detail, { opacity: 1, duration: 0.65, ease: 'power2.out' }, 0.55)
+          .from(detail, { y: 20, duration: 0.65, ease: 'power2.out' }, 0.55);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          animateSection(entry.target as HTMLElement);
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.2, rootMargin: '0px 0px -10% 0px' },
+    );
+
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const handleAnchorClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
+      if (!anchor) return;
+      const hash = anchor.getAttribute('href');
+      if (!hash || hash === '#') return;
+      const target = document.querySelector<HTMLElement>(hash);
+      if (!target) return;
+
+      e.preventDefault();
+      gsap.to(window, {
+        duration: 1.05,
+        ease: 'power3.inOut',
+        scrollTo: { y: target, offsetY: 0, autoKill: true },
+      });
+      history.replaceState(null, '', hash);
+    };
+
+    document.addEventListener('click', handleAnchorClick);
+    return () => document.removeEventListener('click', handleAnchorClick);
+  }, []);
+
   return (
     <div className="landing-page" data-screen-label="01 Landing">
       <canvas ref={hazeRef} className="lp-haze" aria-hidden="true" />
@@ -351,10 +449,9 @@ export default function LandingPage() {
           <span>X-Ray Tech</span>
         </Link>
         <div className="lp-nav-links">
-          <a href="#about">About</a>
-          <a href="#how">How it works</a>
-          <a href="#liability">Liability</a>
           <a href="#contact">Contact</a>
+          <a href="#about">About</a>
+          <a href="#liability">Liability</a>
         </div>
         <div className="lp-nav-actions">
           <Link to="/login" className="lp-text-link">Log in</Link>
@@ -437,7 +534,92 @@ export default function LandingPage() {
             </div>
 
             <div ref={photoRef} className="lp-photo">
-              <img src={xrayTechImage} alt="X-Ray Tech dashboard preview" />
+              <img src={michelle} alt="X-Ray Tech dashboard preview" />
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="lp-section">
+          <div className="lp-section-grid">
+            <div className="lp-section-lead-col">
+              <span className="lp-eyebrow">01 · Contact</span>
+              <h2 className="lp-section-title">Get in <span className="lp-accent">touch.</span></h2>
+              <p className="lp-section-lede">
+                Questions, feedback, or partnership inquiries.
+              </p>
+            </div>
+            <div className="lp-section-detail-col">
+              <span className="lp-eyebrow lp-eyebrow--inline">Developers</span>
+              <dl className="lp-detail-list">
+                {DEVELOPERS.map(({ name, user }) => {
+                  const email = buildEmail(user);
+                  return (
+                    <div key={user} className="lp-detail-row">
+                      <dt>{name}</dt>
+                      <dd>
+                        <a className="lp-section-link" href={`mailto:${email}`}>
+                          {email}
+                        </a>
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        <section id="about" className="lp-section">
+          <div className="lp-section-grid lp-section-grid--reverse">
+            <div className="lp-section-lead-col">
+              <span className="lp-eyebrow">02 · About</span>
+              <h2 className="lp-section-title">
+                Built for radiologic <span className="lp-accent">technologists.</span>
+              </h2>
+              <p className="lp-section-lede">
+                X-Ray Tech is a Northwestern CS394 project that pulls every CE credit, license,
+                and renewal deadline into one live screen. Stop juggling spreadsheets and
+                state-board portals.
+              </p>
+            </div>
+            <div className="lp-section-detail-col">
+              <div className="lp-section-image">
+                <img src={groupphoto} alt="The X-Ray Tech team" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="liability" className="lp-section">
+          <div className="lp-section-grid">
+            <div className="lp-section-lead-col">
+              <span className="lp-eyebrow">03 · Liability</span>
+              <h2 className="lp-section-title">
+                Your files, <span className="lp-accent">handled with care.</span>
+              </h2>
+              <p className="lp-section-lede">
+                Short and honest about how we treat the data you trust us with.
+              </p>
+            </div>
+            <div className="lp-section-detail-col">
+              <div className="lp-promise-block">
+                <span className="lp-eyebrow lp-eyebrow--inline">What we promise today</span>
+                <ul className="lp-section-list">
+                  <li>OCR runs locally in your browser before files reach Firebase Storage.</li>
+                  <li>EXIF metadata (GPS, camera serials, timestamps) is stripped before storage.</li>
+                  <li>Each file is locked to your account, other users can't read it through the app.</li>
+                  <li>Scan-tron tests are stored as text only, never uploaded as files.</li>
+                </ul>
+              </div>
+              <div className="lp-promise-block">
+                <span className="lp-eyebrow lp-eyebrow--inline lp-eyebrow--warn">Do not upload</span>
+                <ul className="lp-section-list">
+                  <li>Patient records, PHI, or any HIPAA-regulated data</li>
+                  <li>Identification documents (passports, driver's licenses, SSNs)</li>
+                  <li>Financial documents, insurance cards, or anything with account numbers</li>
+                  <li>Anything you do not personally have the right to upload</li>
+                </ul>
+              </div>
             </div>
           </div>
         </section>
@@ -450,9 +632,9 @@ export default function LandingPage() {
             <span>X-Ray Tech</span>
           </Link>
           <ul>
+            <li><a className="lp-flink" href="#contact">Contact</a></li>
             <li><a className="lp-flink" href="#about">About</a></li>
             <li><a className="lp-flink" href="#liability">Liability</a></li>
-            <li><a className="lp-flink" href="#contact">Contact</a></li>
             <li><Link className="lp-flink" to="/signup">Create account</Link></li>
             <li><Link className="lp-flink" to="/login">Log in</Link></li>
           </ul>
