@@ -18,10 +18,7 @@
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-}
-
-.dark .landing-page {
-  --lp-line-faint: rgba(244, 243, 247, 0.08);
+  color-scheme: light;
 }
 
 .landing-page *,
@@ -335,10 +332,6 @@
   height: 28px;
 }
 
-.dark .landing-page .lp-iema-badge {
-  background: rgba(244, 243, 247, 0.08);
-}
-
 .landing-page .lp-iema-badge img {
   display: block;
   height: 16px;
@@ -347,14 +340,6 @@
 
 .landing-page .lp-iema-mark-dark {
   display: none;
-}
-
-.dark .landing-page .lp-iema-mark-light {
-  display: none;
-}
-
-.dark .landing-page .lp-iema-mark-dark {
-  display: block;
 }
 
 .landing-page .lp-iema-number {
@@ -393,10 +378,6 @@
 .landing-page .lp-balance-card {
   background: var(--lp-card);
   padding: 1.25rem 1.4rem 1.3rem;
-}
-
-.dark .landing-page .lp-balance-card {
-  background: var(--surface);
 }
 
 .landing-page .lp-balance-title {
@@ -620,11 +601,6 @@
 
 .landing-page #about {
   background: var(--paper);
-}
-
-.dark .landing-page #contact,
-.dark .landing-page #liability {
-  background: var(--tint-brand);
 }
 
 .landing-page .lp-section-grid {
