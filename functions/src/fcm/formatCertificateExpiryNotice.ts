@@ -1,4 +1,4 @@
-import type { Certificate } from '../types/certificate.js';
+import type { Certificate } from '../types/certificate.ts';
 
 /** Human-readable duration until expiration (for notification body). */
 export function formatTimeUntilExpiry(msUntilExpiry: number): string {

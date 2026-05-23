@@ -1,7 +1,7 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging, type MulticastMessage } from 'firebase-admin/messaging';
 import { logger } from 'firebase-functions';
-import type { Certificate } from '../types/certificate.js';
+import type { Certificate } from '../types/certificate.ts';
 import {
   buildCertificateExpiryNotice,
   requireExpirationDate,
