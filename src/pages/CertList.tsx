@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   PhotoIcon,
@@ -6,6 +6,7 @@ import {
   PencilIcon,
   TrashIcon,
   FilterIcon,
+  SearchIcon,
   XIcon,
   CertificateIcon,
 } from '../services/svgIcons';
@@ -14,6 +15,7 @@ import { useCertifications } from '../hooks/useCertifications';
 import { deleteCertificationRecord, updateCertificationRecord } from '../services/certificateService';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
+import { PhotoOverlay } from '../components/PhotoOverlay';
 import arrtLogo from '../assets/arrt.png';
 import iemaLogo from '../assets/iema.png';
 
@@ -171,63 +173,6 @@ const EXPIRY_BADGE: Record<ExpiryTier, string> = {
   warn:    'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
   ok:      'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 };
-
-function PhotoOverlay({
-  cert,
-  onClose,
-  onDetailView,
-}: {
-  cert: Certification;
-  onClose: () => void;
-  onDetailView: (cert: Certification) => void;
-}) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  return (
-    <div className="overlay-center" onClick={onClose}>
-      <div
-        className="overlay-panel overlay-panel--md rounded-2xl shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-primary dark:text-slate-100 leading-tight min-w-0 truncate">
-            {cert.certificateName}
-          </h2>
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => onDetailView(cert)}
-              aria-label="View record details"
-              title="View record details"
-              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-            >
-              <EyeIcon size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-            >
-              <XIcon size={16} />
-            </button>
-          </div>
-        </div>
-        <div className="p-4 bg-gray-50 dark:bg-slate-800/60">
-          <img
-            src={cert.photoURL}
-            alt={cert.certificateName}
-            className="w-full max-h-[70vh] object-contain rounded-lg"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
@@ -428,11 +373,37 @@ function CertDetailOverlay({
                   </div>
                   <div className="form-field">
                     <label className="form-label">Category type</label>
-                    <input type="text" className="form-input" placeholder="e.g. A+" value={form.categoryType} onChange={(e) => setForm((p) => ({ ...p, categoryType: e.target.value }))} disabled={saving} />
+                    <select
+                      className="form-input"
+                      value={form.categoryType}
+                      onChange={(e) => setForm((p) => ({ ...p, categoryType: e.target.value }))}
+                      disabled={saving}
+                    >
+                      <option value="">Select…</option>
+                      <option value="A+">A+</option>
+                      <option value="A">A</option>
+                      <option value="N/A">N/A</option>
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Only A and A+ count toward ARRT and IEMA CE requirements.</p>
                   </div>
                   <div className="form-field">
                     <label className="form-label">CE Credits</label>
-                    <input type="number" inputMode="decimal" min={0} step={0.5} className="form-number" value={form.ceCredits} onChange={(e) => setForm((p) => ({ ...p, ceCredits: e.target.value }))} disabled={saving} />
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      className="form-number"
+                      value={form.ceCredits}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^\d.]/g, '');
+                        const first = raw.indexOf('.');
+                        const cleaned =
+                          first === -1
+                            ? raw
+                            : raw.slice(0, first + 1) + raw.slice(first + 1).replace(/\./g, '');
+                        setForm((p) => ({ ...p, ceCredits: cleaned }));
+                      }}
+                      disabled={saving}
+                    />
                   </div>
                   <div className="form-field">
                     <span className="form-label">Assigned Certifications</span>
@@ -528,9 +499,28 @@ export default function CertList({ name, fullName, category }: CertListProps) {
   const { certifications, loading } = useCertifications(category);
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterContainerRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState('');
   const [expiryBefore, setExpiryBefore] = useState('');
   const [addedAfter, setAddedAfter] = useState('');
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!filterContainerRef.current?.contains(e.target as Node)) {
+        setFiltersOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFiltersOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [filtersOpen]);
   const [pendingDelete, setPendingDelete] = useState<Certification | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -575,11 +565,9 @@ export default function CertList({ name, fullName, category }: CertListProps) {
     });
   }, [certifications, search, expiryBefore, addedAfter]);
 
-  const activeCount =
-    (search.trim() ? 1 : 0) + (expiryBefore ? 1 : 0) + (addedAfter ? 1 : 0);
+  const activeCount = (expiryBefore ? 1 : 0) + (addedAfter ? 1 : 0);
 
   const clearAll = () => {
-    setSearch('');
     setExpiryBefore('');
     setAddedAfter('');
   };
@@ -613,9 +601,10 @@ export default function CertList({ name, fullName, category }: CertListProps) {
         />
       )}
 
-      <div className="mb-7 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
-          <span>{loading ? '…' : `${filtered.length} records`}</span>
-          <span className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />
+      <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+        <span>{loading ? '…' : `${filtered.length} records`}</span>
+        <span className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />
+        <div ref={filterContainerRef} className="relative">
           <button
             type="button"
             onClick={() => setFiltersOpen((o) => !o)}
@@ -636,53 +625,73 @@ export default function CertList({ name, fullName, category }: CertListProps) {
               </span>
             )}
           </button>
-        </div>
 
-      {filtersOpen && (
-        <div className="mb-6 rounded-2xl glass-panel p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-            <div className="form-field lg:col-span-2">
-              <label className="form-label">Search</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Certificate name…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="form-field">
-              <label className="form-label">Expiring by</label>
-              <input
-                type="date"
-                className="form-input"
-                value={expiryBefore}
-                onChange={(e) => setExpiryBefore(e.target.value)}
-              />
-            </div>
-            <div className="form-field">
-              <label className="form-label">Added since</label>
-              <input
-                type="date"
-                className="form-input"
-                value={addedAfter}
-                onChange={(e) => setAddedAfter(e.target.value)}
-              />
-            </div>
-          </div>
-          {activeCount > 0 && (
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={clearAll}
-                className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400 hover:text-[#7C49D5] dark:hover:text-[#A876FF] transition-colors"
-              >
-                Clear filters
-              </button>
+          {filtersOpen && (
+            <div
+              className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[min(22rem,calc(100vw-2.5rem))] rounded-2xl border border-[var(--ink-200)] dark:border-[var(--ink-700)] bg-white/80 dark:bg-[#14111F]/80 backdrop-blur-md shadow-xl p-4"
+              role="dialog"
+              aria-label="Filter options"
+            >
+              <div className="grid grid-cols-1 gap-3">
+                <div className="form-field">
+                  <label className="form-label">Expiring by</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={expiryBefore}
+                    onChange={(e) => setExpiryBefore(e.target.value)}
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Added since</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={addedAfter}
+                    onChange={(e) => setAddedAfter(e.target.value)}
+                  />
+                </div>
+              </div>
+              {activeCount > 0 && (
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400 hover:text-[#7C49D5] dark:hover:text-[#A876FF] transition-colors inline-flex items-center gap-1"
+                  >
+                    <XIcon size={12} /> Clear filters
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
+
+      <div className="mb-5 relative w-full max-w-xs">
+        <span className="absolute inset-y-0 left-3 flex items-center text-[var(--ink-500)] dark:text-[var(--ink-400)] pointer-events-none">
+          <SearchIcon size={16} />
+        </span>
+        <input
+          type="text"
+          className="form-input w-full"
+          style={{ paddingLeft: '2.25rem', paddingRight: search ? '2rem' : '0.875rem' }}
+          placeholder="Search certificate name…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search certificates"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch('')}
+            aria-label="Clear search"
+            className="absolute inset-y-0 right-2 flex items-center text-[var(--ink-400)] hover:text-[var(--ink-700)] dark:hover:text-[var(--ink-100)] transition-colors"
+          >
+            <XIcon size={14} />
+          </button>
+        )}
+      </div>
 
       {loading ? (
         <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 text-center py-12">

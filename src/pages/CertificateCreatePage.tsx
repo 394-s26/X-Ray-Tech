@@ -77,7 +77,12 @@ export const CertificateCreatePage = () => {
       if (parsed.completedDate) setCompletedDate(parsed.completedDate);
       if (parsed.expirationDate) setExpiresDate(parsed.expirationDate);
       if (parsed.ceCredits !== null) setPoints(String(parsed.ceCredits));
-      if (parsed.categoryType) setCategoryType(parsed.categoryType);
+      if (parsed.categoryType) {
+        const normalized = parsed.categoryType.trim().toUpperCase();
+        if (normalized === 'A' || normalized === 'A+' || normalized === 'N/A') {
+          setCategoryType(normalized);
+        }
+      }
     } catch {
       // pipeline.error is already set; user can still fill the form manually
     }
@@ -379,13 +384,19 @@ export const CertificateCreatePage = () => {
             </label>
             <input
               id={`${formId}-points`}
-              type="number"
+              type="text"
               inputMode="decimal"
-              min={0}
-              step={0.5}
               placeholder="0"
               value={points}
-              onChange={(e) => setPoints(e.target.value)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^\d.]/g, '');
+                const first = raw.indexOf('.');
+                const cleaned =
+                  first === -1
+                    ? raw
+                    : raw.slice(0, first + 1) + raw.slice(first + 1).replace(/\./g, '');
+                setPoints(cleaned);
+              }}
               required={!categories.includes('CPR')}
               disabled={formDisabled || categories.includes('CPR')}
               className="form-number"
@@ -396,17 +407,19 @@ export const CertificateCreatePage = () => {
             <label htmlFor={`${formId}-category-type`} className="form-label">
               Category type
             </label>
-            <input
+            <select
               id={`${formId}-category-type`}
-              type="text"
-              placeholder="e.g. A+"
               value={categoryType}
               onChange={(e) => setCategoryType(e.target.value)}
               disabled={formDisabled}
               className="form-input"
-              autoComplete="off"
-            />
-            <p className="text-xs text-gray-500 dark:text-slate-400">Optional. Auto-filled from certificate (e.g. A, A+, 1).</p>
+            >
+              <option value="">Select…</option>
+              <option value="A+">A+</option>
+              <option value="A">A</option>
+              <option value="N/A">N/A</option>
+            </select>
+            <p className="text-xs text-gray-500 dark:text-slate-400">Only A and A+ count toward ARRT and IEMA CE requirements. Pick N/A if the certificate has no category.</p>
           </div>
 
           <div className="form-field">
