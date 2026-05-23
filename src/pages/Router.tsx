@@ -11,6 +11,9 @@ import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
+import { ForgotPasswordPage } from './ForgotPasswordPage';
+import { AuthActionPage } from './AuthActionPage';
+import LandingPage from './LandingPage';
 import AppLayout from '../components/AppLayout';
 
 const Router = () => {
@@ -59,7 +62,20 @@ const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={requireAuth(appUser ? <Dashboard appUser={appUser} /> : <></>)} />
+        <Route
+          path="/"
+          element={
+            user && appUser && appUser.setupCompleted ? (
+              <AppLayout appUser={appUser} onAppUserUpdate={setAppUser}>
+                <Dashboard appUser={appUser} />
+              </AppLayout>
+            ) : user && appUser && !appUser.setupCompleted ? (
+              <Navigate to="/setup" replace />
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
         <Route path="/certificates" element={requireAuth(<CredentialTracking />)} />
         <Route
           path="/certificates/new"
@@ -139,6 +155,12 @@ const Router = () => {
             )
           }
         />
+        <Route
+          path="/forgot-password"
+          element={!user ? <ForgotPasswordPage /> : <Navigate to="/" replace />}
+        />
+        <Route path="/auth/action" element={<AuthActionPage />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
