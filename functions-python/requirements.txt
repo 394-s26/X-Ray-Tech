@@ -23,6 +23,7 @@ google-crc32c==1.8.0
 google-events==0.5.0
 google-resumable-media==2.9.0
 googleapis-common-protos==1.75.0
+greenlet==3.5.1
 grpcio==1.80.0
 grpcio-status==1.80.0
 gunicorn==26.0.0
@@ -38,11 +39,13 @@ Jinja2==3.1.6
 MarkupSafe==3.0.3
 msgpack==1.1.2
 packaging==26.2
+playwright==1.60.0
 proto-plus==1.28.0
 protobuf==6.33.6
 pyasn1==0.6.3
 pyasn1_modules==0.4.2
 pycparser==3.0
+pyee==13.0.1
 PyJWT==2.12.1
 PyYAML==6.0.3
 requests==2.34.2

@@ -23,8 +23,7 @@
     },
     {
       "source": "functions-python",
-      "codebase": "python-functions",
-      "runtime": "python312"    
+      "codebase": "python-functions"
     }
   ],
   "hosting": {

@@ -38,26 +38,6 @@ def get_total_pages(soup):
             continue
     return max(page_nums) if page_nums else 1
 
-def search_category(session, category_id):
-    # 1. GET index.aspx fresh for each category (new tokens)
-    r = session.get(f"{BASE}/index.aspx", headers=headers)
-    soup = BeautifulSoup(r.text, "html.parser")
-    tokens = get_tokens(soup)
-
-    # 2. POST search
-    payload = {
-        **tokens,
-        "ctl00$cphSearchPanel$Search$btnSearch.x": "28",
-        "ctl00$cphSearchPanel$Search$btnSearch.y": "22",
-        "ctl00$cphSearchPanel$Search$txtKeyword":   "Enter Keywords",
-        "ctl00$cphSearchPanel$Search$lstCategories": str(category_id),
-    }
-    session.post(f"{BASE}/index.aspx", data=payload, headers=headers)
-
-    # 3. GET listing.aspx — session carries the search state
-    r = session.get(f"{BASE}/listing.aspx", headers=headers)
-    return BeautifulSoup(r.text, "html.parser")
-
 
 def get_all_category_ids(session):
     r = session.get(f"{BASE}/index.aspx", headers=headers)
@@ -68,7 +48,7 @@ def get_all_category_ids(session):
             if o.get("value") and int(o["value"]) != 0]
 
 
-def parse_courses(soup):
+def parse_courses(soup, category_name=None):
     courses = []
     body = soup.find("div", class_="contentBody")
     if not body:
@@ -114,31 +94,15 @@ def parse_courses(soup):
             "provider": provider_name,
             "description": description_text,
             "num_credits": num_credits,
+            "category": category_name,
             "credit_category": credit_category,
+            "licenses": ["arrt", "iema"]
         })
 
     return courses
 
 
-def get_page(session, listing_soup, page_num):
-    """POST to listing.aspx to navigate to a specific page."""
-    tokens = get_tokens(listing_soup)
-    payload = {
-        **tokens,
-        "__EVENTTARGET":  f"ctl00$cphBody$Pager1$lnkPage{page_num}",
-        "ctl00$cphSearchPanel$Search$ddlSortBy":          "",
-        "ctl00$cphSearchPanel$Search$txtKeyword":         "",
-        "ctl00$cphSearchPanel$Search$lstCategories":      "",
-        "ctl00$cphBody$Pager1$hidCurrentPage":            str(page_num - 1),
-        "ctl00$cphBody$Pager$hidCurrentPage":             str(page_num - 1),
-    }
-    r = session.post(f"{BASE}/listing.aspx", data=payload, headers={
-        **headers,
-        "Referer": f"{BASE}/listing.aspx"
-    })
-    return BeautifulSoup(r.text, "html.parser")
-
-def search_category(session, category_id):
+def search_category(session, category_id, category_name=None):
     # 1. Fresh GET index.aspx for tokens
     r = session.get(f"{BASE}/index.aspx", headers=headers)
     soup = BeautifulSoup(r.text, "html.parser")
@@ -158,36 +122,26 @@ def search_category(session, category_id):
     r = session.get(f"{BASE}/listing.aspx", headers=headers)
     first_page_soup = BeautifulSoup(r.text, "html.parser")
 
-    total_pages = get_total_pages(first_page_soup)
-    print(f"  Category {category_id}: {total_pages} page(s)")
+    return parse_courses(first_page_soup, category_name)
 
-    all_courses = parse_courses(first_page_soup)
 
-    # 4. Paginate through remaining pages
-    current_soup = first_page_soup
-    for page_num in range(2, total_pages + 1):
-        print(f"  Fetching page {page_num}/{total_pages}")
-        current_soup = get_page(session, current_soup, page_num)
-        all_courses.extend(parse_courses(current_soup))
-        time.sleep(1)  # be polite
+def scrape_arrt_courses():
+    # TODO: Seems to skip over/miss many of the courses in the site...
+    session = requests.Session()
+    all_courses = []
 
+    categories = get_all_category_ids(session)
+    print(f"Found {len(categories)} categories")
+
+    for cat_id, cat_name in categories:
+        print(f"Scraping category {cat_id}: {cat_name}")
+        courses = search_category(session, cat_id, cat_name)
+        all_courses.extend(courses)
+        time.sleep(2)  # be polite
+
+    print(f"Total courses: {len(all_courses)}")
     return all_courses
 
 
-# Main
-# TODO: Seems to skip over/miss many of the courses in the site...
-session = requests.Session()
-all_courses = []
-
-categories = get_all_category_ids(session)
-print(f"Found {len(categories)} categories")
-
-for cat_id, cat_name in categories[:1]:  # TODO remove this when done debugging
-    print(f"Scraping category {cat_id}: {cat_name}")
-    courses = search_category(session, cat_id)
-    all_courses.extend(courses)
-    time.sleep(2)  # be polite
-
-print(f"Total courses: {len(all_courses)}")
-
-print(json.dumps(all_courses[:20], indent=2))
+if __name__ == "__main__":
+    print(json.dumps(scrape_arrt_courses()[:20], indent=2))
