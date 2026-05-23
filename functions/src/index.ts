@@ -1,17 +1,18 @@
 import { setGlobalOptions } from "firebase-functions";
 import { onObjectFinalized } from "firebase-functions/v2/storage";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-
-// FCM expiry notifications (call from a scheduled/triggered function when ready):
-// export { sendCertificateExpiryNotification } from "./fcm/sendCertificateExpiryNotification.js";
-// export { msUntilExpirationDate } from "./fcm/formatCertificateExpiryNotice.js";
+import { sendTwoMonthExpiryReminders } from "./fcm/sendTwoMonthExpiryReminders.js";
+import { certificateTwoMonthExpiryReminders } from "./scheduled/certificateTwoMonthExpiry.js";
 
 initializeApp();
 
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({ maxInstances: 10, region: "us-central1" });
+
+export { certificateTwoMonthExpiryReminders };
 
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const JPEG_MAGIC = [0xff, 0xd8, 0xff];
@@ -87,6 +88,17 @@ const validateBlob = async (
 
   return { ok: true };
 };
+
+/** Manual trigger for testing the 2-month expiry job (admin only). */
+export const runCertificateTwoMonthExpiryReminders = onCall(
+  { cors: true, invoker: "public" },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in required.");
+    }
+    return sendTwoMonthExpiryReminders();
+  },
+);
 
 export const validateUploadedCertificate = onObjectFinalized(
   { timeoutSeconds: 30, memory: "256MiB" },

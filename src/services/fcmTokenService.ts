@@ -1,5 +1,4 @@
-import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import type { FcmTokenRecord } from '../types/fcmToken';
+import { deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 const DEVICE_ID_KEY = 'xray-fcm-device-id';
@@ -23,42 +22,46 @@ export function fcmTokenDocId(uid: string, deviceId?: string): string {
 
 /**
  * Creates or updates this browser's token in `fcmTokens/{uid}_{deviceId}`.
- * Same device doc is updated when the token is refreshed (avoids stale duplicates per device).
+ * Uses update-then-create (no read) so Firestore rules allow first-time writes.
  */
 export async function upsertFcmToken(uid: string, token: string): Promise<void> {
   const deviceId = getOrCreateDeviceId();
   const docId = fcmTokenDocId(uid, deviceId);
   const ref = doc(db, 'fcmTokens', docId);
-  const existing = await getDoc(ref);
   const now = serverTimestamp();
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 
-  const payload: Omit<FcmTokenRecord, 'createdAt' | 'updatedAt'> & {
-    createdAt?: ReturnType<typeof serverTimestamp>;
-    updatedAt: ReturnType<typeof serverTimestamp>;
-  } = {
+  const fields = {
     uid,
     token,
     deviceId,
-    platform: 'web',
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    platform: 'web' as const,
+    userAgent,
     updatedAt: now,
   };
 
-  if (existing.exists()) {
-    await setDoc(ref, payload, { merge: true });
-  } else {
+  try {
+    await updateDoc(ref, fields);
+  } catch (err: unknown) {
+    const code = (err as { code?: string })?.code;
+    if (code !== 'not-found') {
+      throw err;
+    }
     await setDoc(ref, {
-      ...payload,
+      ...fields,
       createdAt: now,
     });
   }
 }
 
-/** Remove this device's token doc on sign-out (optional hygiene). */
 export async function deleteCurrentDeviceFcmToken(uid: string): Promise<void> {
-  const deviceId = getOrCreateDeviceId();
-  const ref = doc(db, 'fcmTokens', fcmTokenDocId(uid, deviceId));
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-  await deleteDoc(ref);
+  const ref = doc(db, 'fcmTokens', fcmTokenDocId(uid));
+  try {
+    await deleteDoc(ref);
+  } catch (err: unknown) {
+    const code = (err as { code?: string })?.code;
+    if (code !== 'not-found') {
+      throw err;
+    }
+  }
 }

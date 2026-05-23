@@ -64,7 +64,9 @@ service cloud.firestore {
     }
 
     match /fcmTokens/{docId} {
-      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow get: if isSignedIn()
+                 && (resource == null || resource.data.uid == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
       allow create: if isSignedIn()
                     && request.resource.data.uid == request.auth.uid
                     && docId == request.auth.uid + '_' + request.resource.data.deviceId;
