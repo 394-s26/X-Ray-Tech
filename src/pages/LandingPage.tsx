@@ -54,16 +54,28 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
     uniform vec3  u_a;
     uniform vec3  u_b;
 
-    float blob(vec2 p, vec2 c, float r) {
-      float d = distance(p, c) / r;
-      float f = 1.0 - smoothstep(0.0, 1.0, d);
+    // Long, wide, wavy blob: elliptical radii + rotation + wobbly edge.
+    float blob(vec2 p, vec2 c, vec2 r, float angle, float wobble) {
+      vec2 d = p - c;
+      float cs = cos(angle);
+      float sn = sin(angle);
+      d = vec2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
+      d /= r;
+      float dist = length(d);
+      float theta = atan(d.y, d.x);
+      // Wavy contour — modulate the radius with two sine harmonics so the
+      // edge ripples instead of staying perfectly elliptical.
+      dist *= 1.0 + 0.18 * sin(theta * 3.0 + wobble)
+                   + 0.10 * sin(theta * 5.0 - wobble * 1.3);
+      float f = 1.0 - smoothstep(0.0, 1.0, dist);
       return f * f;
     }
 
     float blobField(vec2 p, float t, float aspect) {
+      // Stronger flow-field warping so the whole canvas drifts and waves.
       vec2 wave = vec2(
-        0.05 * sin(p.y * 6.0 + t * 1.8),
-        0.05 * cos(p.x * 5.0 + t * 1.6)
+        0.10 * sin(p.y * 3.5 + t * 1.6) + 0.05 * sin(p.y * 7.0 - t * 0.9),
+        0.10 * cos(p.x * 3.2 + t * 1.4) + 0.05 * cos(p.x * 6.5 + t * 1.1)
       );
       p += wave;
       vec2 c1 = vec2((0.20 + 0.22 * sin(t * 1.40)) * aspect,
@@ -80,14 +92,17 @@ function startHazeShader(canvas: HTMLCanvasElement): (() => void) | null {
                       0.12 + 0.18 * sin(t * 1.44 + 5.0));
       vec2 c7 = vec2((0.92 + 0.22 * sin(t * 0.84 + 4.7)) * aspect,
                       0.60 + 0.26 * cos(t * 1.16 + 0.9));
+
+      // Elongated ellipses — long axis ~2x the short axis, each rotating at
+      // its own pace so the field reads as wavy ribbons rather than orbs.
       float h = 0.0;
-      h += blob(p, c1, 0.58);
-      h += blob(p, c2, 0.52);
-      h += blob(p, c3, 0.62);
-      h += blob(p, c4, 0.48);
-      h += blob(p, c5, 0.52);
-      h += blob(p, c6, 0.45);
-      h += blob(p, c7, 0.50);
+      h += blob(p, c1, vec2(1.10, 0.55), t * 0.35 + 0.4, t * 0.6);
+      h += blob(p, c2, vec2(1.00, 0.50), t * -0.30 + 1.2, t * 0.7 + 1.1);
+      h += blob(p, c3, vec2(1.25, 0.60), t * 0.25 + 2.1, t * 0.5 + 0.3);
+      h += blob(p, c4, vec2(0.95, 0.48), t * -0.40 + 3.5, t * 0.8 + 2.4);
+      h += blob(p, c5, vec2(1.05, 0.55), t * 0.30 + 1.7, t * 0.6 + 3.0);
+      h += blob(p, c6, vec2(0.90, 0.45), t * -0.35 + 2.8, t * 0.9 + 1.8);
+      h += blob(p, c7, vec2(1.00, 0.50), t * 0.28 + 4.2, t * 0.55 + 4.0);
       return clamp(h * 0.42, 0.0, 1.0);
     }
 
