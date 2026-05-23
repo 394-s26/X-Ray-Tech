@@ -373,11 +373,37 @@ function CertDetailOverlay({
                   </div>
                   <div className="form-field">
                     <label className="form-label">Category type</label>
-                    <input type="text" className="form-input" placeholder="e.g. A+" value={form.categoryType} onChange={(e) => setForm((p) => ({ ...p, categoryType: e.target.value }))} disabled={saving} />
+                    <select
+                      className="form-input"
+                      value={form.categoryType}
+                      onChange={(e) => setForm((p) => ({ ...p, categoryType: e.target.value }))}
+                      disabled={saving}
+                    >
+                      <option value="">Select…</option>
+                      <option value="A+">A+</option>
+                      <option value="A">A</option>
+                      <option value="N/A">N/A</option>
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Only A and A+ count toward ARRT and IEMA CE requirements.</p>
                   </div>
                   <div className="form-field">
                     <label className="form-label">CE Credits</label>
-                    <input type="number" inputMode="decimal" min={0} step={0.5} className="form-number" value={form.ceCredits} onChange={(e) => setForm((p) => ({ ...p, ceCredits: e.target.value }))} disabled={saving} />
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      className="form-number"
+                      value={form.ceCredits}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^\d.]/g, '');
+                        const first = raw.indexOf('.');
+                        const cleaned =
+                          first === -1
+                            ? raw
+                            : raw.slice(0, first + 1) + raw.slice(first + 1).replace(/\./g, '');
+                        setForm((p) => ({ ...p, ceCredits: cleaned }));
+                      }}
+                      disabled={saving}
+                    />
                   </div>
                   <div className="form-field">
                     <span className="form-label">Assigned Certifications</span>

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { AppUser } from '../types/auth';
 import type { Certification } from '../types/certification';
 import { useCertifications } from '../hooks/useCertifications';
 import { Breadcrumb } from '../components/Breadcrumb';
@@ -14,26 +13,18 @@ import {
   SearchIcon,
   XIcon,
 } from '../services/svgIcons';
-import { getArchiveStatus, unusedPointsByLicense } from '../services/archiveLogic';
+import { EXPIRING_SOON_DAYS, getArchiveStatus, unusedPointsByLicense, type LifecycleStatus } from '../services/archiveLogic';
 import { renderPdfThumbnailFromUrl } from '../services/pdfRender';
-import arrtLogoWhite from '../assets/arrtwhitetext.png';
-import arrtLogoBlack from '../assets/arrtblacktext.png';
-import iemaLogoWhite from '../assets/iemawhitetext.png';
-import iemaLogoBlack from '../assets/iemablacktext.png';
 
-interface ArchiveProps {
-  appUser: AppUser;
-}
-
-type StatusFilter = 'all' | 'expired' | 'arrt' | 'iema' | 'unused';
+type StatusFilter = 'all' | 'expired' | 'arrt' | 'iema' | 'unreported';
 
 const MOBILE_PAGE_SIZE = 10;
 const DESKTOP_PAGE_SIZE = 12;
 
 const formatDate = (iso: string): string =>
   new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     year: 'numeric',
   });
 
@@ -59,6 +50,7 @@ function PdfThumbnail({ url, alt }: { url: string; alt: string }) {
         canvas.style.width = 'auto';
         canvas.style.height = 'auto';
         canvas.style.objectFit = 'contain';
+        canvas.style.transform = 'scale(1)';
         canvas.setAttribute('role', 'img');
         canvas.setAttribute('aria-label', alt);
         node.appendChild(canvas);
@@ -78,7 +70,7 @@ function PdfThumbnail({ url, alt }: { url: string; alt: string }) {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full flex items-center justify-center bg-[var(--ink-100)] dark:bg-[#1F1B33]"
+      className="w-full h-full flex items-center justify-center bg-white"
     >
       {status === 'loading' && (
         <span className="text-[10px] uppercase tracking-wider text-[var(--ink-500)]">
@@ -95,13 +87,13 @@ function PdfThumbnail({ url, alt }: { url: string; alt: string }) {
   );
 }
 
-function StatusChip({ tone, label }: { tone: 'expired' | 'arrt' | 'iema'; label: string }) {
+type ChipTone = 'arrt' | 'iema' | 'cpr' | 'unreported';
+
+function StatusChip({ tone, label }: { tone: ChipTone; label: string }) {
   const cls =
-    tone === 'expired'
-      ? 'bg-[var(--danger-100)] text-[var(--danger-600)]'
-      : tone === 'arrt'
-        ? 'bg-[var(--brand-100)] text-[var(--brand-700)]'
-        : 'bg-[var(--success-100)] text-[var(--success-600)]';
+    tone === 'unreported'
+      ? 'bg-[var(--ink-200)] text-[var(--ink-600)] dark:bg-[var(--ink-700)] dark:text-[var(--ink-200)]'
+      : 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100';
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}
@@ -111,24 +103,26 @@ function StatusChip({ tone, label }: { tone: 'expired' | 'arrt' | 'iema'; label:
   );
 }
 
-function CardLogo({ cert }: { cert: Certification }) {
-  if (cert.categories.includes('ARRT')) {
-    return (
-      <>
-        <img src={arrtLogoBlack} alt="ARRT" className="h-4 w-auto object-contain block dark:hidden" />
-        <img src={arrtLogoWhite} alt="ARRT" className="h-4 w-auto object-contain hidden dark:block" />
-      </>
-    );
-  }
-  if (cert.categories.includes('IEMA')) {
-    return (
-      <>
-        <img src={iemaLogoBlack} alt="IEMA" className="h-4 w-auto object-contain block dark:hidden" />
-        <img src={iemaLogoWhite} alt="IEMA" className="h-4 w-auto object-contain hidden dark:block" />
-      </>
-    );
-  }
-  return <CertificateIcon size={16} className="text-[var(--ink-500)]" />;
+const LIFECYCLE_LABEL: Record<LifecycleStatus, string> = {
+  active: 'Active',
+  expiringSoon: 'Expiring Soon',
+  expired: 'Expired',
+};
+
+function LifecycleLabel({ status }: { status: LifecycleStatus }) {
+  const cls =
+    status === 'active'
+      ? 'bg-[var(--success-100)] text-[var(--success-600)]'
+      : status === 'expiringSoon'
+        ? 'bg-[var(--warn-100)] text-[var(--warn-600)]'
+        : 'bg-[var(--danger-100)] text-[var(--danger-600)]';
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}
+    >
+      {LIFECYCLE_LABEL[status]}
+    </span>
+  );
 }
 
 function ArchiveCard({
@@ -140,31 +134,78 @@ function ArchiveCard({
 }) {
   const status = getArchiveStatus(cert);
   const isPdf = isPdfPath(cert.photoStoragePath);
+  const expiryTooltip = status.expired
+    ? `Expired ${formatDate(cert.expirationDate)}`
+    : `Expires ${formatDate(cert.expirationDate)}`;
+
+  const [showTip, setShowTip] = useState(false);
+  const pressTimerRef = useRef<number | null>(null);
+  const isLongPressRef = useRef(false);
+
+  const startPress = () => {
+    isLongPressRef.current = false;
+    if (pressTimerRef.current) window.clearTimeout(pressTimerRef.current);
+    pressTimerRef.current = window.setTimeout(() => {
+      isLongPressRef.current = true;
+      setShowTip(true);
+    }, 400);
+  };
+
+  const endPress = () => {
+    if (pressTimerRef.current) {
+      window.clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    if (showTip) {
+      window.setTimeout(() => setShowTip(false), 1500);
+    }
+  };
+
+  const handleClick = () => {
+    if (isLongPressRef.current) {
+      isLongPressRef.current = false;
+      return;
+    }
+    onOpen(cert);
+  };
 
   return (
+    <div className="relative group">
+      <div
+        role="tooltip"
+        className={`pointer-events-none absolute left-1/2 -translate-x-1/2 -top-2 -translate-y-full z-20 transition-opacity duration-150 ${showTip ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'}`}
+      >
+        <div className="rounded-full bg-white text-black border border-gray-200 text-[11px] font-semibold px-3 py-1.5 whitespace-nowrap shadow-md">
+          {expiryTooltip}
+        </div>
+      </div>
     <button
       type="button"
-      onClick={() => onOpen(cert)}
-      className="nb-card is-clickable text-left overflow-hidden flex flex-col"
-      aria-label={`Open ${cert.certificateName}`}
+      onClick={handleClick}
+      onTouchStart={startPress}
+      onTouchEnd={endPress}
+      onTouchCancel={endPress}
+      onTouchMove={endPress}
+      className="nb-card is-clickable text-left overflow-hidden flex flex-col w-full"
+      aria-label={`Open ${cert.certificateName}. ${expiryTooltip}`}
     >
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[var(--ink-900)] dark:border-[var(--ink-200)]">
         <span className="text-sm font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)] truncate min-w-0 flex-1">
           {cert.certificateName}
         </span>
         <span className="shrink-0 flex items-center">
-          <CardLogo cert={cert} />
+          <LifecycleLabel status={status.lifecycle} />
         </span>
       </div>
 
-      <div className="relative aspect-square bg-[var(--ink-100)] dark:bg-[#1F1B33] flex items-center justify-center overflow-hidden">
+      <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
         {isPdf ? (
           <PdfThumbnail url={cert.photoURL} alt={cert.certificateName} />
         ) : (
           <img
             src={cert.photoURL}
             alt={cert.certificateName}
-            className="max-w-full max-h-full object-contain"
+            className="max-w-full max-h-full object-contain scale-105"
             loading="lazy"
           />
         )}
@@ -172,38 +213,66 @@ function ArchiveCard({
 
       <div className="px-3 py-2.5 flex flex-col gap-2">
         <div className="flex flex-wrap gap-1">
-          {status.expired && <StatusChip tone="expired" label="Expired" />}
           {status.usedByArrt && <StatusChip tone="arrt" label="Used by ARRT" />}
           {status.usedByIema && <StatusChip tone="iema" label="Used by IEMA" />}
+          {status.usedByCpr && <StatusChip tone="cpr" label="Used by CPR" />}
+          {status.unreported && <StatusChip tone="unreported" label="Unreported" />}
         </div>
         <p className="text-[11px] text-[var(--ink-500)] dark:text-[var(--ink-300)] leading-tight">
-          Completed {formatDate(cert.completedDate)} · {cert.ceCredits} hr
+          Start {formatDate(cert.completedDate)} · End {formatDate(cert.expirationDate)} · {cert.ceCredits} hr
           {cert.categoryType ? ` · Cat ${cert.categoryType}` : ''}
         </p>
       </div>
     </button>
+    </div>
   );
 }
 
-function UnusedPointsSummary({ arrt, iema }: { arrt: number | null; iema: number | null }) {
-  const fmt = (n: number | null) => (n === null ? '—' : `${n} pt${n === 1 ? '' : 's'}`);
+function ExpiringSoonSummary({ count }: { count: number }) {
   return (
     <div
-      className="nb-card tint-brand px-4 py-3 flex flex-col gap-1 min-w-[12rem]"
-      title="Category A/A+ credits from non-expired certs not yet applied to this license"
+      className="nb-card px-4 py-3 flex flex-col gap-1 min-w-[12rem] shadow-none"
+      style={{ boxShadow: 'none' }}
+      title={`Certificates with less than ${EXPIRING_SOON_DAYS} days until expiration`}
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-600)] dark:text-[var(--ink-300)]">
-        Potential unused points
+        Expiring soon
+      </p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums leading-none">
+          {count}
+        </span>
+        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">
+          {count === 1 ? 'certificate' : 'certificates'}
+        </span>
+      </div>
+      <p className="text-[10px] text-[var(--ink-500)] dark:text-[var(--ink-400)] leading-tight">
+        Less than {EXPIRING_SOON_DAYS} days until expiration
+      </p>
+    </div>
+  );
+}
+
+function UnusedPointsSummary({ arrt, iema }: { arrt: number; iema: number }) {
+  const fmt = (n: number) => `${n} pt${n === 1 ? '' : 's'}`;
+  return (
+    <div
+      className="nb-card px-4 py-3 flex flex-col gap-1 min-w-[12rem] shadow-none"
+      style={{ boxShadow: 'none' }}
+      title="Category A/A+ credits from non-expired certificates not yet reported to this license"
+    >
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-600)] dark:text-[var(--ink-300)]">
+        Unused points
       </p>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-[var(--ink-700)] dark:text-[var(--ink-100)]">ARRT</span>
-        <span className="text-base font-bold text-[var(--brand-700)] dark:text-[var(--brand-300)] tabular-nums">
+        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">ARRT</span>
+        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
           {fmt(arrt)}
         </span>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-[var(--ink-700)] dark:text-[var(--ink-100)]">IEMA</span>
-        <span className="text-base font-bold text-[var(--success-600)] tabular-nums">
+        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">IEMA</span>
+        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
           {fmt(iema)}
         </span>
       </div>
@@ -218,7 +287,7 @@ function getInt(params: URLSearchParams, key: string, fallback: number): number 
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-export default function Archive({ appUser }: ArchiveProps) {
+export default function Archive() {
   const { certifications, loading } = useCertifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -289,7 +358,7 @@ export default function Archive({ appUser }: ArchiveProps) {
         if (statusFilter === 'expired' && !s.expired) return false;
         if (statusFilter === 'arrt' && !s.usedByArrt) return false;
         if (statusFilter === 'iema' && !s.usedByIema) return false;
-        if (statusFilter === 'unused' && (s.usedByArrt || s.usedByIema)) return false;
+        if (statusFilter === 'unreported' && !s.unreported) return false;
 
         if (categoryFilter !== 'all' && !c.categories.includes(categoryFilter as 'ARRT' | 'IEMA' | 'CPR')) {
           return false;
@@ -319,8 +388,13 @@ export default function Archive({ appUser }: ArchiveProps) {
     (completedBefore ? 1 : 0);
 
   const unused = useMemo(
-    () => unusedPointsByLicense(certifications, appUser),
-    [certifications, appUser],
+    () => unusedPointsByLicense(certifications),
+    [certifications],
+  );
+
+  const expiringSoonCount = useMemo(
+    () => certifications.reduce((n, c) => n + (getArchiveStatus(c).expiringSoon ? 1 : 0), 0),
+    [certifications],
   );
 
   return (
@@ -334,7 +408,10 @@ export default function Archive({ appUser }: ArchiveProps) {
           subtitle="Every certificate you've uploaded"
           className=""
         />
-        <UnusedPointsSummary arrt={unused.arrt} iema={unused.iema} />
+        <div className="flex items-stretch gap-3 flex-wrap">
+          <ExpiringSoonSummary count={expiringSoonCount} />
+          <UnusedPointsSummary arrt={unused.arrt} iema={unused.iema} />
+        </div>
       </div>
 
       <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
@@ -380,7 +457,7 @@ export default function Archive({ appUser }: ArchiveProps) {
                     <option value="expired">Expired</option>
                     <option value="arrt">Used by ARRT</option>
                     <option value="iema">Used by IEMA</option>
-                    <option value="unused">Not yet applied</option>
+                    <option value="unreported">Unreported</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
