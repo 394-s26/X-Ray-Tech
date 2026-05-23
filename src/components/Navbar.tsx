@@ -6,6 +6,7 @@ import {
   BellIcon,
   MoonIcon,
   PlusIcon,
+  SettingsIcon,
   SunIcon,
   UserIcon,
 } from '../services/svgIcons';
@@ -181,6 +182,12 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
                 label="Profile"
                 onClick={close}
                 to="/profile"
+              />
+              <MenuItem
+                icon={<SettingsIcon size={18} />}
+                label="Settings"
+                onClick={close}
+                to="/settings"
               />
             </div>
           </>,

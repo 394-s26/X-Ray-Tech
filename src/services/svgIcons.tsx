@@ -636,3 +636,40 @@ export const GoogleIcon = ({ size = 24, className }: IconProps): ReactElement =>
     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
   </svg>
 );
+
+export const SearchIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+export const ArchiveIcon = ({ size = 24, className }: IconProps): ReactElement => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className={className}
+  >
+    <rect x="2" y="3" width="20" height="5" rx="1" />
+    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+    <line x1="10" y1="12" x2="14" y2="12" />
+  </svg>
+);

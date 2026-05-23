@@ -4,6 +4,7 @@ import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
 import CertList from '../pages/CertList.tsx';
+import Archive from './Archive';
 import Dashboard from './Dashboard';
 import CredentialTracking from './CertificationTracking';
 import TeamManagement from './TeamManagement';
@@ -77,6 +78,10 @@ const Router = () => {
           }
         />
         <Route path="/certificates" element={requireAuth(<CredentialTracking />)} />
+        <Route
+          path="/archive"
+          element={requireAuth(appUser ? <Archive appUser={appUser} /> : <></>)}
+        />
         <Route
           path="/certificates/new"
           element={requireAuth(<CertificateCreatePage />)}

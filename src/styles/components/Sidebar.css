@@ -107,6 +107,7 @@
 .app-sidebar__divider { display: none; }
 
 .app-sidebar__nav-item--mobile-hidden { display: none; }
+.app-sidebar__nav-item--desktop-hidden { display: flex; }
 
 /* Mobile: Add Certificate as a soft-brutalist FAB */
 .app-sidebar__nav-item.highlighted {
@@ -266,6 +267,7 @@
   .dark .app-sidebar__divider { background: var(--ink-700); }
 
   .app-sidebar__nav-item--mobile-hidden { display: flex; }
+  .app-sidebar__nav-item--desktop-hidden { display: none; }
 
   .app-sidebar__nav-item.highlighted {
     background: var(--brand-600);
