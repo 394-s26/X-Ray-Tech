@@ -20,6 +20,20 @@ const startOfToday = (today?: Date): Date => {
   return d;
 };
 
+export const isFullyUsed = (cert: Certification): boolean => {
+  const cprOnly =
+    cert.categories.includes('CPR') &&
+    !cert.categories.includes('ARRT') &&
+    !cert.categories.includes('IEMA');
+  return cprOnly
+    ? cert.categories.includes('CPR')
+    : cert.categories.includes('ARRT') && cert.categories.includes('IEMA');
+};
+
+export const isArchived = (cert: Certification, today?: Date): boolean => {
+  return getArchiveStatus(cert, today).expired || isFullyUsed(cert);
+};
+
 export const getArchiveStatus = (
   cert: Certification,
   today?: Date,
