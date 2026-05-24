@@ -399,7 +399,6 @@ export default function CertList({ name, fullName, category }: CertListProps) {
         <PhotoOverlay
           cert={photoTarget}
           onClose={() => setPhotoTarget(null)}
-          onDetailView={(c) => { setPhotoTarget(null); openOverlay(c); }}
         />
       )}
 
