@@ -10,9 +10,10 @@ import {
   applyActionCode,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, runTransaction, serverTimestamp, arrayUnion, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, setDoc, runTransaction, serverTimestamp, arrayUnion, updateDoc, where } from 'firebase/firestore';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
+import type { Certification } from '../types/certification';
 import { auth, db } from './firebase';
 
 const googleProvider = new GoogleAuthProvider();
@@ -143,6 +144,12 @@ export async function addMemberToTeam(teamCode: string, uid: string): Promise<vo
 export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
   const results = await Promise.all(uids.map(uid => fetchAppUser(uid)));
   return results.filter((u): u is AppUser => u !== null);
+}
+
+export async function fetchCertificatesForOwner(uid: string): Promise<Certification[]> {
+  const q = query(collection(db, 'certificates'), where('ownerId', '==', uid));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as Certification);
 }
 
 export async function updateTeamCode(
