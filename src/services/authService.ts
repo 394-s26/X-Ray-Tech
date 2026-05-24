@@ -5,6 +5,9 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  applyActionCode,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, runTransaction, serverTimestamp, arrayUnion, updateDoc } from 'firebase/firestore';
@@ -52,6 +55,18 @@ export const registerWithEmail = async (
 
 export const signOut = async (): Promise<void> => {
   await firebaseSignOut(auth);
+};
+
+export const sendPasswordReset = async (email: string): Promise<void> => {
+  await sendPasswordResetEmail(auth, email);
+};
+
+export const confirmPasswordResetWithCode = async (oobCode: string, newPassword: string): Promise<void> => {
+  await confirmPasswordReset(auth, oobCode, newPassword);
+};
+
+export const applyAuthActionCode = async (oobCode: string): Promise<void> => {
+  await applyActionCode(auth, oobCode);
 };
 
 export const fetchAppUser = async (uid: string): Promise<AppUser | null> => {
@@ -128,16 +143,6 @@ export async function addMemberToTeam(teamCode: string, uid: string): Promise<vo
 export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
   const results = await Promise.all(uids.map(uid => fetchAppUser(uid)));
   return results.filter((u): u is AppUser => u !== null);
-}
-
-export async function updateAppUserRole(
-  uid: string,
-  role: 'manager' | 'member',
-): Promise<AppUser> {
-  await updateDoc(doc(db, 'users', uid), { role });
-  const updated = await fetchAppUser(uid);
-  if (!updated) throw new Error('User not found after role update');
-  return updated;
 }
 
 export async function updateTeamCode(

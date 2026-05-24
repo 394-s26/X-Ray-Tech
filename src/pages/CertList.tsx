@@ -1,25 +1,29 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
-  ArrowLeftIcon,
   PhotoIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
   FilterIcon,
+  SearchIcon,
   XIcon,
+  CertificateIcon,
 } from '../services/svgIcons';
 import type { CertificateCategory, Certification } from '../types/certification';
 import { useCertifications } from '../hooks/useCertifications';
 import { deleteCertificationRecord, updateCertificationRecord } from '../services/certificateService';
+import { Breadcrumb } from '../components/Breadcrumb';
+import { PageHeader } from '../components/PageHeader';
+import { PhotoOverlay } from '../components/PhotoOverlay';
 import arrtLogo from '../assets/arrt.png';
 import iemaLogo from '../assets/iema.png';
 
-const CATEGORY_LOGO: Record<CertificateCategory, string> = {
+const CATEGORY_LOGOS: Partial<Record<CertificateCategory, string>> = {
   ARRT: arrtLogo,
   IEMA: iemaLogo,
-  CPR: '',
 };
+
 
 export interface CertListProps {
   name: string;
@@ -151,6 +155,13 @@ function CertRow({
             · {daysLabel(status)}
           </span>
         </div>
+        <div className="flex flex-wrap gap-1.5">
+          {cert.categories.map((cat) => (
+            <span key={cat} className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300">
+              {cat}
+            </span>
+          ))}
+        </div>
       </div>
     </article>
   );
@@ -163,70 +174,13 @@ const EXPIRY_BADGE: Record<ExpiryTier, string> = {
   ok:      'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 };
 
-function PhotoOverlay({
-  cert,
-  onClose,
-  onDetailView,
-}: {
-  cert: Certification;
-  onClose: () => void;
-  onDetailView: (cert: Certification) => void;
-}) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  return (
-    <div className="overlay-center" onClick={onClose}>
-      <div
-        className="overlay-panel overlay-panel--md rounded-2xl shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
-          <h2 className="text-base font-bold text-primary dark:text-slate-100 leading-tight min-w-0 truncate">
-            {cert.certificateName}
-          </h2>
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => onDetailView(cert)}
-              aria-label="View record details"
-              title="View record details"
-              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-            >
-              <EyeIcon size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-            >
-              <XIcon size={16} />
-            </button>
-          </div>
-        </div>
-        <div className="p-4 bg-gray-50 dark:bg-slate-800/60">
-          <img
-            src={cert.photoURL}
-            alt={cert.certificateName}
-            className="w-full max-h-[70vh] object-contain rounded-lg"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+      <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
         {label}
       </span>
-      <span className="text-sm font-semibold text-gray-800 dark:text-slate-100">{value}</span>
+      <span className="text-base font-semibold text-gray-800 dark:text-slate-100">{value}</span>
     </div>
   );
 }
@@ -248,7 +202,8 @@ function CertDetailOverlay({
     completedDate: string;
     expirationDate: string;
     ceCredits: string;
-    categories: CertificateCategory[];
+    categoryType: string;
+    assignedCertifications: CertificateCategory[];
   };
 
   const formFromCert = (): FormState => ({
@@ -257,12 +212,14 @@ function CertDetailOverlay({
     completedDate: cert.completedDate,
     expirationDate: cert.expirationDate,
     ceCredits: String(cert.ceCredits),
-    categories: [...cert.categories],
+    categoryType: cert.categoryType ?? '',
+    assignedCertifications: [...cert.categories],
   });
 
   const [isEditing, setIsEditing] = useState(startEditing);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(formFromCert);
+  const [restrictionModalMessage, setRestrictionModalMessage] = useState<string | null>(null);
 
   const status = expiryStatus(isEditing ? form.expirationDate : cert.expirationDate);
 
@@ -283,7 +240,8 @@ function CertDetailOverlay({
         completedDate: form.completedDate,
         expirationDate: form.expirationDate,
         ceCredits: Number(form.ceCredits),
-        categories: form.categories,
+        categoryType: form.categoryType.trim() || null,
+        categories: form.assignedCertifications,
       });
       setIsEditing(false);
     } finally {
@@ -293,10 +251,43 @@ function CertDetailOverlay({
 
   const toggleCategory = (cat: CertificateCategory) =>
     setForm((prev) => {
-      const already = prev.categories.includes(cat);
-      if (already) return { ...prev, categories: prev.categories.filter((c) => c !== cat) };
-      if (cat === 'CPR') return { ...prev, categories: ['CPR'] };
-      return { ...prev, categories: [...prev.categories.filter((c) => c !== 'CPR'), cat] };
+      const already = prev.assignedCertifications.includes(cat);
+      if (already) {
+        if (prev.assignedCertifications.length === 1) {
+          return prev;
+        }
+        return {
+          ...prev,
+          assignedCertifications: prev.assignedCertifications.filter((c) => c !== cat),
+        };
+      }
+
+      const wasCreatedForArrtOrIema =
+        cert.categories.includes('ARRT') || cert.categories.includes('IEMA');
+      const wasCreatedForCprOnly =
+        cert.categories.includes('CPR') &&
+        !cert.categories.includes('ARRT') &&
+        !cert.categories.includes('IEMA');
+
+      if (cat === 'CPR' && wasCreatedForArrtOrIema) {
+        setRestrictionModalMessage(
+          'This certificate was created for ARRT or IEMA. To convert it to CPR, delete this upload first and re-upload it as CPR.',
+        );
+        return prev;
+      }
+
+      if (cat !== 'CPR' && wasCreatedForCprOnly) {
+        setRestrictionModalMessage(
+          'This certificate was created as CPR. To convert it to ARRT or IEMA, delete this upload first and re-upload it for the target license.',
+        );
+        return prev;
+      }
+
+      if (cat === 'CPR') return { ...prev, assignedCertifications: ['CPR'] };
+      return {
+        ...prev,
+        assignedCertifications: [...prev.assignedCertifications.filter((c) => c !== 'CPR'), cat],
+      };
     });
 
   const thumbnailBtn = (
@@ -339,10 +330,10 @@ function CertDetailOverlay({
               <>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-black text-primary dark:text-slate-100 leading-tight">
+                    <h2 className="text-xl font-black text-primary dark:text-slate-100 leading-tight">
                       {cert.certificateName}
                     </h2>
-                    <p className="mt-0.5 text-xs text-gray-500 dark:text-slate-400">{cert.providerName}</p>
+                    <p className="mt-0.5 text-sm text-gray-500 dark:text-slate-400">{cert.providerName}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -358,7 +349,7 @@ function CertDetailOverlay({
                   </div>
                 </div>
 
-                <span className={`self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${EXPIRY_BADGE[status.tier]}`}>
+                <span className={`self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${EXPIRY_BADGE[status.tier]}`}>
                   {status.tier === 'expired' ? 'Expired' : 'Expires'} {formatDate(cert.expirationDate)}
                   <span className="opacity-70">· {daysLabel(status)}</span>
                 </span>
@@ -366,18 +357,21 @@ function CertDetailOverlay({
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <DetailField label="Completed" value={formatDate(cert.completedDate)} />
                   <DetailField label="CE Credits" value={String(cert.ceCredits)} />
-                  <div className="col-span-2 flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
-                      Categories
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+                      Assigned Certifications
                     </span>
                     <div className="flex flex-wrap gap-1.5 mt-0.5">
                       {cert.categories.map((cat) => (
-                        <span key={cat} className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300">
+                        <span key={cat} className="px-2.5 py-0.5 rounded-full text-sm font-semibold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300">
                           {cat}
                         </span>
                       ))}
                     </div>
                   </div>
+                  {cert.categoryType && (
+                    <DetailField label="Category Type" value={cert.categoryType} />
+                  )}
                 </div>
               </>
             )}
@@ -412,35 +406,83 @@ function CertDetailOverlay({
                     </div>
                   </div>
                   <div className="form-field">
-                    <label className="form-label">CE Credits</label>
-                    <input type="number" inputMode="decimal" min={0} step={0.5} className="form-number" value={form.ceCredits} onChange={(e) => setForm((p) => ({ ...p, ceCredits: e.target.value }))} disabled={saving} />
+                    <label className="form-label">Category type</label>
+                    <select
+                      className="form-input"
+                      value={form.categoryType}
+                      onChange={(e) => setForm((p) => ({ ...p, categoryType: e.target.value }))}
+                      disabled={saving}
+                    >
+                      <option value="">Select…</option>
+                      <option value="A+">A+</option>
+                      <option value="A">A</option>
+                      <option value="N/A">N/A</option>
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Only A and A+ count toward ARRT and IEMA CE requirements.</p>
                   </div>
                   <div className="form-field">
-                    <span className="form-label">Categories</span>
+                    <label className="form-label">CE Credits</label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      className="form-number"
+                      value={form.ceCredits}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^\d.]/g, '');
+                        const first = raw.indexOf('.');
+                        const cleaned =
+                          first === -1
+                            ? raw
+                            : raw.slice(0, first + 1) + raw.slice(first + 1).replace(/\./g, '');
+                        setForm((p) => ({ ...p, ceCredits: cleaned }));
+                      }}
+                      disabled={saving}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <span className="form-label">Assigned Certifications</span>
                     <div className="flex gap-2">
                       {(['IEMA', 'ARRT', 'CPR'] as CertificateCategory[]).map((cat) => {
-                        const isCprSelected = form.categories.includes('CPR');
-                        const isArrtIemaSelected = form.categories.some((c) => c === 'ARRT' || c === 'IEMA');
+                        const isCprSelected = form.assignedCertifications.includes('CPR');
+                        const isArrtIemaSelected = form.assignedCertifications.some((c) => c === 'ARRT' || c === 'IEMA');
+                        const certWasCreatedForCprOnly =
+                          cert.categories.includes('CPR') &&
+                          !cert.categories.includes('ARRT') &&
+                          !cert.categories.includes('IEMA');
                         const isGreyed =
-                          (cat === 'CPR' && isArrtIemaSelected) ||
-                          ((cat === 'ARRT' || cat === 'IEMA') && isCprSelected);
+                          cat !== 'CPR' && isCprSelected && !certWasCreatedForCprOnly;
+                        const cprBlocked =
+                          cat === 'CPR' &&
+                          isArrtIemaSelected &&
+                          (cert.categories.includes('ARRT') || cert.categories.includes('IEMA'));
+                        const cprToLicenseBlocked =
+                          cat !== 'CPR' &&
+                          certWasCreatedForCprOnly;
+                        const isOnlySelected =
+                          form.assignedCertifications.includes(cat) &&
+                          form.assignedCertifications.length === 1;
                         return (
                           <label
                             key={cat}
                             className={`flex flex-1 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
-                              form.categories.includes(cat)
+                              form.assignedCertifications.includes(cat)
                                 ? 'border-primary bg-primary/10 text-primary dark:border-primary dark:bg-primary/20 dark:text-slate-100'
+                                : cprBlocked || cprToLicenseBlocked
+                                ? 'cursor-pointer border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-600 dark:bg-amber-500/10 dark:text-amber-300'
                                 : isGreyed
                                 ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-600'
                                 : 'cursor-pointer border-gray-200 bg-white text-gray-800 hover:border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200'
-                            } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            } ${saving || isOnlySelected ? 'opacity-90' : ''}`}
                           >
-                            <input type="checkbox" checked={form.categories.includes(cat)} onChange={() => toggleCategory(cat)} disabled={saving || isGreyed} className="form-checkbox" />
+                            <input type="checkbox" checked={form.assignedCertifications.includes(cat)} onChange={() => toggleCategory(cat)} disabled={saving || isGreyed || isOnlySelected} className="form-checkbox" />
                             {cat}
                           </label>
                         );
                       })}
                     </div>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      CPR is exclusive; certificates cannot be converted between CPR and ARRT/IEMA. At least one license must remain selected.
+                    </p>
                   </div>
                 </div>
 
@@ -457,6 +499,30 @@ function CertDetailOverlay({
           </div>
         </div>
       </div>
+      {restrictionModalMessage && (
+        <div className="overlay-center" onClick={() => setRestrictionModalMessage(null)}>
+          <div
+            className="overlay-panel overlay-panel--sm rounded-2xl p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-primary dark:text-slate-100">
+              License conversion blocked
+            </h3>
+            <p className="mt-2 text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
+              {restrictionModalMessage}
+            </p>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setRestrictionModalMessage(null)}
+                className="global-btn default-btn max-w-30 py-2"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -478,8 +544,8 @@ function DeleteConfirmDialog({
         className="overlay-panel overlay-panel--sm rounded-2xl p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-bold text-primary dark:text-slate-100">Delete certificate?</h2>
-        <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 leading-snug">
+        <h2 className="text-lg font-bold text-primary dark:text-slate-100">Delete certificate?</h2>
+        <p className="mt-2 text-base text-gray-500 dark:text-slate-400 leading-snug">
           <span className="font-semibold text-gray-700 dark:text-slate-200">{cert.certificateName}</span> will be permanently removed. This cannot be undone.
         </p>
         <div className="mt-5 flex justify-end gap-2">
@@ -509,9 +575,28 @@ export default function CertList({ name, fullName, category }: CertListProps) {
   const { certifications, loading } = useCertifications(category);
   const [searchParams, setSearchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterContainerRef = useRef<HTMLDivElement | null>(null);
   const [search, setSearch] = useState('');
   const [expiryBefore, setExpiryBefore] = useState('');
   const [addedAfter, setAddedAfter] = useState('');
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!filterContainerRef.current?.contains(e.target as Node)) {
+        setFiltersOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFiltersOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [filtersOpen]);
   const [pendingDelete, setPendingDelete] = useState<Certification | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -556,41 +641,46 @@ export default function CertList({ name, fullName, category }: CertListProps) {
     });
   }, [certifications, search, expiryBefore, addedAfter]);
 
-  const activeCount =
-    (search.trim() ? 1 : 0) + (expiryBefore ? 1 : 0) + (addedAfter ? 1 : 0);
+  const activeCount = (expiryBefore ? 1 : 0) + (addedAfter ? 1 : 0);
 
   const clearAll = () => {
-    setSearch('');
     setExpiryBefore('');
     setAddedAfter('');
   };
 
   return (
-    <main className="min-h-[calc(100vh-6rem)] pt-2 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-5xl mx-auto">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-primary dark:hover:text-slate-100 transition-colors"
-      >
-        <ArrowLeftIcon size={14} />
-        Dashboard
-      </Link>
+    <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-md lg:max-w-6xl mx-auto">
+      <Breadcrumb
+        items={[
+          { name: 'Certification Tracking', to: '/certificates' },
+          { name, to: '' },
+        ]}
+      />
 
-      <header className="mt-3 mb-7">
-        <div className="flex items-end gap-4">
+      {CATEGORY_LOGOS[category] ? (
+        <div className="mt-2 mb-4 flex items-end gap-2 flex-wrap">
           <img
-            src={CATEGORY_LOGO[category]}
-            alt={`${name} logo`}
+            src={CATEGORY_LOGOS[category]}
+            alt={name}
             className="h-12 sm:h-14 w-auto object-contain shrink-0"
           />
-          <div className="min-w-0">
-            <p className="text-sm text-gray-500 dark:text-slate-400 leading-snug">
-              {fullName}
-            </p>
-          </div>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-slate-400 leading-tight pb-1">
+            {fullName}
+          </p>
         </div>
-        <div className="mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
-          <span>{loading ? '…' : `${filtered.length} records`}</span>
-          <span className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />
+      ) : (
+        <PageHeader
+          icon={<CertificateIcon size={22} />}
+          title={name}
+          subtitle={fullName}
+          className="mt-2 mb-4"
+        />
+      )}
+
+      <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+        <span>{loading ? '…' : `${filtered.length} records`}</span>
+        <span className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />
+        <div ref={filterContainerRef} className="relative">
           <button
             type="button"
             onClick={() => setFiltersOpen((o) => !o)}
@@ -611,54 +701,73 @@ export default function CertList({ name, fullName, category }: CertListProps) {
               </span>
             )}
           </button>
-        </div>
-      </header>
 
-      {filtersOpen && (
-        <div className="mb-6 rounded-2xl glass-panel p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-            <div className="form-field lg:col-span-2">
-              <label className="form-label">Search</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Certificate name…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="form-field">
-              <label className="form-label">Expiring by</label>
-              <input
-                type="date"
-                className="form-input"
-                value={expiryBefore}
-                onChange={(e) => setExpiryBefore(e.target.value)}
-              />
-            </div>
-            <div className="form-field">
-              <label className="form-label">Added since</label>
-              <input
-                type="date"
-                className="form-input"
-                value={addedAfter}
-                onChange={(e) => setAddedAfter(e.target.value)}
-              />
-            </div>
-          </div>
-          {activeCount > 0 && (
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={clearAll}
-                className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400 hover:text-[#7C49D5] dark:hover:text-[#A876FF] transition-colors"
-              >
-                Clear filters
-              </button>
+          {filtersOpen && (
+            <div
+              className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[min(22rem,calc(100vw-2.5rem))] rounded-2xl border border-[var(--ink-200)] dark:border-[var(--ink-700)] bg-white/80 dark:bg-[#14111F]/80 backdrop-blur-md shadow-xl p-4"
+              role="dialog"
+              aria-label="Filter options"
+            >
+              <div className="grid grid-cols-1 gap-3">
+                <div className="form-field">
+                  <label className="form-label">Expiring by</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={expiryBefore}
+                    onChange={(e) => setExpiryBefore(e.target.value)}
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Added since</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={addedAfter}
+                    onChange={(e) => setAddedAfter(e.target.value)}
+                  />
+                </div>
+              </div>
+              {activeCount > 0 && (
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400 hover:text-[#7C49D5] dark:hover:text-[#A876FF] transition-colors inline-flex items-center gap-1"
+                  >
+                    <XIcon size={12} /> Clear filters
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+      </div>
+
+      <div className="mb-5 relative w-full max-w-xs">
+        <span className="absolute inset-y-0 left-3 flex items-center text-[var(--ink-500)] dark:text-[var(--ink-400)] pointer-events-none">
+          <SearchIcon size={16} />
+        </span>
+        <input
+          type="text"
+          className="form-input w-full"
+          style={{ paddingLeft: '2.25rem', paddingRight: search ? '2rem' : '0.875rem' }}
+          placeholder="Search certificate name…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search certificates"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch('')}
+            aria-label="Clear search"
+            className="absolute inset-y-0 right-2 flex items-center text-[var(--ink-400)] hover:text-[var(--ink-700)] dark:hover:text-[var(--ink-100)] transition-colors"
+          >
+            <XIcon size={14} />
+          </button>
+        )}
+      </div>
 
       {loading ? (
         <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 text-center py-12">

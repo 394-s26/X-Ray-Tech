@@ -4,15 +4,18 @@ import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
 import CertList from '../pages/CertList.tsx';
+import Archive from './Archive';
 import Dashboard from './Dashboard';
-import CredentialTracking from './CredentialTracking';
+import CredentialTracking from './CertificationTracking';
 import TeamManagement from './TeamManagement';
 import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
+import { ForgotPasswordPage } from './ForgotPasswordPage';
+import { AuthActionPage } from './AuthActionPage';
+import LandingPage from './LandingPage';
 import AppLayout from '../components/AppLayout';
-import DevRoleToggle from '../components/DevRoleToggle';
 
 const Router = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -50,21 +53,39 @@ const Router = () => {
     if (!user) return <Navigate to="/login" replace />;
     if (!appUser) return <></>;
     if (!appUser.setupCompleted) return <Navigate to="/setup" replace />;
-    return <AppLayout appUser={appUser}>{element}</AppLayout>;
+    return (
+      <AppLayout appUser={appUser} onAppUserUpdate={setAppUser}>
+        {element}
+      </AppLayout>
+    );
   };
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={requireAuth(appUser ? <Dashboard appUser={appUser} /> : <></>)} />
-        <Route path="/credentials" element={requireAuth(<CredentialTracking />)} />
+        <Route
+          path="/"
+          element={
+            user && appUser && appUser.setupCompleted ? (
+              <AppLayout appUser={appUser} onAppUserUpdate={setAppUser}>
+                <Dashboard appUser={appUser} />
+              </AppLayout>
+            ) : user && appUser && !appUser.setupCompleted ? (
+              <Navigate to="/setup" replace />
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
+        <Route path="/certificates" element={requireAuth(<CredentialTracking />)} />
+        <Route path="/archive" element={requireAuth(<Archive />)} />
         <Route
           path="/certificates/new"
           element={requireAuth(<CertificateCreatePage />)}
         />
         <Route
           path="/team"
-          element={requireAuth(appUser ? <TeamManagement appUser={appUser} /> : <></>)}
+          element={requireAuth(appUser ? <TeamManagement appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
         <Route
           path="/arrt"
@@ -136,11 +157,15 @@ const Router = () => {
             )
           }
         />
+        <Route
+          path="/forgot-password"
+          element={!user ? <ForgotPasswordPage /> : <Navigate to="/" replace />}
+        />
+        <Route path="/auth/action" element={<AuthActionPage />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {import.meta.env.DEV && appUser && (
-        <DevRoleToggle appUser={appUser} onRoleChanged={setAppUser} />
-      )}
+
     </BrowserRouter>
   );
 };

@@ -11,6 +11,7 @@ import {
   SettingsIcon,
   ChevronRightIcon,
   LogOutIcon,
+  ArchiveIcon,
 } from '../services/svgIcons';
 import { signOut, getTeamByCode } from '../services/authService';
 import '../styles/components/Sidebar.css';
@@ -26,6 +27,8 @@ interface NavItem {
   highlighted?: boolean;
   /** When true, the item is hidden in the mobile bottom nav. */
   mobileHidden?: boolean;
+  /** When true, the item is hidden in the desktop sidebar. */
+  desktopHidden?: boolean;
 }
 
 const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
@@ -37,9 +40,9 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     mobileHidden: true,
   },
   {
-    to: '/credentials',
-    longLabel: 'Credential Tracking',
-    shortLabel: 'Credentials',
+    to: '/certificates',
+    longLabel: 'Certification Tracking',
+    shortLabel: 'Certifications',
     icon: (s) => <IdCardIcon size={s} />,
     mobileHidden: true,
   },
@@ -47,7 +50,7 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
 
 const ADD_CERT_ITEM: NavItem = {
   to: '/certificates/new',
-  longLabel: 'Add certificate',
+  longLabel: 'Add certification',
   shortLabel: 'Add cert',
   icon: (s) => <PlusIcon size={s} />,
   exact: true,
@@ -59,6 +62,23 @@ const SETTINGS_ITEM: NavItem = {
   longLabel: 'System Settings',
   shortLabel: 'Settings',
   icon: (s) => <SettingsIcon size={s} />,
+  mobileHidden: true,
+};
+
+const ARCHIVE_ITEM_DESKTOP: NavItem = {
+  to: '/archive',
+  longLabel: 'Archived Certifications',
+  shortLabel: 'Archive',
+  icon: (s) => <ArchiveIcon size={s} />,
+  mobileHidden: true,
+};
+
+const ARCHIVE_ITEM_MOBILE: NavItem = {
+  to: '/archive',
+  longLabel: 'Archived Certifications',
+  shortLabel: 'Archive',
+  icon: (s) => <ArchiveIcon size={s} />,
+  desktopHidden: true,
 };
 
 interface SidebarProps {
@@ -76,7 +96,7 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
     to={item.to}
     end={item.exact !== undefined ? item.exact : item.to === '/'}
     className={({ isActive }) =>
-      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}${item.mobileHidden ? ' app-sidebar__nav-item--mobile-hidden' : ''}`
+      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}${item.mobileHidden ? ' app-sidebar__nav-item--mobile-hidden' : ''}${item.desktopHidden ? ' app-sidebar__nav-item--desktop-hidden' : ''}`
     }
   >
     <span className="app-sidebar__nav-icon">{item.icon(20)}</span>
@@ -133,35 +153,35 @@ const Sidebar = ({ appUser }: SidebarProps) => {
           {visiblePrimary.map((item) => (
             <NavItemLink key={item.to} item={item} />
           ))}
-          {isManager && (
-            <NavLink
-              to="/team"
-              end={false}
-              className={({ isActive }) =>
-                `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
-              }
-              style={{ backgroundColor: teamBg }}
-              onMouseEnter={() => setTeamHovered(true)}
-              onMouseLeave={() => setTeamHovered(false)}
-            >
-              <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
-              <span className="app-sidebar__nav-label app-sidebar__nav-label--long">
-                Manage Team
-                {team?.name && (
-                  <span className="app-sidebar__team-name">{team.name}</span>
-                )}
-              </span>
-              <span className="app-sidebar__nav-label app-sidebar__nav-label--short">
-                Team
-              </span>
-            </NavLink>
-          )}
+          <NavLink
+            to="/team"
+            end={false}
+            className={({ isActive }) =>
+              `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
+            }
+            style={{ backgroundColor: teamBg }}
+            onMouseEnter={() => setTeamHovered(true)}
+            onMouseLeave={() => setTeamHovered(false)}
+          >
+            <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
+            <span className="app-sidebar__nav-label app-sidebar__nav-label--long">
+              {isManager ? 'Manage Team' : 'View Team'}
+              {team?.name && (
+                <span className="app-sidebar__team-name">{team.name}</span>
+              )}
+            </span>
+            <span className="app-sidebar__nav-label app-sidebar__nav-label--short">
+              Team
+            </span>
+          </NavLink>
+          <NavItemLink item={ARCHIVE_ITEM_DESKTOP} />
         </nav>
 
         <div className="app-sidebar__bottom">
           <div className="app-sidebar__divider" />
           <nav className="app-sidebar__section" aria-label="Add certificate">
             <NavItemLink item={ADD_CERT_ITEM} />
+            <NavItemLink item={ARCHIVE_ITEM_MOBILE} />
           </nav>
           <nav
             className="app-sidebar__section app-sidebar__section--settings"

@@ -6,11 +6,14 @@ import {
   BellIcon,
   MoonIcon,
   PlusIcon,
+  SettingsIcon,
   SunIcon,
   UserIcon,
 } from '../services/svgIcons';
 import ThemeToggle from './ThemeToggle';
 import BrandLogo from './BrandLogo';
+import NotificationBell from './NotificationBell';
+import type { AppUser } from '../types/auth';
 import '../styles/components/NavBar.css';
 
 interface HamburgerButtonProps {
@@ -66,9 +69,10 @@ function MenuItem({ icon, label, onClick, to }: MenuItemProps) {
 
 interface NavbarProps {
   mode?: 'full' | 'minimal';
+  appUser?: AppUser | null;
 }
 
-export default function Navbar({ mode = 'full' }: NavbarProps) {
+export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
@@ -131,14 +135,13 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
           menuOpen ? 'pointer-events-auto' : ''
         }`}
       >
-        <button
-          type="button"
-          className="navbar-bell"
-          aria-label="Notifications"
-        >
-          <BellIcon size={18} />
-          <span className="navbar-bell__dot" aria-hidden="true" />
-        </button>
+        {appUser ? (
+          <NotificationBell appUser={appUser} />
+        ) : (
+          <button type="button" className="navbar-bell" aria-label="Notifications (sign in)">
+            <BellIcon size={18} />
+          </button>
+        )}
 
         <div className="hidden lg:flex items-center gap-3">
           <ThemeToggle />
@@ -179,6 +182,12 @@ export default function Navbar({ mode = 'full' }: NavbarProps) {
                 label="Profile"
                 onClick={close}
                 to="/profile"
+              />
+              <MenuItem
+                icon={<SettingsIcon size={18} />}
+                label="Settings"
+                onClick={close}
+                to="/settings"
               />
             </div>
           </>,
