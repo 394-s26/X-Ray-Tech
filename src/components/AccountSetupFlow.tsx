@@ -38,11 +38,30 @@ const daysInMonth = (monthNum: number): number => {
   return 31;
 };
 
-const buildRecentYearOptions = (): number[] => {
-  const currentYear = new Date().getFullYear();
+/**
+ * Recent-year options. If `anchorMonth` (1-12) is provided AND it falls *after*
+ * the current calendar month, the current year is excluded — the user's cycle
+ * couldn't have started yet this year. Birth month equal to current month is
+ * allowed because the cycle starts on the first of the month and today is at
+ * least the 1st.
+ */
+const buildRecentYearOptions = (anchorMonth?: number | null): number[] => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const maxYear =
+    anchorMonth && anchorMonth > currentMonth ? currentYear - 1 : currentYear;
   const years: number[] = [];
-  for (let y = currentYear; y >= currentYear - 9; y--) years.push(y);
+  for (let y = maxYear; y >= currentYear - 9; y--) years.push(y);
   return years;
+};
+
+const monthNumFromBirthday = (birthday: string | undefined | null): number | null => {
+  if (!birthday) return null;
+  const m = birthday.match(/^(\d{2})-\d{2}$/);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  return n >= 1 && n <= 12 ? n : null;
 };
 
 const monthLabelFromBirthday = (birthday: string | undefined | null): string | null => {
@@ -184,17 +203,32 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   const validateLicenseStep = (): boolean => {
     const errs: Record<string, string> = {};
-    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const arrtMonth = monthNumFromBirthday(formData.birthday);
+
     if (formData.arrtCycleStartYear.trim()) {
       const y = parseInt(formData.arrtCycleStartYear, 10);
       if (!/^\d{4}$/.test(formData.arrtCycleStartYear) || y < 1980 || y > currentYear + 1) {
         errs.arrtCycleStartYear = 'Enter a valid 4-digit year.';
+      } else if (arrtMonth && arrtMonth > currentMonth && y >= currentYear) {
+        const monthLabel = MONTH_NAMES[arrtMonth - 1];
+        errs.arrtCycleStartYear = `Your ${monthLabel} cycle for ${y} hasn't started yet. Pick ${currentYear - 1} or earlier.`;
       }
     }
     if (formData.iemaCycleStartYear.trim()) {
       const y = parseInt(formData.iemaCycleStartYear, 10);
       if (!/^\d{4}$/.test(formData.iemaCycleStartYear) || y < 1980 || y > currentYear + 1) {
         errs.iemaCycleStartYear = 'Enter a valid 4-digit year.';
+      } else if (
+        formData.iemaCycleEndMonth.trim() &&
+        parseInt(formData.iemaCycleEndMonth, 10) > currentMonth &&
+        y >= currentYear
+      ) {
+        const m = parseInt(formData.iemaCycleEndMonth, 10);
+        const monthLabel = MONTH_NAMES[m - 1];
+        errs.iemaCycleStartYear = `Your ${monthLabel} cycle for ${y} hasn't started yet. Pick ${currentYear - 1} or earlier.`;
       }
     }
     if (formData.iemaCycleStartYear.trim() && !formData.iemaCycleEndMonth.trim()) {
@@ -379,7 +413,12 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   const renderLicenseStep = () => {
     const birthMonth = monthLabelFromBirthday(formData.birthday);
-    const iemaYearOptions = buildRecentYearOptions();
+    const arrtMonthNum = monthNumFromBirthday(formData.birthday);
+    const arrtYearOptions = buildRecentYearOptions(arrtMonthNum);
+    const iemaMonthNum = formData.iemaCycleEndMonth.trim()
+      ? parseInt(formData.iemaCycleEndMonth, 10)
+      : null;
+    const iemaYearOptions = buildRecentYearOptions(iemaMonthNum);
     return (
       <>
         <h2 className="setup-flow__title">Your license cycles</h2>
@@ -403,7 +442,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
               onChange={e => setField('arrtCycleStartYear', e.target.value)}
             >
               <option value="">Select year…</option>
-              {iemaYearOptions.map(y => (
+              {arrtYearOptions.map(y => (
                 <option key={y} value={String(y)}>{y}</option>
               ))}
             </select>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Certification } from '../types/certification';
-import { ArrowLeftIcon, PencilIcon, TrashIcon, XIcon } from '../services/svgIcons';
+import { ArrowLeftIcon, DownloadIcon, PencilIcon, TrashIcon, XIcon } from '../services/svgIcons';
 import {
   expiryStatus,
   formatExpiryDate,
@@ -40,6 +40,29 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
   const isPdf = /\.pdf$/i.test(cert.photoStoragePath ?? '');
   const status = expiryStatus(cert.expirationDate);
 
+  const downloadFilename = (() => {
+    const base = cert.certificateName.trim().replace(/[^\w.\-]+/g, '_') || 'certificate';
+    const ext = isPdf ? '.pdf' : '';
+    return base.toLowerCase().endsWith(ext) ? base : `${base}${ext}`;
+  })();
+
+  const handleDownload = async () => {
+    try {
+      const res = await fetch(cert.photoURL, { mode: 'cors' });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = downloadFilename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(cert.photoURL, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="overlay-center" onClick={onClose}>
       <div
@@ -62,6 +85,15 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
                 <ArrowLeftIcon size={16} />
               </button>
             )}
+            <button
+              type="button"
+              onClick={handleDownload}
+              aria-label="Download file"
+              title="Download file"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <DownloadIcon size={16} />
+            </button>
             {onEdit && (
               <button
                 type="button"
@@ -94,7 +126,13 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
             </button>
           </div>
         </div>
-        <div className="relative p-4 bg-gray-50 dark:bg-slate-800/60">
+        <div
+          className={`relative p-4 transition-colors duration-200 ${
+            statsCollapsed
+              ? 'bg-gray-50 dark:bg-slate-800/60'
+              : 'bg-gray-300 dark:bg-slate-950/80'
+          }`}
+        >
           {!statsCollapsed && (
             <aside
               className="absolute top-0 left-0 z-10 w-[clamp(11rem,40vw,14rem)] bg-white dark:bg-slate-900 border-r border-b border-gray-200 dark:border-slate-700 shadow-md rounded-br-xl px-3 py-3 flex flex-col gap-2"
@@ -149,13 +187,13 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
             <iframe
               src={cert.photoURL}
               title={cert.certificateName}
-              className="w-full h-[70vh] rounded-lg bg-white"
+              className={`w-full h-[70vh] rounded-lg bg-white transition-opacity duration-200 ${statsCollapsed ? 'opacity-100' : 'opacity-30'}`}
             />
           ) : (
             <img
               src={cert.photoURL}
               alt={cert.certificateName}
-              className="w-full max-h-[70vh] object-contain rounded-lg"
+              className={`w-full max-h-[70vh] object-contain rounded-lg transition-opacity duration-200 ${statsCollapsed ? 'opacity-100' : 'opacity-30'}`}
             />
           )}
         </div>

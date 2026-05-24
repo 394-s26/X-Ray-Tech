@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Certification } from '../types/certification';
+import type { AppUser } from '../types/auth';
 import { useCertifications } from '../hooks/useCertifications';
+import { computeArrtCycle, computeIemaCycle, creditsInCycle } from '../utils/cycles';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
 import { PhotoOverlay } from '../components/PhotoOverlay';
@@ -67,6 +69,33 @@ function ExpiringSoonSummary({ count }: { count: number }) {
   );
 }
 
+function UsedPointsSummary({ arrt, iema }: { arrt: number; iema: number }) {
+  const fmt = (n: number) => `${n} pt${n === 1 ? '' : 's'}`;
+  return (
+    <div
+      className="nb-card px-4 py-3 flex flex-col gap-1 min-w-[12rem] shadow-none"
+      style={{ boxShadow: 'none' }}
+      title="Credits already counted toward the active cycle for each license"
+    >
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-600)] dark:text-[var(--ink-300)]">
+        Used points <span className="font-medium normal-case tracking-normal text-[var(--ink-500)]">(current cycles)</span>
+      </p>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">ARRT</span>
+        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
+          {fmt(arrt)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">IEMA</span>
+        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
+          {fmt(iema)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function UnusedPointsSummary({ arrt, iema }: { arrt: number; iema: number }) {
   const fmt = (n: number) => `${n} pt${n === 1 ? '' : 's'}`;
   return (
@@ -76,7 +105,7 @@ function UnusedPointsSummary({ arrt, iema }: { arrt: number; iema: number }) {
       title="Category A/A+ credits from non-expired certificates not yet reported to this license"
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-600)] dark:text-[var(--ink-300)]">
-        Unused points
+        Unused points <span className="font-medium normal-case tracking-normal text-[var(--ink-500)]">(current cycles)</span>
       </p>
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">ARRT</span>
@@ -127,7 +156,11 @@ function getInt(params: URLSearchParams, key: string, fallback: number): number 
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-const CertificationTracking = () => {
+interface CertificationTrackingProps {
+  appUser: AppUser;
+}
+
+const CertificationTracking = ({ appUser }: CertificationTrackingProps) => {
   const { certifications, loading } = useCertifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -243,6 +276,15 @@ const CertificationTracking = () => {
     [certifications],
   );
 
+  const used = useMemo(() => {
+    const iemaCycle = computeIemaCycle(appUser);
+    const arrtCycle = computeArrtCycle(appUser);
+    return {
+      iema: iemaCycle ? Math.round(creditsInCycle(certifications, 'IEMA', iemaCycle)) : 0,
+      arrt: arrtCycle ? Math.round(creditsInCycle(certifications, 'ARRT', arrtCycle)) : 0,
+    };
+  }, [appUser, certifications]);
+
   const expiringSoonCount = useMemo(
     () => tracked.reduce((n, c) => n + (getArchiveStatus(c).expiringSoon ? 1 : 0), 0),
     [tracked],
@@ -272,6 +314,7 @@ const CertificationTracking = () => {
         />
         <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full sm:w-auto">
           <ExpiringSoonSummary count={expiringSoonCount} />
+          <UsedPointsSummary arrt={used.arrt} iema={used.iema} />
           <UnusedPointsSummary arrt={unused.arrt} iema={unused.iema} />
         </div>
       </div>

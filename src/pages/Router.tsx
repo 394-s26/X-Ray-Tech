@@ -3,10 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
-import CertList from '../pages/CertList.tsx';
 import Archive from './Archive';
 import Dashboard from './Dashboard';
+import CyclesPage from './CyclesPage';
 import CredentialTracking from './CertificationTracking';
+
 import TeamManagement from './TeamManagement';
 import { CertificateCreatePage } from './CertificateCreatePage';
 import { LoginPage } from './LoginPage';
@@ -77,7 +78,11 @@ const Router = () => {
             )
           }
         />
-        <Route path="/certificates" element={requireAuth(<CredentialTracking />)} />
+        <Route
+          path="/certificates"
+          element={requireAuth(appUser ? <CredentialTracking appUser={appUser} /> : <></>)}
+        />
+        <Route path="/cycles" element={requireAuth(appUser ? <CyclesPage appUser={appUser} /> : <></>)} />
         <Route path="/archive" element={requireAuth(<Archive />)} />
         <Route
           path="/certificates/new"
@@ -87,39 +92,9 @@ const Router = () => {
           path="/team"
           element={requireAuth(appUser ? <TeamManagement appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
-        <Route
-          path="/arrt"
-          element={requireAuth(
-            <CertList
-              name="ARRT"
-              fullName="American Registry of Radiologic Technologists"
-              accent="#1A4975"
-              category="ARRT"
-            />,
-          )}
-        />
-        <Route
-          path="/iema"
-          element={requireAuth(
-            <CertList
-              name="IEMA"
-              fullName="Illinois Emergency Management Agency"
-              accent="#0EA37E"
-              category="IEMA"
-            />,
-          )}
-        />
-        <Route
-          path="/cpr"
-          element={requireAuth(
-            <CertList
-              name="CPR"
-              fullName="Cardiopulmonary Resuscitation"
-              accent="#DC2626"
-              category="CPR"
-            />,
-          )}
-        />
+        <Route path="/arrt" element={<Navigate to="/certificates?cat=ARRT" replace />} />
+        <Route path="/iema" element={<Navigate to="/certificates?cat=IEMA" replace />} />
+        <Route path="/cpr" element={<Navigate to="/certificates?cat=CPR" replace />} />
 
         <Route
           path="/setup"

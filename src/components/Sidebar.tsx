@@ -12,6 +12,7 @@ import {
   ChevronRightIcon,
   LogOutIcon,
   ArchiveIcon,
+  RotateCwIcon,
 } from '../services/svgIcons';
 import { signOut, getTeamByCode } from '../services/authService';
 import '../styles/components/Sidebar.css';
@@ -44,6 +45,13 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     longLabel: 'Certification Tracking',
     shortLabel: 'Certifications',
     icon: (s) => <IdCardIcon size={s} />,
+    mobileHidden: true,
+  },
+  {
+    to: '/cycles',
+    longLabel: 'License Cycles',
+    shortLabel: 'Cycles',
+    icon: (s) => <RotateCwIcon size={s} />,
     mobileHidden: true,
   },
 ];
