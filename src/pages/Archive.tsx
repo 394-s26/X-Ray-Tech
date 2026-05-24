@@ -8,6 +8,7 @@ import { PhotoOverlay } from '../components/PhotoOverlay';
 import { CertDetailOverlay } from '../components/CertDetailOverlay';
 import { DeleteConfirmDialog } from '../components/DeleteConfirmDialog';
 import { CertificateCard } from '../components/CertificateCard';
+import { Toast } from '../components/Toast';
 import {
   ArchiveIcon,
   FilterIcon,
@@ -37,6 +38,7 @@ export default function Archive() {
   const [detailTarget, setDetailTarget] = useState<{ cert: Certification; editing: boolean } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Certification | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; detail?: string } | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filterContainerRef = useRef<HTMLDivElement | null>(null);
   const [isDesktop, setIsDesktop] = useState<boolean>(() =>
@@ -373,6 +375,23 @@ export default function Archive() {
             setDetailTarget(null);
             setPhotoTarget(c);
           }}
+          onSaved={(updated) => {
+            setDetailTarget(null);
+            setToast({
+              message: 'Updates have been made',
+              detail: !isArchived(updated)
+                ? 'This certificate is active again. Find it in Certification Tracking.'
+                : undefined,
+            });
+          }}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          detail={toast.detail}
+          onDismiss={() => setToast(null)}
         />
       )}
 

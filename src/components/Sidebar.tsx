@@ -153,6 +153,7 @@ const Sidebar = ({ appUser }: SidebarProps) => {
           {visiblePrimary.map((item) => (
             <NavItemLink key={item.to} item={item} />
           ))}
+          <NavItemLink item={ARCHIVE_ITEM_DESKTOP} />
           <NavLink
             to="/team"
             end={false}
@@ -174,7 +175,6 @@ const Sidebar = ({ appUser }: SidebarProps) => {
               Team
             </span>
           </NavLink>
-          <NavItemLink item={ARCHIVE_ITEM_DESKTOP} />
         </nav>
 
         <div className="app-sidebar__bottom">

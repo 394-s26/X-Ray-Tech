@@ -8,6 +8,7 @@ import { PhotoOverlay } from '../components/PhotoOverlay';
 import { CertDetailOverlay } from '../components/CertDetailOverlay';
 import { DeleteConfirmDialog } from '../components/DeleteConfirmDialog';
 import { CertificateCard } from '../components/CertificateCard';
+import { Toast } from '../components/Toast';
 import {
   IdCardIcon,
   FilterIcon,
@@ -133,6 +134,7 @@ const CertificationTracking = () => {
   const [detailTarget, setDetailTarget] = useState<{ cert: Certification; editing: boolean } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Certification | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; detail?: string } | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filterContainerRef = useRef<HTMLDivElement | null>(null);
   const [isDesktop, setIsDesktop] = useState<boolean>(() =>
@@ -481,6 +483,23 @@ const CertificationTracking = () => {
             setDetailTarget(null);
             setPhotoTarget(c);
           }}
+          onSaved={(updated) => {
+            setDetailTarget(null);
+            setToast({
+              message: 'Updates have been made',
+              detail: isArchived(updated)
+                ? 'This certificate is now fully used or expired. Find it in Archive.'
+                : undefined,
+            });
+          }}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          detail={toast.detail}
+          onDismiss={() => setToast(null)}
         />
       )}
 

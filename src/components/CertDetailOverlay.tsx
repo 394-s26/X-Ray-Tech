@@ -69,12 +69,14 @@ export function CertDetailOverlay({
   onPhotoView,
   startEditing = false,
   onCancelEdit,
+  onSaved,
 }: {
   cert: Certification;
   onClose: () => void;
   onPhotoView: (cert: Certification) => void;
   startEditing?: boolean;
   onCancelEdit?: () => void;
+  onSaved?: (updated: Certification) => void;
 }) {
   type FormState = {
     certName: string;
@@ -123,7 +125,7 @@ export function CertDetailOverlay({
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateCertificationRecord(cert.id, {
+      const updates = {
         certificateName: form.certName.trim(),
         providerName: form.provider.trim(),
         completedDate: form.completedDate,
@@ -131,7 +133,12 @@ export function CertDetailOverlay({
         ceCredits: Number(form.ceCredits),
         categoryType: form.categoryType.trim() || null,
         categories: form.assignedCertifications,
-      });
+      };
+      await updateCertificationRecord(cert.id, updates);
+      if (onSaved) {
+        onSaved({ ...cert, ...updates });
+        return;
+      }
       setIsEditing(false);
     } finally {
       setSaving(false);
