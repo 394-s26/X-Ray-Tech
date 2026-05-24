@@ -3,14 +3,14 @@ import { PencilIcon, XIcon } from '../services/svgIcons';
 import type { CertificateCategory, Certification } from '../types/certification';
 import { updateCertificationRecord } from '../services/certificateService';
 
-type ExpiryTier = 'expired' | 'urgent' | 'warn' | 'ok';
+export type ExpiryTier = 'expired' | 'urgent' | 'warn' | 'ok';
 
-interface ExpiryStatus {
+export interface ExpiryStatus {
   tier: ExpiryTier;
   days: number;
 }
 
-function expiryStatus(dateString: string): ExpiryStatus {
+export function expiryStatus(dateString: string): ExpiryStatus {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const expiry = new Date(dateString + 'T00:00:00');
@@ -28,14 +28,14 @@ const STRIPE_COLOR: Record<ExpiryTier, string> = {
   ok: 'bg-emerald-500',
 };
 
-const EXPIRY_BADGE: Record<ExpiryTier, string> = {
+export const EXPIRY_BADGE: Record<ExpiryTier, string> = {
   expired: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
   urgent: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
   warn: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
   ok: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
 };
 
-function formatDate(dateString: string): string {
+export function formatExpiryDate(dateString: string): string {
   return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -43,7 +43,7 @@ function formatDate(dateString: string): string {
   });
 }
 
-function daysLabel(status: ExpiryStatus): string {
+export function daysLabel(status: ExpiryStatus): string {
   if (status.tier === 'expired') {
     const n = Math.abs(status.days);
     return n === 1 ? '1 day ago' : `${n} days ago`;
@@ -52,7 +52,7 @@ function daysLabel(status: ExpiryStatus): string {
   return status.days === 1 ? 'in 1 day' : `in ${status.days} days`;
 }
 
-function DetailField({ label, value }: { label: string; value: string }) {
+export function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
@@ -68,11 +68,13 @@ export function CertDetailOverlay({
   onClose,
   onPhotoView,
   startEditing = false,
+  onCancelEdit,
 }: {
   cert: Certification;
   onClose: () => void;
   onPhotoView: (cert: Certification) => void;
   startEditing?: boolean;
+  onCancelEdit?: () => void;
 }) {
   type FormState = {
     certName: string;
@@ -111,6 +113,10 @@ export function CertDetailOverlay({
 
   const handleCancel = () => {
     setForm(formFromCert());
+    if (onCancelEdit) {
+      onCancelEdit();
+      return;
+    }
     setIsEditing(false);
   };
 
@@ -202,7 +208,7 @@ export function CertDetailOverlay({
         className="overlay-panel overlay-panel--md rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`h-1.5 w-full ${STRIPE_COLOR[status.tier]}`} />
+        {!isEditing && <div className={`h-1.5 w-full ${STRIPE_COLOR[status.tier]}`} />}
 
         <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6">
           {thumbnailBtn}
@@ -232,12 +238,12 @@ export function CertDetailOverlay({
                 </div>
 
                 <span className={`self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${EXPIRY_BADGE[status.tier]}`}>
-                  {status.tier === 'expired' ? 'Expired' : 'Expires'} {formatDate(cert.expirationDate)}
+                  {status.tier === 'expired' ? 'Expired' : 'Expires'} {formatExpiryDate(cert.expirationDate)}
                   <span className="opacity-70">· {daysLabel(status)}</span>
                 </span>
 
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                  <DetailField label="Completed" value={formatDate(cert.completedDate)} />
+                  <DetailField label="Completed" value={formatExpiryDate(cert.completedDate)} />
                   <DetailField label="CE Credits" value={String(cert.ceCredits)} />
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">

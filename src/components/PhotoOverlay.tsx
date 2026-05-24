@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import type { Certification } from '../types/certification';
 import { EyeIcon, PencilIcon, TrashIcon, XIcon } from '../services/svgIcons';
+import {
+  expiryStatus,
+  formatExpiryDate,
+  daysLabel,
+  EXPIRY_BADGE,
+} from './CertDetailOverlay';
 
 interface PhotoOverlayProps {
   cert: Certification;
@@ -18,17 +24,33 @@ export function PhotoOverlay({ cert, onClose, onDetailView, onEdit, onDelete }: 
   }, [onClose]);
 
   const isPdf = /\.pdf$/i.test(cert.photoStoragePath ?? '');
+  const status = expiryStatus(cert.expirationDate);
 
   return (
     <div className="overlay-center" onClick={onClose}>
       <div
-        className="overlay-panel overlay-panel--md rounded-2xl shadow-2xl overflow-hidden"
+        className="overlay-panel overlay-panel--md rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-black dark:text-slate-100 leading-tight min-w-0 truncate">
-            {cert.certificateName}
-          </h2>
+        <div className="flex items-start justify-between gap-3 px-5 py-3 border-b border-gray-100 dark:border-slate-700">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold text-black dark:text-slate-100 leading-tight truncate">
+              {cert.certificateName}
+            </h2>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500 dark:text-slate-400 leading-tight">
+              <span
+                className={`inline-flex items-center px-1.5 py-0 rounded-full text-[10px] font-bold ${EXPIRY_BADGE[status.tier]}`}
+              >
+                {status.tier === 'expired' ? 'Expired' : 'Expires'} {formatExpiryDate(cert.expirationDate)} · {daysLabel(status)}
+              </span>
+              <span>Completed {formatExpiryDate(cert.completedDate)}</span>
+              <span>· {cert.ceCredits} hr</span>
+              {cert.categoryType && <span>· Cat {cert.categoryType}</span>}
+              {cert.categories.length > 0 && (
+                <span>· {cert.categories.join(', ')}</span>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-1 shrink-0">
             {onDetailView && (
               <button

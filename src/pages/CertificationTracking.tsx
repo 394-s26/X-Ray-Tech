@@ -96,12 +96,10 @@ function UnusedPointsSummary({ arrt, iema }: { arrt: number; iema: number }) {
 function AgencyFilterButton({
   agency,
   active,
-  count,
   onClick,
 }: {
   agency: AgencyConfig;
   active: boolean;
-  count: number;
   onClick: () => void;
 }) {
   return (
@@ -109,32 +107,14 @@ function AgencyFilterButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider transition-colors"
+      className="px-3 py-1 rounded-full border text-xs font-semibold tracking-wide transition-colors whitespace-nowrap"
       style={{
         borderColor: agency.accent,
         backgroundColor: active ? agency.accent : 'transparent',
         color: active ? '#ffffff' : agency.accent,
       }}
     >
-      <span
-        className="grid place-items-center w-5 h-5 rounded-md text-[10px] font-bold"
-        style={{
-          backgroundColor: active ? 'rgba(255,255,255,0.25)' : agency.accent,
-          color: '#ffffff',
-        }}
-      >
-        {agency.name.charAt(0)}
-      </span>
       {agency.name}
-      <span
-        className="min-w-[18px] h-[18px] inline-flex items-center justify-center px-1 rounded-full text-[10px] tabular-nums leading-none"
-        style={{
-          backgroundColor: active ? 'rgba(255,255,255,0.25)' : `${agency.accent}1A`,
-          color: active ? '#ffffff' : agency.accent,
-        }}
-      >
-        {count}
-      </span>
     </button>
   );
 }
@@ -256,16 +236,6 @@ const CertificationTracking = () => {
     (completedAfter ? 1 : 0) +
     (completedBefore ? 1 : 0);
 
-  const agencyCounts = useMemo(() => {
-    const counts: Record<Exclude<AgencyFilter, 'all'>, number> = { ARRT: 0, IEMA: 0, CPR: 0 };
-    for (const c of tracked) {
-      if (c.categories.includes('ARRT')) counts.ARRT++;
-      if (c.categories.includes('IEMA')) counts.IEMA++;
-      if (c.categories.includes('CPR')) counts.CPR++;
-    }
-    return counts;
-  }, [tracked]);
-
   const unused = useMemo(
     () => unusedPointsByLicense(certifications),
     [certifications],
@@ -338,13 +308,12 @@ const CertificationTracking = () => {
               <div className="grid grid-cols-1 gap-3">
                 <div className="form-field">
                   <label className="form-label">Agency</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-nowrap gap-1.5">
                     {AGENCIES.map((agency) => (
                       <AgencyFilterButton
                         key={agency.key}
                         agency={agency}
                         active={agencyFilter === agency.key}
-                        count={agencyCounts[agency.key]}
                         onClick={() => toggleAgency(agency.key)}
                       />
                     ))}
@@ -504,6 +473,11 @@ const CertificationTracking = () => {
           startEditing={detailTarget.editing}
           onClose={() => setDetailTarget(null)}
           onPhotoView={(c) => {
+            setDetailTarget(null);
+            setPhotoTarget(c);
+          }}
+          onCancelEdit={() => {
+            const c = detailTarget.cert;
             setDetailTarget(null);
             setPhotoTarget(c);
           }}

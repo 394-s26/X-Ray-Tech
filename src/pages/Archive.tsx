@@ -368,6 +368,11 @@ export default function Archive() {
             setDetailTarget(null);
             setPhotoTarget(c);
           }}
+          onCancelEdit={() => {
+            const c = detailTarget.cert;
+            setDetailTarget(null);
+            setPhotoTarget(c);
+          }}
         />
       )}
 
