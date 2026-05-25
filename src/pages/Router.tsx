@@ -10,6 +10,7 @@ import CredentialTracking from './CertificationTracking';
 
 import TeamManagement from './TeamManagement';
 import { CertificateCreatePage } from './CertificateCreatePage';
+import { CertificateSaveResultPage } from './CertificateSaveResultPage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
@@ -87,6 +88,10 @@ const Router = () => {
         <Route
           path="/certificates/new"
           element={requireAuth(<CertificateCreatePage />)}
+        />
+        <Route
+          path="/certificates/saved"
+          element={requireAuth(<CertificateSaveResultPage />)}
         />
         <Route
           path="/team"

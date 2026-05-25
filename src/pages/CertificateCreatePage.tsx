@@ -8,6 +8,7 @@ import {
   describeCertificateSaveError,
 } from '../services/certificateService';
 import type { CertificateCategory } from '../types/certification';
+import type { CertificateSaveResultState } from './CertificateSaveResultPage';
 import { useOcrPipeline } from '../hooks/useOcrPipeline';
 import { parseCertificateText } from '../services/certificateParser';
 import type { PreprocessingOptions } from '../types/ocr';
@@ -38,7 +39,6 @@ export const CertificateCreatePage = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successId, setSuccessId] = useState<string | null>(null);
   const [badFileType, setBadFileType] = useState(false);
   const [noTextDetected, setNoTextDetected] = useState(false);
 
@@ -139,7 +139,6 @@ export const CertificateCreatePage = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccessId(null);
 
     if (categories.length === 0) {
       setError('Please complete all required fields.');
@@ -172,10 +171,21 @@ export const CertificateCreatePage = () => {
         categoryType: categoryType.trim() || null,
         categories,
       });
-      navigate(`/certificates?certificate=${id}`);
+      const successState: CertificateSaveResultState = {
+        status: 'success',
+        certId: id,
+        certificateName,
+        expirationDate: expiresDate,
+        categories,
+      };
+      navigate('/certificates/saved', { state: successState });
     } catch (err) {
       console.error(err);
-      setError(describeCertificateSaveError(err));
+      const errorState: CertificateSaveResultState = {
+        status: 'error',
+        errorMessage: describeCertificateSaveError(err),
+      };
+      navigate('/certificates/saved', { state: errorState });
     } finally {
       setLoading(false);
     }
@@ -485,15 +495,6 @@ export const CertificateCreatePage = () => {
             role="alert"
           >
             {error}
-          </p>
-        ) : null}
-        {successId ? (
-          <p
-            className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
-            role="status"
-          >
-            Saved successfully. Record ID:{' '}
-            <strong className="font-mono text-sm">{successId}</strong>
           </p>
         ) : null}
       </section>
