@@ -6,7 +6,7 @@ import { Breadcrumb } from '../components/Breadcrumb';
 import { EXPIRING_SOON_DAYS, getArchiveStatus, isFullyUsed } from '../services/archiveLogic';
 import type { CertificateCategory, Certification } from '../types/certification';
 
-const HAPPY_EMOJIS = ['🥳', '😊', '😆', '🤠', '😎', '😺', '😻', '🤩', '😇', '😸'];
+const HAPPY_EMOJIS = ['🥳', '😊', '😆', '🤠', '😎', '😺', '😻', '🤩', '😇', '😸', '💃🏽', '🐵', '😌', '😙'];
 const FAILURE_EMOJIS = ['😪', '🦖', '😞', '😰', '😿', '😔', '😭'];
 const EMOJI_FONT_STACK =
   '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Android Emoji", sans-serif';
