@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { ArrowRightIcon, CertificateUploadIcon, XIcon } from '../services/svgIcons';
+import { ArrowRightIcon, CertificateUploadIcon } from '../services/svgIcons';
 import { PageHeader } from '../components/PageHeader';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { EXPIRING_SOON_DAYS, getArchiveStatus, isFullyUsed } from '../services/archiveLogic';
 import type { CertificateCategory, Certification } from '../types/certification';
-import checksign from '../assets/checksign.png';
+
+const HAPPY_EMOJIS = ['🥳', '😊', '😆', '🤠', '😎', '😺', '😻', '🤩', '😇', '😸'];
+const FAILURE_EMOJIS = ['😪', '🦖', '😞', '😰', '😿', '😔', '😭'];
+const EMOJI_FONT_STACK =
+  '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Android Emoji", sans-serif';
 
 export interface CertificateSaveResultState {
   status: 'success' | 'error';
@@ -99,6 +104,13 @@ const TONE_BORDER = {
 
 export const CertificateSaveResultPage = () => {
   const location = useLocation();
+  const [happyEmoji] = useState(
+    () => HAPPY_EMOJIS[Math.floor(Math.random() * HAPPY_EMOJIS.length)],
+  );
+  const [failureEmoji] = useState(
+    () => FAILURE_EMOJIS[Math.floor(Math.random() * FAILURE_EMOJIS.length)],
+  );
+
   const state = location.state as CertificateSaveResultState | null;
 
   if (!state) {
@@ -108,6 +120,7 @@ export const CertificateSaveResultPage = () => {
   const outcome = buildOutcome(state);
   const borderClass = TONE_BORDER[outcome.tone];
   const isError = outcome.tone === 'error';
+  const emoji = isError ? failureEmoji : happyEmoji;
 
   return (
     <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
@@ -128,22 +141,15 @@ export const CertificateSaveResultPage = () => {
         className={`rounded-2xl glass-panel p-6 lg:p-8 relative overflow-hidden max-w-180 border ${borderClass}`}
       >
         <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 min-[514px]:grid-cols-[auto_1fr]">
-          <div className="flex items-center justify-center">
-            {isError ? (
-              <span
-                className="grid place-items-center w-40 h-40 sm:w-48 sm:h-48 rounded-full bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300"
-                aria-hidden="true"
-              >
-                <XIcon size={80} />
-              </span>
-            ) : (
-              <img
-                src={checksign}
-                alt=""
-                aria-hidden="true"
-                className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
-              />
-            )}
+          <div className="flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48">
+            <span
+              role="img"
+              aria-label={isError ? 'Sad face' : 'Celebration'}
+              className="text-[8rem] sm:text-[10rem] leading-none select-none"
+              style={{ fontFamily: EMOJI_FONT_STACK }}
+            >
+              {emoji}
+            </span>
           </div>
           <div className="flex flex-col items-start text-left gap-2">
             <h2 className="text-xl sm:text-2xl font-bold text-primary dark:text-slate-50">
