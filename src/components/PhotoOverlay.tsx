@@ -15,13 +15,22 @@ interface PhotoOverlayProps {
   onDelete?: (cert: Certification) => void;
 }
 
-function CornerStat({ label, value }: { label: string; value: React.ReactNode }) {
+function CornerStat({
+  label,
+  value,
+  align = 'left',
+}: {
+  label: string;
+  value: React.ReactNode;
+  align?: 'left' | 'center';
+}) {
+  const alignClass = align === 'center' ? 'items-center text-center' : '';
   return (
-    <div className="py-1.5 flex flex-col gap-0.5">
+    <div className={`flex flex-col gap-1.5 h-full ${alignClass}`}>
       <dt className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-slate-400">
         {label}
       </dt>
-      <dd className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-slate-100 break-words">
+      <dd className="mt-auto text-xs sm:text-sm font-semibold text-gray-900 dark:text-slate-100 break-words">
         {value}
       </dd>
     </div>
@@ -74,46 +83,57 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
             {cert.certificateName}
           </h2>
           <div className="flex items-center gap-1 shrink-0">
-            {statsCollapsed && (
+            {statsCollapsed ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setStatsCollapsed(false)}
+                  aria-label="Back to details"
+                  title="Back to details"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <ArrowLeftIcon size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  aria-label="Download file"
+                  title="Download file"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <DownloadIcon size={16} />
+                </button>
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(cert)}
+                    aria-label="Edit record"
+                    title="Edit record"
+                    className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <PencilIcon size={16} />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(cert)}
+                    aria-label="Delete record"
+                    title="Delete record"
+                    className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-colors"
+                  >
+                    <TrashIcon size={16} />
+                  </button>
+                )}
+              </>
+            ) : (
               <button
                 type="button"
-                onClick={() => setStatsCollapsed(false)}
-                aria-label="Back to details"
-                title="Back to details"
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                onClick={() => setStatsCollapsed(true)}
+                aria-label="View file"
+                className="inline-flex items-center h-8 px-3 rounded-lg text-xs font-semibold bg-primary text-white shadow-sm hover:bg-primary-light transition-colors"
               >
-                <ArrowLeftIcon size={16} />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleDownload}
-              aria-label="Download file"
-              title="Download file"
-              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-            >
-              <DownloadIcon size={16} />
-            </button>
-            {onEdit && (
-              <button
-                type="button"
-                onClick={() => onEdit(cert)}
-                aria-label="Edit record"
-                title="Edit record"
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-primary dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-              >
-                <PencilIcon size={16} />
-              </button>
-            )}
-            {onDelete && (
-              <button
-                type="button"
-                onClick={() => onDelete(cert)}
-                aria-label="Delete record"
-                title="Delete record"
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-colors"
-              >
-                <TrashIcon size={16} />
+                View File
               </button>
             )}
             <button
@@ -135,32 +155,33 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
         >
           {!statsCollapsed && (
             <aside
-              className="absolute top-0 left-0 z-10 w-[clamp(11rem,40vw,14rem)] bg-white dark:bg-slate-900 border-r border-b border-gray-200 dark:border-slate-700 shadow-md rounded-br-xl px-3 py-3 flex flex-col gap-2"
+              className="absolute top-0 left-0 right-0 z-10 w-full bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 shadow-md px-4 py-3 flex flex-wrap items-stretch gap-x-6 gap-y-3"
               aria-label="Certificate details"
             >
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col items-center gap-1.5 h-full text-center">
                 <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-slate-400">
                   Expiration
                 </span>
                 <span
-                  className={`self-start -ml-1.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${EXPIRY_BADGE[status.tier]}`}
+                  className={`mt-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${EXPIRY_BADGE[status.tier]}`}
                 >
                   {status.tier === 'expired' ? 'Expired' : 'Expires'}{' '}
                   {formatExpiryDate(cert.expirationDate)}
                   <span className="opacity-70 max-[536px]:hidden">· {daysLabel(status)}</span>
                 </span>
               </div>
-              <dl className="flex flex-col divide-y divide-gray-100 dark:divide-slate-700/60">
+              <dl className="contents">
                 <CornerStat label="Completed" value={formatExpiryDate(cert.completedDate)} />
-                <CornerStat label="CE Credits" value={String(cert.ceCredits)} />
+                <CornerStat label="CE Credits" value={String(cert.ceCredits)} align="center" />
                 {cert.categoryType && (
-                  <CornerStat label="Category Type" value={cert.categoryType} />
+                  <CornerStat label="Category Type" value={cert.categoryType} align="center" />
                 )}
                 {cert.categories.length > 0 && (
                   <CornerStat
                     label="Assigned"
+                    align="center"
                     value={
-                      <span className="mt-1.5 -ml-1.5 flex flex-wrap gap-1.5">
+                      <span className="flex flex-wrap justify-center gap-1.5">
                         {cert.categories.map((cat) => (
                           <span
                             key={cat}
@@ -174,13 +195,6 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
                   />
                 )}
               </dl>
-              <button
-                type="button"
-                onClick={() => setStatsCollapsed(true)}
-                className="mt-1 w-full inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary-light transition-colors"
-              >
-                View File
-              </button>
             </aside>
           )}
           {isPdf ? (
