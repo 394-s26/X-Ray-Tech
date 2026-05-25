@@ -22,7 +22,6 @@ const ALL_PREPROCESSING_OPTIONS: PreprocessingOptions = {
   upscale2x: true,
 };
 
-const CATEGORY_ROUTE: Record<string, string> = { ARRT: '/arrt', IEMA: '/iema', CPR: '/cpr' };
 
 export const CertificateCreatePage = () => {
   const categoryOptions: CertificateCategory[] = ['IEMA', 'ARRT', 'CPR'];
@@ -142,7 +141,7 @@ export const CertificateCreatePage = () => {
     setError(null);
     setSuccessId(null);
 
-    if (!photoFile || categories.length === 0) {
+    if (categories.length === 0) {
       setError('Please complete all required fields.');
       return;
     }
@@ -173,8 +172,7 @@ export const CertificateCreatePage = () => {
         categoryType: categoryType.trim() || null,
         categories,
       });
-      const route = CATEGORY_ROUTE[categories[0]] ?? '/arrt';
-      navigate(`${route}?certificate=${id}`);
+      navigate(`/certificates?certificate=${id}`);
     } catch (err) {
       console.error(err);
       setError(describeCertificateSaveError(err));
@@ -208,7 +206,7 @@ export const CertificateCreatePage = () => {
         <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-5 pt-2">
           <div className="form-field">
             <label htmlFor={`${formId}-photo`} className="form-label">
-              Certificate photo <span className="text-red-500">*</span>
+              Certificate photo <span className="text-gray-400 font-normal">(optional)</span>
             </label>
             <input
               id={`${formId}-photo`}
@@ -466,7 +464,9 @@ export const CertificateCreatePage = () => {
                 );
               })}
             </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Select at least one license. CPR cannot be combined with other licenses.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">
+              Select at least one license. ARRT and IEMA hours apply to whichever cycle is active on the completion date above, so a single certificate can count toward both your ARRT and IEMA cycle. CPR cannot be combined with other licenses.
+            </p>
           </div>
 
           <button

@@ -29,10 +29,10 @@ const STRIPE_COLOR: Record<ExpiryTier, string> = {
 };
 
 export const EXPIRY_BADGE: Record<ExpiryTier, string> = {
-  expired: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
-  urgent: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
-  warn: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
-  ok: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+  expired: 'bg-[var(--danger-100)] text-[var(--danger-600)]',
+  urgent: 'bg-[var(--warn-100)] text-[var(--warn-600)]',
+  warn: 'bg-[var(--warn-100)] text-[var(--warn-600)]',
+  ok: 'bg-[var(--success-100)] text-[var(--success-600)]',
 };
 
 export function formatExpiryDate(dateString: string): string {
