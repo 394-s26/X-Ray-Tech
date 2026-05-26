@@ -406,6 +406,10 @@ body, #root {
 .glass-panel--strong { background: var(--paper); }
 .glass-panel--soft   { background: var(--surface); }
 
+/* Hide native scrollbar (used by horizontal carousels). */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* ── Cards ────────────────────────────────────────────────── */
 .card {
   --card-p: 1.25rem;

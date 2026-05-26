@@ -96,12 +96,6 @@ function buildOutcome(state: CertificateSaveResultState): Outcome {
   };
 }
 
-const TONE_BORDER = {
-  success: 'border-emerald-200 dark:border-emerald-800/60',
-  warning: 'border-amber-200 dark:border-amber-800/60',
-  error: 'border-red-200 dark:border-red-800/60',
-} as const;
-
 export const CertificateSaveResultPage = () => {
   const location = useLocation();
   const [happyEmoji] = useState(
@@ -118,7 +112,6 @@ export const CertificateSaveResultPage = () => {
   }
 
   const outcome = buildOutcome(state);
-  const borderClass = TONE_BORDER[outcome.tone];
   const isError = outcome.tone === 'error';
   const emoji = isError ? failureEmoji : happyEmoji;
 
@@ -138,7 +131,7 @@ export const CertificateSaveResultPage = () => {
       />
 
       <section
-        className={`rounded-2xl glass-panel p-6 lg:p-8 relative overflow-hidden max-w-180 border ${borderClass}`}
+        className="rounded-2xl text-[var(--ink-900)] dark:text-[var(--fg)] p-6 lg:p-8 relative overflow-hidden max-w-180"
       >
         <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 min-[514px]:grid-cols-[auto_1fr]">
           <div className="flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48">
