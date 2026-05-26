@@ -12,9 +12,12 @@ service cloud.firestore {
     }
 
     function isTeamLead(uid) {
+      let myTeamCode = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.teamCode;
       return isSignedIn()
-        && exists(/databases/$(database)/documents/teams/$(get(/databases/$(database)/documents/users/$(uid)).data.teamCode))
-        && get(/databases/$(database)/documents/teams/$(get(/databases/$(database)/documents/users/$(uid)).data.teamCode)).data.teamLead == request.auth.uid;
+        && myTeamCode != null
+        && get(/databases/$(database)/documents/teams/$(myTeamCode)).data.teamLead == request.auth.uid
+        && (uid in get(/databases/$(database)/documents/teams/$(myTeamCode)).data.members
+            || uid == get(/databases/$(database)/documents/teams/$(myTeamCode)).data.teamLead);
     }
 
     match /users/{uid} {
