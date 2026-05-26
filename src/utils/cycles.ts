@@ -53,6 +53,14 @@ export function isArrtSetup(u: AppUser): boolean {
   return u.arrtCycleStartYear != null && !!u.birthday;
 }
 
+// Used to hide past cycles that ended before the account existed — those
+// cycles can never carry user data, so showing them as empty PAST cards is
+// misleading on brand-new accounts.
+function accountCreatedISO(u: AppUser): string | null {
+  if (!u.accountCreatedDate) return null;
+  return toISO(u.accountCreatedDate.toDate());
+}
+
 function iemaCycleStartingAt(month: number, startYear: number): CycleWindow {
   const start = new Date(startYear, month - 1, 1);
   const end = new Date(startYear + 2, month, 0); // day 0 of next month = last day of this month
@@ -154,11 +162,15 @@ export function listIemaCycles(u: AppUser): CycleSummary[] {
   const anchorYear = u.iemaCycleStartYear as number;
   const currentYear = rolledIemaStartYear(u);
   const today = todayISO();
+  const createdISO = accountCreatedISO(u);
   const out: CycleSummary[] = [];
 
   // Past cycles: anchor (inclusive) → currentYear (exclusive). Skipped if anchor >= current.
   for (let y = anchorYear; y < currentYear; y += 2) {
     const w = iemaCycleStartingAt(month, y);
+    // Drop past cycles that ended before the account existed — no user data
+    // could ever live in them, so they'd render as empty placeholders.
+    if (createdISO && w.endISO < createdISO) continue;
     out.push({ ...w, isCurrent: false, isPast: true, isFuture: today < w.startISO });
   }
 
@@ -180,10 +192,12 @@ export function listArrtCycles(u: AppUser): CycleSummary[] {
   const anchorYear = u.arrtCycleStartYear as number;
   const currentYear = rolledArrtStartYear(u, birthMonth);
   const today = todayISO();
+  const createdISO = accountCreatedISO(u);
   const out: CycleSummary[] = [];
 
   for (let y = anchorYear; y < currentYear; y += 2) {
     const w = arrtCycleStartingAt(birthMonth, y);
+    if (createdISO && w.endISO < createdISO) continue;
     out.push({
       startISO: w.startISO,
       endISO: w.endISO,
