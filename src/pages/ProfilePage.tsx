@@ -6,7 +6,9 @@ import {
   checkUsernameAvailable,
   changeUsername,
   changePassword,
+  signOut,
 } from '../services/authService';
+import { DeleteAccountDialog } from '../components/DeleteAccountDialog';
 import { COLORS } from '../utils/colors';
 import UserAvatar from '../components/UserAvatar';
 import { BirthdayInput } from '../components/BirthdayInput';
@@ -136,7 +138,7 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
     }
   };
 
-  // ── License Cycles ────────────────────────────────────────
+  // ── License Cycles & Identification ──────────────────────
   const yearOptions = buildRecentYearOptions();
   const [arrtYear, setArrtYear] = useState(
     appUser.arrtCycleStartYear != null ? String(appUser.arrtCycleStartYear) : '',
@@ -147,6 +149,8 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
   const [iemaMonth, setIemaMonth] = useState(
     appUser.iemaCycleEndMonth != null ? String(appUser.iemaCycleEndMonth) : '',
   );
+  const [arrtIdNumber, setArrtIdNumber] = useState(appUser.arrtIdNumber ?? '');
+  const [iemaIdNumber, setIemaIdNumber] = useState(appUser.iemaIdNumber ?? '');
   const [licenseErrors, setLicenseErrors] = useState<Record<string, string>>({});
   const [licenseSaving, setLicenseSaving] = useState(false);
   const [licenseSuccess, setLicenseSuccess] = useState(false);
@@ -178,6 +182,8 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
         arrtCycleStartYear: arrtYear.trim() ? parseInt(arrtYear, 10) : null,
         iemaCycleStartYear: iemaYear.trim() ? parseInt(iemaYear, 10) : null,
         iemaCycleEndMonth: iemaMonth.trim() ? parseInt(iemaMonth, 10) : null,
+        arrtIdNumber: arrtIdNumber.trim() || null,
+        iemaIdNumber: iemaIdNumber.trim() || null,
       };
       await updateUserProfile(appUser.uid, update);
       onAppUserUpdate({ ...appUser, ...update });
@@ -295,6 +301,9 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
+  // ── Delete Account ────────────────────────────────────────
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const pwStrength = checkPasswordStrength(newPassword);
   const passwordsMatch = newPassword === confirmPassword;
   const canSavePassword =
@@ -329,7 +338,7 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
   // ── Render ────────────────────────────────────────────────
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 lg:px-8 flex flex-col gap-6">
+    <div className="max-w-3xl mx-auto px-4 py-8 lg:px-8 flex flex-col gap-6">
       <PageHeader
         icon={<UserIcon size={22} />}
         title="Profile"
@@ -399,13 +408,26 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
           <p className="text-xs text-[var(--ink-500)] dark:text-[var(--fg-muted)] mb-3">
             Your ARRT cycle is anchored to your birth month and runs for 2 years.
           </p>
-          <div className="form-field max-w-60">
-            <label className="form-label">Year your current ARRT cycle began</label>
-            <select className="form-input" value={arrtYear} onChange={e => { setArrtYear(e.target.value); setLicenseErrors(p => ({ ...p, arrtYear: '' })); }}>
-              <option value="">Select year…</option>
-              {yearOptions.map(y => <option key={y} value={String(y)}>{y}</option>)}
-            </select>
-            {licenseErrors.arrtYear && <p className="text-xs text-red-500 mt-1">{licenseErrors.arrtYear}</p>}
+          <div className="flex gap-4 flex-wrap">
+            <div className="form-field max-w-60 flex-1">
+              <label className="form-label">Year your current ARRT cycle began</label>
+              <select className="form-input" value={arrtYear} onChange={e => { setArrtYear(e.target.value); setLicenseErrors(p => ({ ...p, arrtYear: '' })); }}>
+                <option value="">Select year…</option>
+                {yearOptions.map(y => <option key={y} value={String(y)}>{y}</option>)}
+              </select>
+              {licenseErrors.arrtYear && <p className="text-xs text-red-500 mt-1">{licenseErrors.arrtYear}</p>}
+            </div>
+            <div className="form-field max-w-60 flex-1">
+              <label className="form-label">ARRT identification number <span className="text-gray-400 font-normal">(optional)</span></label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="e.g. 1234567"
+                value={arrtIdNumber}
+                onChange={e => setArrtIdNumber(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
           </div>
         </div>
 
@@ -414,7 +436,7 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
           <p className="text-xs text-[var(--ink-500)] dark:text-[var(--fg-muted)] mb-3">
             Your IEMA cycle is anchored to the month you were first accredited and runs for 2 years.
           </p>
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-4 flex-wrap items-end">
             <div className="form-field max-w-60 flex-1">
               <label className="form-label">Year your current IEMA cycle began</label>
               <select className="form-input" value={iemaYear} onChange={e => { setIemaYear(e.target.value); setLicenseErrors(p => ({ ...p, iemaYear: '', iemaMonth: '' })); }}>
@@ -430,6 +452,17 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
                 {MONTH_NAMES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
               </select>
               {licenseErrors.iemaMonth && <p className="text-xs text-red-500 mt-1">{licenseErrors.iemaMonth}</p>}
+            </div>
+            <div className="form-field max-w-60 flex-1">
+              <label className="form-label">IEMA identification number <span className="text-gray-400 font-normal">(optional)</span></label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="e.g. IL-12345"
+                value={iemaIdNumber}
+                onChange={e => setIemaIdNumber(e.target.value)}
+                autoComplete="off"
+              />
             </div>
           </div>
         </div>
@@ -621,6 +654,31 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
           </p>
         )}
       </SectionCard>
+
+      {/* Danger Zone */}
+      <div className="nb-card p-6 flex flex-col gap-3 border border-red-200 dark:border-red-900">
+        <h2 className="font-display text-lg font-semibold tracking-tight text-red-600 dark:text-red-400">Danger Zone</h2>
+        <p className="text-sm text-[var(--ink-500)] dark:text-[var(--fg-muted)]">
+          Permanently delete your account, all your certifications, and remove you from any teams. This cannot be undone.
+        </p>
+        <div>
+          <button
+            type="button"
+            className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            Delete Account
+          </button>
+        </div>
+      </div>
+
+      {showDeleteDialog && (
+        <DeleteAccountDialog
+          appUser={appUser}
+          onSuccess={() => void signOut()}
+          onCancel={() => setShowDeleteDialog(false)}
+        />
+      )}
     </div>
   );
 };

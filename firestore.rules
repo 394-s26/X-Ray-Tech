@@ -22,7 +22,7 @@ service cloud.firestore {
       allow create: if isOwner(uid);
       allow update: if isOwner(uid)
                     || (isTeamLead(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamCode']));
-      allow delete: if false;
+      allow delete: if isOwner(uid);
 
       // Mirror of per-license-cycle CE credits, written eagerly on every cert change.
       match /cycleCredits/{cycleId} {
@@ -34,7 +34,8 @@ service cloud.firestore {
     match /usernames/{username} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
     match /certificates/{certId} {
