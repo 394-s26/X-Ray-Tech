@@ -3,6 +3,7 @@ import type { AppUser } from '../types/auth';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { SetupReminderProvider } from './SetupModal';
+import { useSyncCycleCredits } from '../hooks/useSyncCycleCredits';
 
 interface AppLayoutProps {
   appUser: AppUser;
@@ -10,6 +11,7 @@ interface AppLayoutProps {
 }
 
 const AppLayout = ({ appUser, onAppUserUpdate, children }: PropsWithChildren<AppLayoutProps>) => {
+  useSyncCycleCredits(appUser);
   return (
     <SetupReminderProvider appUser={appUser} onAppUserUpdate={onAppUserUpdate}>
       <div className="min-h-screen flex">

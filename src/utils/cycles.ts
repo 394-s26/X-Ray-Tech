@@ -1,5 +1,12 @@
 import type { AppUser } from '../types/auth';
-import type { Certification, CertificateCategory } from '../types/certification';
+import type {
+  AppliedCycles,
+  Certification,
+  CertificateCategory,
+} from '../types/certification';
+
+/** Per-license CE credit cap for a single 2-year cycle. */
+export const PER_LICENSE = 24;
 
 export interface CycleWindow {
   startISO: string;
@@ -133,25 +140,36 @@ export function computeArrtCycle(u: AppUser): ArrtCycleWindow | null {
   return { ...base, isOnProbation, probationEndsISO };
 }
 
-/** Returns IEMA cycles ordered oldest → newest, spanning the user's anchor and the current rolled cycle. */
+/**
+ * Returns IEMA cycles ordered oldest → newest:
+ *   - All past cycles from the anchor (inclusive) up to (but excluding) the current cycle.
+ *     If the anchor is the current cycle or in the future, the past list is empty
+ *     (the anchor is a hard "don't show cycles before this" boundary).
+ *   - The current cycle.
+ *   - One future cycle (the next cycle after current).
+ */
 export function listIemaCycles(u: AppUser): CycleSummary[] {
   if (!isIemaSetup(u)) return [];
   const month = u.iemaCycleEndMonth as number;
   const anchorYear = u.iemaCycleStartYear as number;
   const currentYear = rolledIemaStartYear(u);
-  const lo = Math.min(anchorYear, currentYear);
-  const hi = Math.max(anchorYear, currentYear);
   const today = todayISO();
   const out: CycleSummary[] = [];
-  for (let y = lo; y <= hi; y += 2) {
+
+  // Past cycles: anchor (inclusive) → currentYear (exclusive). Skipped if anchor >= current.
+  for (let y = anchorYear; y < currentYear; y += 2) {
     const w = iemaCycleStartingAt(month, y);
-    out.push({
-      ...w,
-      isCurrent: y === currentYear,
-      isPast: today > w.endISO,
-      isFuture: today < w.startISO,
-    });
+    out.push({ ...w, isCurrent: false, isPast: true, isFuture: today < w.startISO });
   }
+
+  // Current cycle.
+  const cur = iemaCycleStartingAt(month, currentYear);
+  out.push({ ...cur, isCurrent: true, isPast: false, isFuture: false });
+
+  // One future cycle (always shown).
+  const next = iemaCycleStartingAt(month, currentYear + 2);
+  out.push({ ...next, isCurrent: false, isPast: false, isFuture: true });
+
   return out;
 }
 
@@ -161,20 +179,64 @@ export function listArrtCycles(u: AppUser): CycleSummary[] {
   if (!Number.isFinite(birthMonth) || birthMonth < 1 || birthMonth > 12) return [];
   const anchorYear = u.arrtCycleStartYear as number;
   const currentYear = rolledArrtStartYear(u, birthMonth);
-  const lo = Math.min(anchorYear, currentYear);
-  const hi = Math.max(anchorYear, currentYear);
   const today = todayISO();
   const out: CycleSummary[] = [];
-  for (let y = lo; y <= hi; y += 2) {
+
+  for (let y = anchorYear; y < currentYear; y += 2) {
     const w = arrtCycleStartingAt(birthMonth, y);
     out.push({
       startISO: w.startISO,
       endISO: w.endISO,
       daysRemaining: w.daysRemaining,
-      isCurrent: y === currentYear,
-      isPast: today > w.endISO,
+      isCurrent: false,
+      isPast: true,
       isFuture: today < w.startISO,
     });
+  }
+
+  const cur = arrtCycleStartingAt(birthMonth, currentYear);
+  out.push({
+    startISO: cur.startISO,
+    endISO: cur.endISO,
+    daysRemaining: cur.daysRemaining,
+    isCurrent: true,
+    isPast: false,
+    isFuture: false,
+  });
+
+  const next = arrtCycleStartingAt(birthMonth, currentYear + 2);
+  out.push({
+    startISO: next.startISO,
+    endISO: next.endISO,
+    daysRemaining: next.daysRemaining,
+    isCurrent: false,
+    isPast: false,
+    isFuture: true,
+  });
+
+  return out;
+}
+
+/**
+ * Resolves which cycle a cert's credits land in, per license.
+ *
+ * - If `cert.appliedCycles` is present, it wins (explicit, user-chosen).
+ * - Otherwise, for each license in `cert.categories`, derive the cycle
+ *   whose window contains `completedDate` (legacy behavior). CPR is
+ *   omitted because it has no cycle.
+ */
+export function getEffectiveAppliedCycles(
+  cert: Certification,
+  appUser: AppUser,
+): AppliedCycles {
+  if (cert.appliedCycles) return cert.appliedCycles;
+  const out: AppliedCycles = {};
+  const completed = cert.completedDate;
+  for (const cat of cert.categories) {
+    if (cat === 'CPR') continue;
+    const cycles = cat === 'IEMA' ? listIemaCycles(appUser) : listArrtCycles(appUser);
+    const hit = cycles.find((c) => completed >= c.startISO && completed <= c.endISO);
+    if (hit) out[cat] = hit.startISO;
   }
   return out;
 }
@@ -183,11 +245,11 @@ export function creditsInCycle(
   certs: Certification[],
   category: CertificateCategory,
   cycle: CycleWindow,
+  appUser: AppUser,
 ): number {
   return certs.reduce((sum, cert) => {
-    if (!cert.categories.includes(category)) return sum;
-    const completed = cert.completedDate;
-    if (completed < cycle.startISO || completed > cycle.endISO) return sum;
+    const applied = getEffectiveAppliedCycles(cert, appUser);
+    if (applied[category] !== cycle.startISO) return sum;
     return sum + (cert.ceCredits || 0);
   }, 0);
 }

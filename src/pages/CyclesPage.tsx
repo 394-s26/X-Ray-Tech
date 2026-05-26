@@ -6,6 +6,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from '../services/svgIcons';
 import type { AppUser } from '../types/auth';
 import type { Certification, CertificateCategory } from '../types/certification';
 import {
+  PER_LICENSE,
   creditsInCycle,
   isArrtSetup,
   isIemaSetup,
@@ -15,8 +16,6 @@ import {
 } from '../utils/cycles';
 import iemaLogo from '../assets/iema.png';
 import arrtLogo from '../assets/arrt.png';
-
-const PER_LICENSE = 24;
 
 function formatRange(startISO: string, endISO: string): string {
   const start = new Date(startISO + 'T00:00:00');
@@ -87,9 +86,10 @@ interface CycleTimelineProps {
   cycles: CycleSummary[];
   certifications: Certification[];
   category: CertificateCategory;
+  appUser: AppUser;
 }
 
-function CycleTimeline({ cycles, certifications, category }: CycleTimelineProps) {
+function CycleTimeline({ cycles, certifications, category, appUser }: CycleTimelineProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
@@ -181,7 +181,7 @@ function CycleTimeline({ cycles, certifications, category }: CycleTimelineProps)
       >
         <div ref={trackRef} className="flex gap-4 pb-6 relative">
           {cycles.map((cycle) => {
-            const hours = creditsInCycle(certifications, category, cycle);
+            const hours = creditsInCycle(certifications, category, cycle, appUser);
             return <CycleCard key={cycle.startISO} cycle={cycle} hours={hours} />;
           })}
         </div>
@@ -211,6 +211,59 @@ interface LicenseHistoryProps {
   logo: string;
   isSetup: boolean;
   onCompleteSetup: () => void;
+  appUser: AppUser;
+}
+
+function PlaceholderCycleCard({ label }: { label: 'CURRENT' | 'UPCOMING' }) {
+  const tone =
+    label === 'CURRENT'
+      ? 'text-[var(--brand-700)] border-[var(--brand-600)]'
+      : 'text-[var(--ink-700)] border-[var(--ink-200)]';
+  return (
+    <article
+      data-cycle-card
+      className="flex-shrink-0 w-full sm:w-[calc((100%-1rem)/2)] flex flex-col gap-3 p-4 rounded-3xl border-2 border-dashed border-[var(--ink-200)] dark:border-[var(--ink-700)] bg-transparent"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={`font-mono-brand text-[10px] font-semibold tracking-wide px-1.5 py-0.5 rounded border ${tone}`}
+        >
+          {label}
+        </span>
+      </div>
+      <div className="font-mono-brand text-[11px] text-[var(--ink-500)] tracking-wide">
+        Dates unknown
+      </div>
+      <div className="font-mono-brand text-2xl font-semibold text-[var(--ink-400)]">
+        —
+        <span className="text-base text-[var(--ink-400)]">/{PER_LICENSE}h</span>
+      </div>
+      <div className="w-full h-1.5 rounded-full bg-[var(--ink-200)] overflow-hidden" />
+    </article>
+  );
+}
+
+interface PlaceholderTimelineProps {
+  name: 'IEMA' | 'ARRT';
+  onCompleteSetup: () => void;
+}
+
+function PlaceholderTimeline({ name, onCompleteSetup }: PlaceholderTimelineProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <PlaceholderCycleCard label="CURRENT" />
+        <PlaceholderCycleCard label="UPCOMING" />
+      </div>
+      <p className="text-sm text-[var(--ink-700)]">
+        You haven&rsquo;t set your {name} cycle yet.{' '}
+        <button type="button" onClick={onCompleteSetup} className="nb-link-accent">
+          Complete setup
+        </button>{' '}
+        to fill these in and start tracking credits.
+      </p>
+    </div>
+  );
 }
 
 function LicenseHistory({
@@ -220,6 +273,7 @@ function LicenseHistory({
   logo,
   isSetup,
   onCompleteSetup,
+  appUser,
 }: LicenseHistoryProps) {
   const category = name as CertificateCategory;
 
@@ -231,15 +285,9 @@ function LicenseHistory({
         </span>
       </div>
       {!isSetup ? (
-        <p className="text-sm text-[var(--ink-700)]">
-          You haven&rsquo;t set your {name} cycle yet.{' '}
-          <button type="button" onClick={onCompleteSetup} className="nb-link-accent">
-            Complete setup
-          </button>{' '}
-          to start tracking it.
-        </p>
+        <PlaceholderTimeline name={name} onCompleteSetup={onCompleteSetup} />
       ) : (
-        <CycleTimeline cycles={cycles} certifications={certifications} category={category} />
+        <CycleTimeline cycles={cycles} certifications={certifications} category={category} appUser={appUser} />
       )}
     </section>
   );
@@ -282,6 +330,7 @@ export default function CyclesPage({ appUser }: CyclesPageProps) {
           logo={iemaLogo}
           isSetup={isIemaSetup(appUser)}
           onCompleteSetup={openSetupModal}
+          appUser={appUser}
         />
         <LicenseHistory
           name="ARRT"
@@ -290,6 +339,7 @@ export default function CyclesPage({ appUser }: CyclesPageProps) {
           logo={arrtLogo}
           isSetup={isArrtSetup(appUser)}
           onCompleteSetup={openSetupModal}
+          appUser={appUser}
         />
       </div>
     </main>

@@ -10,6 +10,7 @@ import { PhotoOverlay } from '../components/PhotoOverlay';
 import { CertDetailOverlay } from '../components/CertDetailOverlay';
 import { DeleteConfirmDialog } from '../components/DeleteConfirmDialog';
 import { CertificateCard } from '../components/CertificateCard';
+import { RolloverPrompt } from '../components/RolloverPrompt';
 import { Toast } from '../components/Toast';
 import {
   IdCardIcon,
@@ -272,16 +273,16 @@ const CertificationTracking = ({ appUser }: CertificationTrackingProps) => {
     (completedBefore ? 1 : 0);
 
   const unused = useMemo(
-    () => unusedPointsByLicense(certifications),
-    [certifications],
+    () => unusedPointsByLicense(certifications, appUser),
+    [certifications, appUser],
   );
 
   const used = useMemo(() => {
     const iemaCycle = computeIemaCycle(appUser);
     const arrtCycle = computeArrtCycle(appUser);
     return {
-      iema: iemaCycle ? Math.round(creditsInCycle(certifications, 'IEMA', iemaCycle)) : 0,
-      arrt: arrtCycle ? Math.round(creditsInCycle(certifications, 'ARRT', arrtCycle)) : 0,
+      iema: iemaCycle ? Math.round(creditsInCycle(certifications, 'IEMA', iemaCycle, appUser)) : 0,
+      arrt: arrtCycle ? Math.round(creditsInCycle(certifications, 'ARRT', arrtCycle, appUser)) : 0,
     };
   }, [appUser, certifications]);
 
@@ -318,6 +319,8 @@ const CertificationTracking = ({ appUser }: CertificationTrackingProps) => {
           <UnusedPointsSummary arrt={unused.arrt} iema={unused.iema} />
         </div>
       </div>
+
+      <RolloverPrompt certifications={certifications} appUser={appUser} />
 
       <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
         <span>{loading ? '…' : `${filtered.length} certificate${filtered.length === 1 ? '' : 's'}`}</span>

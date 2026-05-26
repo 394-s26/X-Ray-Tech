@@ -10,6 +10,7 @@ import iemaLogoWhite from '../assets/iemawhitetext.png';
 import arrtLogoBlack from '../assets/arrtblacktext.png';
 import iemaLogoBlack from '../assets/iemablacktext.png';
 import {
+  PER_LICENSE,
   computeArrtCycle,
   computeIemaCycle,
   creditsInCycle,
@@ -18,7 +19,6 @@ import {
   type CycleWindow,
 } from '../utils/cycles';
 
-const PER_LICENSE = 24;
 const COMBINED_TOTAL = 48;
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -479,13 +479,13 @@ export default function Dashboard({ appUser }: DashboardProps) {
 
   const iemaHours = useMemo(() => {
     if (!iemaCycle) return 0;
-    return creditsInCycle(certifications, 'IEMA', iemaCycle);
-  }, [certifications, iemaCycle]);
+    return creditsInCycle(certifications, 'IEMA', iemaCycle, appUser);
+  }, [certifications, iemaCycle, appUser]);
 
   const arrtHours = useMemo(() => {
     if (!arrtCycle) return 0;
-    return creditsInCycle(certifications, 'ARRT', arrtCycle);
-  }, [certifications, arrtCycle]);
+    return creditsInCycle(certifications, 'ARRT', arrtCycle, appUser);
+  }, [certifications, arrtCycle, appUser]);
 
   const firstName = appUser.firstName?.trim() || appUser.username || 'there';
 

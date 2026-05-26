@@ -23,7 +23,7 @@ import {
   type CertificateInput,
   type Scantron,
 } from '../types/upload';
-import type { Certification, CertificateCategory } from '../types/certification';
+import type { AppliedCycles, Certification, CertificateCategory } from '../types/certification';
 
 export type { CertificateCategory };
 
@@ -42,6 +42,7 @@ export interface CreateCertificateInput {
   ceCredits: number;
   categoryType: string | null;
   categories: CertificateCategory[];
+  appliedCycles: AppliedCycles;
 }
 
 const extFromMime = (mime: string): string => {
@@ -86,6 +87,7 @@ export const createCertificateRecord = async (
     ceCredits: input.ceCredits,
     categoryType: input.categoryType,
     categories: input.categories,
+    appliedCycles: input.appliedCycles,
     photoStoragePath,
     photoURL,
     createdAt: serverTimestamp(),
@@ -209,6 +211,7 @@ export const updateCertificationRecord = async (
     ceCredits?: number;
     categoryType?: string | null;
     categories?: CertificateCategory[];
+    appliedCycles?: AppliedCycles;
   },
 ): Promise<void> => {
   await updateDoc(doc(db, COLLECTION, id), updates);

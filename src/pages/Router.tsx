@@ -87,7 +87,7 @@ const Router = () => {
         <Route path="/archive" element={requireAuth(<Archive />)} />
         <Route
           path="/certificates/new"
-          element={requireAuth(<CertificateCreatePage />)}
+          element={requireAuth(appUser ? <CertificateCreatePage appUser={appUser} /> : <></>)}
         />
         <Route
           path="/certificates/saved"
