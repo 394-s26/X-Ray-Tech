@@ -21,7 +21,7 @@ function formatRange(startISO: string, endISO: string): string {
   const start = new Date(startISO + 'T00:00:00');
   const end = new Date(endISO + 'T00:00:00');
   const fmt = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
+    d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
   return `${fmt(start)} → ${fmt(end)}`;
 }
 

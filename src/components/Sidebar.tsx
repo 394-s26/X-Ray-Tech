@@ -13,6 +13,7 @@ import {
   LogOutIcon,
   ArchiveIcon,
   RotateCwIcon,
+  ClipboardIcon,
 } from '../services/svgIcons';
 import { signOut, getTeamByCode } from '../services/authService';
 import '../styles/components/Sidebar.css';
@@ -41,20 +42,28 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     mobileHidden: true,
   },
   {
-    to: '/certificates',
-    longLabel: 'Certification Tracking',
-    shortLabel: 'Certifications',
-    icon: (s) => <IdCardIcon size={s} />,
+    to: '/reporting',
+    longLabel: 'Certificate Reporting',
+    shortLabel: 'Reporting',
+    icon: (s) => <ClipboardIcon size={s} />,
     mobileHidden: true,
   },
   {
-    to: '/cycles',
-    longLabel: 'License Cycles',
-    shortLabel: 'Cycles',
-    icon: (s) => <RotateCwIcon size={s} />,
+    to: '/certificates',
+    longLabel: 'Available Certificates',
+    shortLabel: 'Certificates',
+    icon: (s) => <IdCardIcon size={s} />,
     mobileHidden: true,
   },
 ];
+
+const CYCLES_ITEM_DESKTOP: NavItem = {
+  to: '/cycles',
+  longLabel: 'License Cycles',
+  shortLabel: 'Cycles',
+  icon: (s) => <RotateCwIcon size={s} />,
+  mobileHidden: true,
+};
 
 const ADD_CERT_ITEM: NavItem = {
   to: '/certificates/new',
@@ -99,7 +108,7 @@ const HISTORY_ITEM_MOBILE: NavItem = {
 
 const FILES_ITEM_MOBILE: NavItem = {
   to: '/certificates',
-  longLabel: 'Certification tracking',
+  longLabel: 'Available Certificates',
   shortLabel: 'Files',
   icon: (s) => <IdCardIcon size={s} />,
   desktopHidden: true,
@@ -173,6 +182,7 @@ const Sidebar = ({ appUser }: SidebarProps) => {
             <NavItemLink key={item.to} item={item} />
           ))}
           <NavItemLink item={ARCHIVE_ITEM_DESKTOP} />
+          <NavItemLink item={CYCLES_ITEM_DESKTOP} />
           <NavLink
             to="/team"
             end={false}

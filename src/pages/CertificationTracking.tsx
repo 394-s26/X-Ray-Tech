@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Certification } from '../types/certification';
-import type { AppUser } from '../types/auth';
 import { useCertifications } from '../hooks/useCertifications';
-import { computeArrtCycle, computeIemaCycle, creditsInCycle } from '../utils/cycles';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
 import { PhotoOverlay } from '../components/PhotoOverlay';
 import { CertDetailOverlay } from '../components/CertDetailOverlay';
 import { DeleteConfirmDialog } from '../components/DeleteConfirmDialog';
 import { CertificateCard } from '../components/CertificateCard';
-import { RolloverPrompt } from '../components/RolloverPrompt';
 import { Toast } from '../components/Toast';
 import {
   IdCardIcon,
@@ -23,7 +20,6 @@ import {
   EXPIRING_SOON_DAYS,
   getArchiveStatus,
   isArchived,
-  unusedPointsByLicense,
 } from '../services/archiveLogic';
 import { deleteCertificationRecord } from '../services/certificateService';
 
@@ -70,60 +66,6 @@ function ExpiringSoonSummary({ count }: { count: number }) {
   );
 }
 
-function UsedPointsSummary({ arrt, iema }: { arrt: number; iema: number }) {
-  const fmt = (n: number) => `${n} pt${n === 1 ? '' : 's'}`;
-  return (
-    <div
-      className="nb-card px-4 py-3 flex flex-col gap-1 min-w-[12rem] shadow-none"
-      style={{ boxShadow: 'none' }}
-      title="Credits already counted toward the active cycle for each license"
-    >
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-600)] dark:text-[var(--ink-300)]">
-        Used points <span className="font-medium normal-case tracking-normal text-[var(--ink-500)]">(current cycles)</span>
-      </p>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">ARRT</span>
-        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
-          {fmt(arrt)}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">IEMA</span>
-        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
-          {fmt(iema)}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function UnusedPointsSummary({ arrt, iema }: { arrt: number; iema: number }) {
-  const fmt = (n: number) => `${n} pt${n === 1 ? '' : 's'}`;
-  return (
-    <div
-      className="nb-card px-4 py-3 flex flex-col gap-1 min-w-[12rem] shadow-none"
-      style={{ boxShadow: 'none' }}
-      title="Category A/A+ credits from non-expired certificates not yet reported to this license"
-    >
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-600)] dark:text-[var(--ink-300)]">
-        Unused points <span className="font-medium normal-case tracking-normal text-[var(--ink-500)]">(current cycles)</span>
-      </p>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">ARRT</span>
-        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
-          {fmt(arrt)}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">IEMA</span>
-        <span className="text-base font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums">
-          {fmt(iema)}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function AgencyFilterButton({
   agency,
   active,
@@ -157,11 +99,7 @@ function getInt(params: URLSearchParams, key: string, fallback: number): number 
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-interface CertificationTrackingProps {
-  appUser: AppUser;
-}
-
-const CertificationTracking = ({ appUser }: CertificationTrackingProps) => {
+const CertificationTracking = () => {
   const { certifications, loading } = useCertifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -272,20 +210,6 @@ const CertificationTracking = ({ appUser }: CertificationTrackingProps) => {
     (completedAfter ? 1 : 0) +
     (completedBefore ? 1 : 0);
 
-  const unused = useMemo(
-    () => unusedPointsByLicense(certifications, appUser),
-    [certifications, appUser],
-  );
-
-  const used = useMemo(() => {
-    const iemaCycle = computeIemaCycle(appUser);
-    const arrtCycle = computeArrtCycle(appUser);
-    return {
-      iema: iemaCycle ? Math.round(creditsInCycle(certifications, 'IEMA', iemaCycle, appUser)) : 0,
-      arrt: arrtCycle ? Math.round(creditsInCycle(certifications, 'ARRT', arrtCycle, appUser)) : 0,
-    };
-  }, [appUser, certifications]);
-
   const expiringSoonCount = useMemo(
     () => tracked.reduce((n, c) => n + (getArchiveStatus(c).expiringSoon ? 1 : 0), 0),
     [tracked],
@@ -304,23 +228,19 @@ const CertificationTracking = ({ appUser }: CertificationTrackingProps) => {
 
   return (
     <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-3xl md:max-w-4xl lg:max-w-6xl mx-auto">
-      <Breadcrumb items={[{ name: 'Certification Tracking', to: '' }]} />
+      <Breadcrumb items={[{ name: 'Available Certificates', to: '' }]} />
 
       <div className="mt-2 mb-6 flex items-start justify-between gap-4 flex-wrap">
         <PageHeader
           icon={<IdCardIcon size={22} />}
-          title="Certification Tracking"
+          title="Available Certificates"
           subtitle="Browse and manage certificates by issuing agency."
           className=""
         />
         <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full sm:w-auto">
           <ExpiringSoonSummary count={expiringSoonCount} />
-          <UsedPointsSummary arrt={used.arrt} iema={used.iema} />
-          <UnusedPointsSummary arrt={unused.arrt} iema={unused.iema} />
         </div>
       </div>
-
-      <RolloverPrompt certifications={certifications} appUser={appUser} />
 
       <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
         <span>{loading ? '…' : `${filtered.length} certificate${filtered.length === 1 ? '' : 's'}`}</span>

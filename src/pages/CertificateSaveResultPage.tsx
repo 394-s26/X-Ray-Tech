@@ -158,7 +158,7 @@ export const CertificateSaveResultPage = () => {
           {isError ? (
             <Link
               to="/certificates/new"
-              className="global-btn default-btn flex items-center justify-between gap-3 sm:flex-1"
+              className="rounded-lg bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-[var(--fg-on-brand)] px-4 py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2 sm:flex-1"
             >
               <span>Try again</span>
               <ArrowRightIcon size={18} className="shrink-0" />
@@ -167,14 +167,20 @@ export const CertificateSaveResultPage = () => {
             <>
               <Link
                 to="/certificates/new"
-                className="global-btn outline default-btn flex items-center justify-center gap-2 sm:flex-1"
+                className="rounded-lg border border-[var(--ink-200)] dark:border-[var(--ink-700)] text-[var(--ink-700)] dark:text-[var(--ink-300)] px-4 py-2 text-sm font-semibold hover:bg-[var(--ink-100)] dark:hover:bg-[var(--ink-800)] transition-colors flex items-center justify-center sm:flex-1"
               >
-                Upload another certificate
+                Upload another
+              </Link>
+              <Link
+                to="/reporting"
+                className="rounded-lg border border-[var(--brand-600)] text-[var(--brand-700)] dark:text-[var(--brand-400)] px-4 py-2 text-sm font-semibold hover:bg-[var(--brand-50)] dark:hover:bg-[rgba(91,63,228,0.15)] transition-colors flex items-center justify-center sm:flex-1"
+              >
+                Report certificate
               </Link>
               {outcome.destination && (
                 <Link
                   to={outcome.destination.to}
-                  className="global-btn default-btn flex items-center justify-between gap-3 sm:flex-1"
+                  className="rounded-lg bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-[var(--fg-on-brand)] px-4 py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2 sm:flex-1"
                 >
                   <span>{outcome.destination.label}</span>
                   <ArrowRightIcon size={18} className="shrink-0" />

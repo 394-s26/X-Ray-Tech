@@ -217,7 +217,7 @@ export function CertificateCard({
 
         <div className="px-3 py-2.5 flex flex-col gap-2">
           <div className="flex flex-wrap gap-1">
-            {status.unreported ? null : cprOnly ? (
+            {cprOnly ? (
               <StatusChip tone="cpr" label="CPR Already Used" />
             ) : (
               <>

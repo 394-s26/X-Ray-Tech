@@ -7,6 +7,7 @@ import Archive from './Archive';
 import Dashboard from './Dashboard';
 import CyclesPage from './CyclesPage';
 import CredentialTracking from './CertificationTracking';
+import CertificateReporting from './CertificateReporting';
 
 import TeamManagement from './TeamManagement';
 import { CertificateCreatePage } from './CertificateCreatePage';
@@ -81,13 +82,17 @@ const Router = () => {
         />
         <Route
           path="/certificates"
-          element={requireAuth(appUser ? <CredentialTracking appUser={appUser} /> : <></>)}
+          element={requireAuth(<CredentialTracking />)}
         />
         <Route path="/cycles" element={requireAuth(appUser ? <CyclesPage appUser={appUser} /> : <></>)} />
+        <Route
+          path="/reporting"
+          element={requireAuth(appUser ? <CertificateReporting appUser={appUser} /> : <></>)}
+        />
         <Route path="/archive" element={requireAuth(<Archive />)} />
         <Route
           path="/certificates/new"
-          element={requireAuth(appUser ? <CertificateCreatePage appUser={appUser} /> : <></>)}
+          element={requireAuth(<CertificateCreatePage />)}
         />
         <Route
           path="/certificates/saved"

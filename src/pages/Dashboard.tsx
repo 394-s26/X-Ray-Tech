@@ -231,7 +231,7 @@ function CePointsCard({ iemaHours, arrtHours, iemaSetup, arrtSetup }: CePointsCa
 
   return (
     <Link
-      to="/cycles"
+      to="/reporting"
       className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden"
     >
       <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
