@@ -23,6 +23,12 @@ service cloud.firestore {
       allow update: if isOwner(uid)
                     || (isTeamLead(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamCode']));
       allow delete: if false;
+
+      // Mirror of per-license-cycle CE credits, written eagerly on every cert change.
+      match /cycleCredits/{cycleId} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(uid);
+      }
     }
 
     match /usernames/{username} {

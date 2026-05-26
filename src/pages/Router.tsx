@@ -3,16 +3,23 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { User } from 'firebase/auth';
 import type { AppUser } from '../types/auth';
 import { subscribeToAuthState, fetchAppUser, createStubAppUser } from '../services/authService';
-import CertList from '../pages/CertList.tsx';
+import Archive from './Archive';
 import Dashboard from './Dashboard';
+import CyclesPage from './CyclesPage';
 import CredentialTracking from './CertificationTracking';
+import CertificateReporting from './CertificateReporting';
+
 import TeamManagement from './TeamManagement';
 import { CertificateCreatePage } from './CertificateCreatePage';
+import { CertificateSaveResultPage } from './CertificateSaveResultPage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
 import { ProfilePage } from './ProfilePage';
 import { BrowseCertificationsPage } from './BrowseCertificationsPage';
+import { ForgotPasswordPage } from './ForgotPasswordPage';
+import { AuthActionPage } from './AuthActionPage';
+import LandingPage from './LandingPage';
 import AppLayout from '../components/AppLayout';
 
 const Router = () => {
@@ -61,49 +68,45 @@ const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={requireAuth(appUser ? <Dashboard appUser={appUser} /> : <></>)} />
-        <Route path="/certificates" element={requireAuth(<CredentialTracking />)} />
+        <Route
+          path="/"
+          element={
+            user && appUser && appUser.setupCompleted ? (
+              <AppLayout appUser={appUser} onAppUserUpdate={setAppUser}>
+                <Dashboard appUser={appUser} />
+              </AppLayout>
+            ) : user && appUser && !appUser.setupCompleted ? (
+              <Navigate to="/setup" replace />
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
+        <Route
+          path="/certificates"
+          element={requireAuth(<CredentialTracking />)}
+        />
+        <Route path="/cycles" element={requireAuth(appUser ? <CyclesPage appUser={appUser} /> : <></>)} />
+        <Route
+          path="/reporting"
+          element={requireAuth(appUser ? <CertificateReporting appUser={appUser} /> : <></>)}
+        />
+        <Route path="/archive" element={requireAuth(<Archive />)} />
         <Route
           path="/certificates/new"
           element={requireAuth(<CertificateCreatePage />)}
         />
         <Route
+          path="/certificates/saved"
+          element={requireAuth(<CertificateSaveResultPage />)}
+        />
+        <Route
           path="/team"
           element={requireAuth(appUser ? <TeamManagement appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
-        <Route
-          path="/arrt"
-          element={requireAuth(
-            <CertList
-              name="ARRT"
-              fullName="American Registry of Radiologic Technologists"
-              accent="#1A4975"
-              category="ARRT"
-            />,
-          )}
-        />
-        <Route
-          path="/iema"
-          element={requireAuth(
-            <CertList
-              name="IEMA"
-              fullName="Illinois Emergency Management Agency"
-              accent="#0EA37E"
-              category="IEMA"
-            />,
-          )}
-        />
-        <Route
-          path="/cpr"
-          element={requireAuth(
-            <CertList
-              name="CPR"
-              fullName="Cardiopulmonary Resuscitation"
-              accent="#DC2626"
-              category="CPR"
-            />,
-          )}
-        />
+        <Route path="/arrt" element={<Navigate to="/certificates?cat=ARRT" replace />} />
+        <Route path="/iema" element={<Navigate to="/certificates?cat=IEMA" replace />} />
+        <Route path="/cpr" element={<Navigate to="/certificates?cat=CPR" replace />} />
 
         <Route
           path="/setup"
@@ -146,6 +149,12 @@ const Router = () => {
           element={requireAuth(appUser ? <ProfilePage appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
         />
         <Route path="/browse" element={requireAuth(<BrowseCertificationsPage />)} />
+        <Route
+          path="/forgot-password"
+          element={!user ? <ForgotPasswordPage /> : <Navigate to="/" replace />}
+        />
+        <Route path="/auth/action" element={<AuthActionPage />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

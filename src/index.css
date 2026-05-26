@@ -316,6 +316,21 @@ body, #root {
 }
 .dark .nb-btn.is-accent { border-color: #FFFFFF; }
 
+/* Orange hyperlink-style trigger — same accent palette as .nb-btn.is-accent,
+   but renders inline within copy (no border, no shadow). Used for the inline
+   "Complete setup" / "Finish setup" prompts on the dashboard subline. */
+.nb-link-accent {
+  color: #F59E0B;
+  font-weight: 500;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.nb-link-accent:hover { text-decoration: underline; }
+.dark .nb-link-accent { color: #FBBF24; }
+
 /* Disabled "Complete setup" — softens to a neutral state and animates back in
    when the modal flips to is-accent (all sections complete). */
 .setup-modal__finish {
@@ -390,6 +405,10 @@ body, #root {
 }
 .glass-panel--strong { background: var(--paper); }
 .glass-panel--soft   { background: var(--surface); }
+
+/* Hide native scrollbar (used by horizontal carousels). */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* ── Cards ────────────────────────────────────────────────── */
 .card {
