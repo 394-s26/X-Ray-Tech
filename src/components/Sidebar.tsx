@@ -89,6 +89,22 @@ const ARCHIVE_ITEM_MOBILE: NavItem = {
   desktopHidden: true,
 };
 
+const HISTORY_ITEM_MOBILE: NavItem = {
+  to: '/cycles',
+  longLabel: 'License history',
+  shortLabel: 'History',
+  icon: (s) => <RotateCwIcon size={s} />,
+  desktopHidden: true,
+};
+
+const FILES_ITEM_MOBILE: NavItem = {
+  to: '/certificates',
+  longLabel: 'Certification tracking',
+  shortLabel: 'Files',
+  icon: (s) => <IdCardIcon size={s} />,
+  desktopHidden: true,
+};
+
 interface SidebarProps {
   appUser: AppUser;
 }
@@ -121,7 +137,6 @@ const Sidebar = ({ appUser }: SidebarProps) => {
   const isManager = appUser.role === 'manager';
   const navigate = useNavigate();
   const [team, setTeam] = useState<Team | null>(null);
-  const [teamHovered, setTeamHovered] = useState(false);
 
   useEffect(() => {
     if (!appUser.teamCode) return;
@@ -131,10 +146,6 @@ const Sidebar = ({ appUser }: SidebarProps) => {
   const visiblePrimary = PRIMARY_ITEMS.filter(
     (item) => !item.managerOnly || isManager,
   );
-
-  const teamBg = team?.color
-    ? `${team.color}${teamHovered ? '14' : '0D'}`
-    : undefined;
 
   return (
     <aside className="app-sidebar" aria-label="Primary navigation">
@@ -168,9 +179,6 @@ const Sidebar = ({ appUser }: SidebarProps) => {
             className={({ isActive }) =>
               `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
             }
-            style={{ backgroundColor: teamBg }}
-            onMouseEnter={() => setTeamHovered(true)}
-            onMouseLeave={() => setTeamHovered(false)}
           >
             <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
             <span className="app-sidebar__nav-label app-sidebar__nav-label--long">
@@ -183,12 +191,14 @@ const Sidebar = ({ appUser }: SidebarProps) => {
               Team
             </span>
           </NavLink>
+          <NavItemLink item={FILES_ITEM_MOBILE} />
         </nav>
 
         <div className="app-sidebar__bottom">
           <div className="app-sidebar__divider" />
           <nav className="app-sidebar__section" aria-label="Add certificate">
             <NavItemLink item={ADD_CERT_ITEM} />
+            <NavItemLink item={HISTORY_ITEM_MOBILE} />
             <NavItemLink item={ARCHIVE_ITEM_MOBILE} />
           </nav>
           <nav

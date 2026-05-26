@@ -16,7 +16,7 @@ const AppLayout = ({ appUser, onAppUserUpdate, children }: PropsWithChildren<App
         <Sidebar appUser={appUser} />
         <div className="flex-1 min-w-0 flex flex-col">
           <Navbar appUser={appUser} />
-          <div className="app-canvas flex-1 pt-4 pb-28 lg:pt-0 lg:pb-0">{children}</div>
+          <div className="app-canvas flex-1 pt-0 pb-28 lg:pt-0 lg:pb-0">{children}</div>
         </div>
       </div>
     </SetupReminderProvider>
