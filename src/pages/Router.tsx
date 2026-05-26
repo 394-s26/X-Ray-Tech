@@ -15,10 +15,10 @@ import { CertificateSaveResultPage } from './CertificateSaveResultPage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
-import { ProfilePage } from './ProfilePage';
 import { BrowseCertificationsPage } from './BrowseCertificationsPage';
 import { ForgotPasswordPage } from './ForgotPasswordPage';
 import { AuthActionPage } from './AuthActionPage';
+import ProfilePage from './ProfilePage';
 import LandingPage from './LandingPage';
 import AppLayout from '../components/AppLayout';
 
@@ -107,7 +107,6 @@ const Router = () => {
         <Route path="/arrt" element={<Navigate to="/certificates?cat=ARRT" replace />} />
         <Route path="/iema" element={<Navigate to="/certificates?cat=IEMA" replace />} />
         <Route path="/cpr" element={<Navigate to="/certificates?cat=CPR" replace />} />
-
         <Route
           path="/setup"
           element={
