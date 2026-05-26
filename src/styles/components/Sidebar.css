@@ -93,7 +93,7 @@
 .app-sidebar__nav-icon { flex-shrink: 0; }
 
 .app-sidebar__nav-label {
-  line-height: 1;
+  line-height: 1.25;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;

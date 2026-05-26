@@ -114,6 +114,14 @@ const FILES_ITEM_MOBILE: NavItem = {
   desktopHidden: true,
 };
 
+const TRACKING_ITEM_MOBILE: NavItem = {
+  to: '/reporting',
+  longLabel: 'Certificate Reporting',
+  shortLabel: 'Tracking',
+  icon: (s) => <ClipboardIcon size={s} />,
+  desktopHidden: true,
+};
+
 interface SidebarProps {
   appUser: AppUser;
 }
@@ -187,7 +195,7 @@ const Sidebar = ({ appUser }: SidebarProps) => {
             to="/team"
             end={false}
             className={({ isActive }) =>
-              `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
+              `app-sidebar__nav-item app-sidebar__nav-item--mobile-hidden${isActive ? ' app-sidebar__nav-item--active' : ''}`
             }
           >
             <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
@@ -201,6 +209,7 @@ const Sidebar = ({ appUser }: SidebarProps) => {
               Team
             </span>
           </NavLink>
+          <NavItemLink item={TRACKING_ITEM_MOBILE} />
           <NavItemLink item={FILES_ITEM_MOBILE} />
         </nav>
 

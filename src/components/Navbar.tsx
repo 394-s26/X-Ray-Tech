@@ -8,6 +8,7 @@ import {
   PlusIcon,
   SettingsIcon,
   SunIcon,
+  TeamIcon,
   UserIcon,
 } from '../services/svgIcons';
 import ThemeToggle from './ThemeToggle';
@@ -169,6 +170,12 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
                 label="Add Certificate"
                 onClick={close}
                 to="/certificates/new"
+              />
+              <MenuItem
+                icon={<TeamIcon size={18} />}
+                label="Team"
+                onClick={close}
+                to="/team"
               />
               <MenuItem
                 icon={
