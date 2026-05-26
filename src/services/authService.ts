@@ -149,6 +149,13 @@ export async function addMemberToTeam(teamCode: string, uid: string): Promise<vo
   await updateDoc(doc(db, 'teams', teamCode.toUpperCase()), { members: arrayUnion(uid) });
 }
 
+export async function removeTeamMember(teamCode: string, memberUid: string): Promise<void> {
+  await Promise.all([
+    updateDoc(doc(db, 'teams', teamCode.toUpperCase()), { members: arrayRemove(memberUid) }),
+    updateDoc(doc(db, 'users', memberUid), { teamCode: null, role: null }),
+  ]);
+}
+
 export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
   const results = await Promise.all(uids.map(uid => fetchAppUser(uid)));
   return results.filter((u): u is AppUser => u !== null);

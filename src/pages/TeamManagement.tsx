@@ -11,6 +11,7 @@ import {
   fetchUsersByUids,
   fetchCertificatesForOwner,
   updateTeamCode,
+  removeTeamMember,
 } from '../services/authService';
 import { TeamSetupCard } from '../components/TeamSetupCard';
 import '../styles/components/AccountSetupFlow.css';
@@ -111,12 +112,6 @@ function formatDate(dateString: string): string {
   });
 }
 
-function formatBirthday(mmdd: string): string {
-  const [m, d] = mmdd.split('-');
-  if (!m || !d) return mmdd;
-  const dt = new Date(2000, Number(m) - 1, Number(d));
-  return dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-}
 
 const displayName = (user: AppUser): string => {
   const full = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
@@ -239,12 +234,20 @@ function LicenseDetailRow({ license }: LicenseDetailRowProps) {
   );
 }
 
+const CE_TOTAL_PER_LICENSE = 24;
+
 interface EmployeeModalProps {
   summary: TeamMemberSummary;
+  teamCode: string;
   onClose: () => void;
+  onRemoved: (uid: string) => void;
 }
 
-function EmployeeModal({ summary, onClose }: EmployeeModalProps) {
+function EmployeeModal({ summary, teamCode, onClose, onRemoved }: EmployeeModalProps) {
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -256,6 +259,25 @@ function EmployeeModal({ summary, onClose }: EmployeeModalProps) {
   const overall = overallTier(summary);
   const { user } = summary;
 
+  const handleRemove = async () => {
+    setRemoveError(null);
+    setRemoving(true);
+    try {
+      await removeTeamMember(teamCode, summary.uid);
+      onRemoved(summary.uid);
+      onClose();
+    } catch {
+      setRemoveError('Failed to remove member. Please try again.');
+      setRemoving(false);
+    }
+  };
+
+  const arrtLic = summary.licenses.find((l) => l.category === 'ARRT');
+  const iemaLic = summary.licenses.find((l) => l.category === 'IEMA');
+
+  const hasArrtId = !!user.arrtIdNumber?.trim();
+  const hasIemaId = !!user.iemaIdNumber?.trim();
+
   return (
     <div className="overlay-center" onClick={onClose}>
       <div
@@ -263,30 +285,72 @@ function EmployeeModal({ summary, onClose }: EmployeeModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-xl font-extrabold text-primary dark:text-slate-100 tracking-tight">
-              {displayName(user)}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-extrabold text-primary dark:text-slate-100 tracking-tight">
+                {displayName(user)}
+              </h3>
+              <span
+                className={`shrink-0 inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${TEXT_COLOR[overall]}`}
+                style={{ backgroundColor: 'rgba(0,0,0,0.04)' }}
+              >
+                <span className={`w-2 h-2 rounded-full ${DOT_COLOR[overall]}`} />
+                {STATUS_LABEL[overall]}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1 min-h-[1.25rem]">
               {summary.isLead && <span className="font-semibold">Team lead</span>}
-              {summary.isLead && user.birthday ? ' · ' : ''}
-              {user.birthday && <>Born {formatBirthday(user.birthday)}</>}
+              {summary.isLead && (hasArrtId || hasIemaId) && ' · '}
+              {hasArrtId && <span className="font-mono">ARRT {user.arrtIdNumber}</span>}
+              {hasArrtId && hasIemaId && ' · '}
+              {hasIemaId && <span className="font-mono">IEMA {user.iemaIdNumber}</span>}
             </p>
           </div>
-          <span
-            className={`flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${TEXT_COLOR[overall]}`}
-            style={{ backgroundColor: 'rgba(0,0,0,0.04)' }}
+          <button
+            type="button"
+            onClick={onClose}
+            className="cursor-pointer shrink-0 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+            aria-label="Close"
           >
-            <span className={`w-2 h-2 rounded-full ${DOT_COLOR[overall]}`} />
-            {STATUS_LABEL[overall]}
-          </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div className="mt-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500 mb-2">
+        <div className="mt-6 flex flex-col gap-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
             CE progress
           </p>
-          <OverallProgressBar credits={summary.overallCredits} tier={overall} />
+          {arrtLic && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-gray-500 dark:text-slate-400 w-10 shrink-0">ARRT</span>
+              <div className="flex-1 min-w-0 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${BAR_FILL_COLOR[tierFromDate(arrtLic.earliestExpiry)]}`}
+                  style={{ width: `${Math.max(0, Math.min(100, (arrtLic.credits / CE_TOTAL_PER_LICENSE) * 100))}%`, transition: 'width 0.4s ease-out' }}
+                />
+              </div>
+              <span className="text-[10px] font-semibold tabular-nums text-gray-600 dark:text-slate-300 shrink-0 w-14 text-right">
+                {Math.round(arrtLic.credits)}/{CE_TOTAL_PER_LICENSE} CE
+              </span>
+            </div>
+          )}
+          {iemaLic && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-gray-500 dark:text-slate-400 w-10 shrink-0">IEMA</span>
+              <div className="flex-1 min-w-0 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${BAR_FILL_COLOR[tierFromDate(iemaLic.earliestExpiry)]}`}
+                  style={{ width: `${Math.max(0, Math.min(100, (iemaLic.credits / CE_TOTAL_PER_LICENSE) * 100))}%`, transition: 'width 0.4s ease-out' }}
+                />
+              </div>
+              <span className="text-[10px] font-semibold tabular-nums text-gray-600 dark:text-slate-300 shrink-0 w-14 text-right">
+                {Math.round(iemaLic.credits)}/{CE_TOTAL_PER_LICENSE} CE
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="mt-6">
@@ -300,15 +364,51 @@ function EmployeeModal({ summary, onClose }: EmployeeModalProps) {
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            type="button"
-            className="global-btn cancel-btn w-auto px-4"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
+        {removeError && (
+          <p className="text-xs text-red-500 mt-4">{removeError}</p>
+        )}
+
+        <span className="block text-xs text-gray-600 dark:text-slate-300 min-h-[1rem]">
+          {!summary.isLead && confirmRemove &&
+            `Are you sure you want to remove ${displayName(user)} from the team?`}
+        </span>
+        
+
+        {!summary.isLead && (
+          <div className="mt-6">
+            {confirmRemove ? (
+              <div className="flex flex-col gap-2">
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={removing}
+                    onClick={handleRemove}
+                    className="global-btn red-btn w-auto px-3 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                  >
+                    {removing ? 'Removing…' : 'Yes, remove'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={removing}
+                    onClick={() => setConfirmRemove(false)}
+                    className="global-btn cancel-btn w-auto px-3"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmRemove(true)}
+                className="global-btn w-auto px-4 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                Remove from team
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -331,10 +431,20 @@ function EmployeeRow({ summary, onClick }: EmployeeRowProps) {
       <div className="flex items-center gap-3">
         <span className={`w-3 h-3 rounded-full shrink-0 ${DOT_COLOR[tier]}`} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-primary dark:text-slate-100 truncate">
-            {displayName(summary.user)}
+          <p className="text-sm font-bold text-primary dark:text-slate-100 truncate flex items-center gap-2 flex-wrap">
+            <span>{displayName(summary.user)}</span>
+            {summary.user.arrtIdNumber && (
+              <span className="text-[10px] font-semibold text-gray-400 dark:text-slate-500 font-mono">
+                ARRT {summary.user.arrtIdNumber}
+              </span>
+            )}
+            {summary.user.iemaIdNumber && (
+              <span className="text-[10px] font-semibold text-gray-400 dark:text-slate-500 font-mono">
+                IEMA {summary.user.iemaIdNumber}
+              </span>
+            )}
             {summary.isLead && (
-              <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
                 Lead
               </span>
             )}
@@ -727,7 +837,12 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
       </section>
 
       {isManager && selected && (
-        <EmployeeModal summary={selected} onClose={() => setSelected(null)} />
+        <EmployeeModal
+          summary={selected}
+          teamCode={teamCode}
+          onClose={() => setSelected(null)}
+          onRemoved={(uid) => setMembers((prev) => prev.filter((m) => m.uid !== uid))}
+        />
       )}
     </main>
   );

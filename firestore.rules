@@ -24,7 +24,7 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isOwner(uid);
       allow update: if isOwner(uid)
-                    || (isTeamLead(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamCode']));
+                    || (isTeamLead(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamCode', 'role']));
       allow delete: if isOwner(uid);
 
       // Mirror of per-license-cycle CE credits, written eagerly on every cert change.
