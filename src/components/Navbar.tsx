@@ -4,15 +4,18 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import {
   BellIcon,
+  LogOutIcon,
   MoonIcon,
   PlusIcon,
   SettingsIcon,
   SunIcon,
+  TeamIcon,
   UserIcon,
 } from '../services/svgIcons';
 import ThemeToggle from './ThemeToggle';
 import BrandLogo from './BrandLogo';
 import NotificationBell from './NotificationBell';
+import { signOut } from '../services/authService';
 import type { AppUser } from '../types/auth';
 import '../styles/components/NavBar.css';
 
@@ -44,9 +47,11 @@ interface MenuItemProps {
   label: string;
   onClick: () => void;
   to?: string;
+  variant?: 'default' | 'danger';
 }
 
-function MenuItem({ icon, label, onClick, to }: MenuItemProps) {
+function MenuItem({ icon, label, onClick, to, variant = 'default' }: MenuItemProps) {
+  const className = `navbar-menu__item${variant === 'danger' ? ' navbar-menu__item--danger' : ''}`;
   const content = (
     <>
       <span className="navbar-menu__icon">{icon}</span>
@@ -55,13 +60,13 @@ function MenuItem({ icon, label, onClick, to }: MenuItemProps) {
   );
   if (to) {
     return (
-      <Link to={to} role="menuitem" className="navbar-menu__item" onClick={onClick}>
+      <Link to={to} role="menuitem" className={className} onClick={onClick}>
         {content}
       </Link>
     );
   }
   return (
-    <button type="button" role="menuitem" className="navbar-menu__item" onClick={onClick}>
+    <button type="button" role="menuitem" className={className} onClick={onClick}>
       {content}
     </button>
   );
@@ -171,6 +176,12 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
                 to="/certificates/new"
               />
               <MenuItem
+                icon={<TeamIcon size={18} />}
+                label="Team"
+                onClick={close}
+                to="/team"
+              />
+              <MenuItem
                 icon={
                   isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />
                 }
@@ -188,6 +199,15 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
                 label="Settings"
                 onClick={close}
                 to="/settings"
+              />
+              <MenuItem
+                icon={<LogOutIcon size={18} />}
+                label="Log out"
+                variant="danger"
+                onClick={() => {
+                  close();
+                  signOut();
+                }}
               />
             </div>
           </>,

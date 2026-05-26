@@ -5,16 +5,24 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   sendPasswordResetEmail,
   confirmPasswordReset,
   applyActionCode,
+  deleteUser as firebaseDeleteUser,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs, query, setDoc, runTransaction, serverTimestamp, arrayUnion, updateDoc, where } from 'firebase/firestore';
+import {
+  collection, doc, getDoc, getDocs, query, setDoc, runTransaction, serverTimestamp,
+  arrayUnion, arrayRemove, updateDoc, deleteDoc, where, writeBatch,
+} from 'firebase/firestore';
+import { ref as storageRef, deleteObject } from 'firebase/storage';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import type { Certification } from '../types/certification';
-import { auth, db } from './firebase';
+import { auth, db, storage } from './firebase';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -150,6 +158,82 @@ export async function fetchCertificatesForOwner(uid: string): Promise<Certificat
   const q = query(collection(db, 'certificates'), where('ownerId', '==', uid));
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as Certification);
+}
+
+export async function changeUsername(uid: string, oldUsername: string, newUsername: string): Promise<void> {
+  await runTransaction(db, async tx => {
+    const newRef = doc(db, 'usernames', newUsername);
+    const snap = await tx.get(newRef);
+    if (snap.exists()) throw new Error('Username taken');
+    tx.delete(doc(db, 'usernames', oldUsername));
+    tx.set(newRef, { uid });
+    tx.update(doc(db, 'users', uid), { username: newUsername });
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const currentUser = auth.currentUser;
+  if (!currentUser || !currentUser.email) throw new Error('Not authenticated');
+  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+  await reauthenticateWithCredential(currentUser, credential);
+  await updatePassword(currentUser, newPassword);
+}
+
+export async function deleteAccount(appUser: AppUser, password: string): Promise<void> {
+  const currentUser = auth.currentUser;
+  if (!currentUser || !appUser.email) throw new Error('Not authenticated');
+
+  const credential = EmailAuthProvider.credential(appUser.email, password);
+  await reauthenticateWithCredential(currentUser, credential);
+
+  const certsCol = collection(db, 'certificates');
+  const [ownerSnap, uidSnap] = await Promise.all([
+    getDocs(query(certsCol, where('ownerId', '==', appUser.uid))),
+    getDocs(query(certsCol, where('uid', '==', appUser.uid))),
+  ]);
+  const certDocs = [...ownerSnap.docs, ...uidSnap.docs];
+  await Promise.all(
+    certDocs.map(async d => {
+      const data = d.data();
+      const path: string | undefined = data.photoStoragePath ?? data.storagePath;
+      if (path) {
+        try { await deleteObject(storageRef(storage, path)); } catch { /* already gone */ }
+      }
+      await deleteDoc(d.ref);
+    })
+  );
+
+  const cycleSnap = await getDocs(collection(db, 'users', appUser.uid, 'cycleCredits'));
+  if (!cycleSnap.empty) {
+    const batch = writeBatch(db);
+    cycleSnap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+
+  if (appUser.teamCode) {
+    if (appUser.role === 'manager') {
+      const teamSnap = await getDoc(doc(db, 'teams', appUser.teamCode));
+      if (teamSnap.exists()) {
+        const team = teamSnap.data() as Team;
+        const memberBatch = writeBatch(db);
+        team.members.forEach(uid => {
+          if (uid !== appUser.uid) {
+            memberBatch.update(doc(db, 'users', uid), { teamCode: null, role: null });
+          }
+        });
+        await memberBatch.commit();
+        await deleteDoc(doc(db, 'teams', appUser.teamCode));
+      }
+    } else {
+      await updateDoc(doc(db, 'teams', appUser.teamCode), {
+        members: arrayRemove(appUser.uid),
+      });
+    }
+  }
+
+  await deleteDoc(doc(db, 'usernames', appUser.username));
+  await deleteDoc(doc(db, 'users', appUser.uid));
+  await firebaseDeleteUser(currentUser);
 }
 
 export async function updateTeamCode(

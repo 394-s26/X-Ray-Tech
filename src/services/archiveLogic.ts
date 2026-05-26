@@ -1,4 +1,12 @@
-import type { Certification } from '../types/certification';
+import type { Certification, CertificateCategory } from '../types/certification';
+import type { AppUser } from '../types/auth';
+import {
+  PER_LICENSE,
+  computeArrtCycle,
+  computeIemaCycle,
+  creditsInCycle,
+  getEffectiveAppliedCycles,
+} from '../utils/cycles';
 
 export type LifecycleStatus = 'active' | 'expiringSoon' | 'expired';
 
@@ -18,6 +26,20 @@ const startOfToday = (today?: Date): Date => {
   const d = today ? new Date(today) : new Date();
   d.setHours(0, 0, 0, 0);
   return d;
+};
+
+export const isFullyUsed = (cert: Certification): boolean => {
+  const cprOnly =
+    cert.categories.includes('CPR') &&
+    !cert.categories.includes('ARRT') &&
+    !cert.categories.includes('IEMA');
+  return cprOnly
+    ? cert.categories.includes('CPR')
+    : cert.categories.includes('ARRT') && cert.categories.includes('IEMA');
+};
+
+export const isArchived = (cert: Certification, today?: Date): boolean => {
+  return getArchiveStatus(cert, today).expired || isFullyUsed(cert);
 };
 
 export const getArchiveStatus = (
@@ -45,36 +67,45 @@ export const getArchiveStatus = (
   };
 };
 
-const isCategoryA = (cert: Certification): boolean => {
+export const isCategoryA = (cert: Certification): boolean => {
   const t = (cert.categoryType ?? '').trim().toUpperCase();
   return t === 'A' || t === 'A+';
 };
 
 /**
- * Unused points per license: ceCredits across certs that
- *   - are Category A or A+ (the only categories that count per license_ce_logic.md)
- *   - have not yet expired
- *   - are NOT already applied to that license (cert.categories does not include it)
+ * Unused points per license, capped at remaining capacity in the current cycle.
  *
- * Per license_ce_logic.md a single certificate may be applied to one ARRT cycle
- * AND one IEMA cycle ("double dipping"), so a cert tagged only with IEMA still
- * counts toward ARRT's unused pool until it's tagged with ARRT too.
+ * For each license:
+ *   1. usedThisCycle = credits already applied to the user's current cycle.
+ *   2. capacity = max(0, 24 - usedThisCycle).
+ *   3. unused = min(sum of ceCredits across non-expired A/A+ certs that
+ *      are NOT effectively applied to this license, capacity).
+ *
+ * If the user hasn't set up that license yet (no current cycle), the cap is
+ * disabled — return the raw sum so the UI still shows their potential.
  */
 export const unusedPointsByLicense = (
   certs: Certification[],
+  appUser: AppUser,
   today?: Date,
 ): { arrt: number; iema: number } => {
   const cutoff = startOfToday(today);
-  let arrt = 0;
-  let iema = 0;
 
-  for (const cert of certs) {
-    if (!isCategoryA(cert)) continue;
-    if (new Date(`${cert.expirationDate}T00:00:00`) < cutoff) continue;
+  const computeFor = (license: Exclude<CertificateCategory, 'CPR'>): number => {
+    const cycle = license === 'ARRT' ? computeArrtCycle(appUser) : computeIemaCycle(appUser);
+    let unappliedTotal = 0;
+    for (const cert of certs) {
+      if (!isCategoryA(cert)) continue;
+      if (new Date(`${cert.expirationDate}T00:00:00`) < cutoff) continue;
+      const applied = getEffectiveAppliedCycles(cert, appUser);
+      if (applied[license]) continue; // already applied somewhere
+      unappliedTotal += cert.ceCredits || 0;
+    }
+    if (!cycle) return unappliedTotal;
+    const used = creditsInCycle(certs, license, cycle, appUser);
+    const capacity = Math.max(0, PER_LICENSE - used);
+    return Math.min(unappliedTotal, capacity);
+  };
 
-    if (!cert.categories.includes('ARRT')) arrt += cert.ceCredits || 0;
-    if (!cert.categories.includes('IEMA')) iema += cert.ceCredits || 0;
-  }
-
-  return { arrt, iema };
+  return { arrt: computeFor('ARRT'), iema: computeFor('IEMA') };
 };
