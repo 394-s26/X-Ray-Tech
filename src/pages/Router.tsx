@@ -15,6 +15,8 @@ import { CertificateSaveResultPage } from './CertificateSaveResultPage';
 import { LoginPage } from './LoginPage';
 import { SignupPage } from './SignupPage';
 import { AccountSetupPage } from './AccountSetupPage';
+import { ProfilePage } from './ProfilePage';
+import { BrowseCertificationsPage } from './BrowseCertificationsPage';
 import { ForgotPasswordPage } from './ForgotPasswordPage';
 import { AuthActionPage } from './AuthActionPage';
 import LandingPage from './LandingPage';
@@ -142,6 +144,11 @@ const Router = () => {
             )
           }
         />
+        <Route
+          path="/profile"
+          element={requireAuth(appUser ? <ProfilePage appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
+        />
+        <Route path="/browse" element={requireAuth(<BrowseCertificationsPage />)} />
         <Route
           path="/forgot-password"
           element={!user ? <ForgotPasswordPage /> : <Navigate to="/" replace />}

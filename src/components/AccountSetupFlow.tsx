@@ -4,6 +4,7 @@ import { updateUserProfile, createTeam, getTeamByCode, fetchUsersByUids, addMemb
 import UserAvatar from './UserAvatar';
 import { CopyIcon, RotateCwIcon } from '../services/svgIcons';
 import { COLORS } from '../utils/colors';
+import { BirthdayInput } from './BirthdayInput';
 import '../styles/components/AccountSetupFlow.css';
 
 interface AccountSetupFlowProps {
@@ -126,16 +127,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     iemaCycleStartYear: user.iemaCycleStartYear != null ? String(user.iemaCycleStartYear) : '',
     iemaCycleEndMonth: user.iemaCycleEndMonth != null ? String(user.iemaCycleEndMonth) : '',
   });
-  const initialBdMatch = (user.birthday ?? '').match(/^(\d{2})-(\d{2})$/);
-  const [birthMonth, setBirthMonth] = useState<string>(initialBdMatch ? initialBdMatch[1] : '');
-  const [birthDay, setBirthDay] = useState<string>(initialBdMatch ? initialBdMatch[2] : '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    const next = birthMonth && birthDay ? `${birthMonth}-${birthDay}` : '';
-    setFormData(prev => (prev.birthday === next ? prev : { ...prev, birthday: next }));
-  }, [birthMonth, birthDay]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [foundTeam, setFoundTeam] = useState<{ name: string; manager: string; color: string } | null>(null);
   const [teamLookupLoading, setTeamLookupLoading] = useState(false);
@@ -366,46 +359,12 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         </div>
 
         <div className="setup-flow__birthday-field form-field w-full mt-2">
-          <div className="flex gap-3">
-            <div className="flex-1 max-w-50">
-              <select
-                className="form-input"
-                value={birthMonth}
-                onChange={e => {
-                  const m = e.target.value;
-                  setBirthMonth(m);
-                  if (m && birthDay && parseInt(birthDay, 10) > daysInMonth(parseInt(m, 10))) {
-                    setBirthDay('');
-                  }
-                  setErrors(prev => ({ ...prev, birthday: undefined as unknown as string }));
-                }}
-              >
-                <option value="">Month</option>
-                {MONTH_NAMES.map((name, i) => (
-                  <option key={name} value={String(i + 1).padStart(2, '0')}>{name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="w-28">
-              <select
-                className="form-input"
-                value={birthDay}
-                onChange={e => {
-                  setBirthDay(e.target.value);
-                  setErrors(prev => ({ ...prev, birthday: undefined as unknown as string }));
-                }}
-              >
-                <option value="">Day</option>
-                {Array.from(
-                  { length: birthMonth ? daysInMonth(parseInt(birthMonth, 10)) : 31 },
-                  (_, i) => i + 1,
-                ).map(d => (
-                  <option key={d} value={String(d).padStart(2, '0')}>{d}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <p className="setup-flow__field-error">{errors.birthday}</p>
+          <BirthdayInput
+            value={formData.birthday}
+            onChange={v => setField('birthday', v)}
+            error={errors.birthday}
+            onErrorClear={() => setErrors(prev => ({ ...prev, birthday: undefined as unknown as string }))}
+          />
         </div>
       </div>
     </>
