@@ -12,28 +12,43 @@ service cloud.firestore {
     }
 
     function isTeamLead(uid) {
+      let myTeamCode = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.teamCode;
       return isSignedIn()
-        && exists(/databases/$(database)/documents/teams/$(get(/databases/$(database)/documents/users/$(uid)).data.teamCode))
-        && get(/databases/$(database)/documents/teams/$(get(/databases/$(database)/documents/users/$(uid)).data.teamCode)).data.teamLead == request.auth.uid;
+        && myTeamCode != null
+        && get(/databases/$(database)/documents/teams/$(myTeamCode)).data.teamLead == request.auth.uid
+        && (uid in get(/databases/$(database)/documents/teams/$(myTeamCode)).data.members
+            || uid == get(/databases/$(database)/documents/teams/$(myTeamCode)).data.teamLead);
     }
 
     match /users/{uid} {
       allow read: if isSignedIn();
       allow create: if isOwner(uid);
       allow update: if isOwner(uid)
-                    || (isTeamLead(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamCode']));
-      allow delete: if false;
+                    || (isTeamLead(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teamCode', 'role']));
+      allow delete: if isOwner(uid);
+
+      // Mirror of per-license-cycle CE credits, written eagerly on every cert change.
+      match /cycleCredits/{cycleId} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(uid);
+      }
     }
 
     match /usernames/{username} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
     match /certificates/{certId} {
       // Support both ownerId (manual form) and uid (OCR upload flow).
-      allow read: if isOwner(resource.data.ownerId) || isOwner(resource.data.uid);
+      // Team leads can also read certificates belonging to their teammates so
+      // the Team Management page can show real license progress.
+      allow read: if isOwner(resource.data.ownerId)
+                  || isOwner(resource.data.uid)
+                  || isTeamLead(resource.data.ownerId)
+                  || isTeamLead(resource.data.uid);
       allow create: if isOwner(request.resource.data.ownerId)
                     || (isOwner(request.resource.data.uid)
                         && request.resource.data.validated == 'pending');

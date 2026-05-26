@@ -10,87 +10,19 @@ import { DeleteConfirmDialog } from '../components/DeleteConfirmDialog';
 import { CertificateCard } from '../components/CertificateCard';
 import { Toast } from '../components/Toast';
 import {
-  IdCardIcon,
+  ArchiveIcon,
   FilterIcon,
   ChevronRightIcon,
   SearchIcon,
   XIcon,
 } from '../services/svgIcons';
-import {
-  EXPIRING_SOON_DAYS,
-  getArchiveStatus,
-  isArchived,
-} from '../services/archiveLogic';
+import { getArchiveStatus, isArchived, isFullyUsed } from '../services/archiveLogic';
 import { deleteCertificationRecord } from '../services/certificateService';
 
-type StatusFilter = 'all' | 'active' | 'expiringSoon';
-type AgencyFilter = 'all' | 'ARRT' | 'IEMA' | 'CPR';
+type StatusFilter = 'all' | 'expired' | 'used' | 'arrt' | 'iema';
 
 const MOBILE_PAGE_SIZE = 10;
 const DESKTOP_PAGE_SIZE = 12;
-
-interface AgencyConfig {
-  key: Exclude<AgencyFilter, 'all'>;
-  name: string;
-  accent: string;
-}
-
-const AGENCIES: ReadonlyArray<AgencyConfig> = [
-  { key: 'ARRT', name: 'ARRT', accent: '#1A4975' },
-  { key: 'IEMA', name: 'IEMA', accent: '#0EA37E' },
-  { key: 'CPR', name: 'CPR', accent: '#DC2626' },
-];
-
-function ExpiringSoonSummary({ count }: { count: number }) {
-  return (
-    <div
-      className="nb-card px-4 py-3 flex flex-col gap-1 min-w-[12rem] shadow-none"
-      style={{ boxShadow: 'none' }}
-      title={`Certificates with less than ${EXPIRING_SOON_DAYS} days until expiration`}
-    >
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-600)] dark:text-[var(--ink-300)]">
-        Expiring soon
-      </p>
-      <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-bold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums leading-none">
-          {count}
-        </span>
-        <span className="text-xs font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">
-          {count === 1 ? 'certificate' : 'certificates'}
-        </span>
-      </div>
-      <p className="text-[10px] text-[var(--ink-500)] dark:text-[var(--ink-400)] leading-tight">
-        Less than {EXPIRING_SOON_DAYS} days until expiration
-      </p>
-    </div>
-  );
-}
-
-function AgencyFilterButton({
-  agency,
-  active,
-  onClick,
-}: {
-  agency: AgencyConfig;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className="px-3 py-1 rounded-full border text-xs font-semibold tracking-wide transition-colors whitespace-nowrap"
-      style={{
-        borderColor: agency.accent,
-        backgroundColor: active ? agency.accent : 'transparent',
-        color: active ? '#ffffff' : agency.accent,
-      }}
-    >
-      {agency.name}
-    </button>
-  );
-}
 
 function getInt(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -99,7 +31,7 @@ function getInt(params: URLSearchParams, key: string, fallback: number): number 
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-const CertificationTracking = () => {
+export default function Archive() {
   const { certifications, loading } = useCertifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -140,7 +72,7 @@ const CertificationTracking = () => {
 
   const search = searchParams.get('q') ?? '';
   const statusFilter = (searchParams.get('status') as StatusFilter) || 'all';
-  const agencyFilter = (searchParams.get('cat') as AgencyFilter) || 'all';
+  const categoryFilter = searchParams.get('cat') ?? 'all';
   const typeFilter = searchParams.get('type') ?? 'all';
   const completedAfter = searchParams.get('after') ?? '';
   const completedBefore = searchParams.get('before') ?? '';
@@ -154,24 +86,20 @@ const CertificationTracking = () => {
     setSearchParams(next, { replace: true });
   };
 
-  const toggleAgency = (key: Exclude<AgencyFilter, 'all'>) => {
-    setParam('cat', agencyFilter === key ? 'all' : key);
-  };
-
   const clearAll = () => {
     const next = new URLSearchParams();
     if (search) next.set('q', search);
     setSearchParams(next, { replace: true });
   };
 
-  const tracked = useMemo(
-    () => certifications.filter((c) => !isArchived(c)),
+  const archived = useMemo(
+    () => certifications.filter((c) => isArchived(c)),
     [certifications],
   );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return tracked
+    return archived
       .filter((c) => {
         if (q) {
           const hit =
@@ -180,10 +108,12 @@ const CertificationTracking = () => {
           if (!hit) return false;
         }
         const s = getArchiveStatus(c);
-        if (statusFilter === 'active' && s.lifecycle !== 'active') return false;
-        if (statusFilter === 'expiringSoon' && s.lifecycle !== 'expiringSoon') return false;
+        if (statusFilter === 'expired' && !s.expired) return false;
+        if (statusFilter === 'used' && !isFullyUsed(c)) return false;
+        if (statusFilter === 'arrt' && !s.usedByArrt) return false;
+        if (statusFilter === 'iema' && !s.usedByIema) return false;
 
-        if (agencyFilter !== 'all' && !c.categories.includes(agencyFilter)) {
+        if (categoryFilter !== 'all' && !c.categories.includes(categoryFilter as 'ARRT' | 'IEMA' | 'CPR')) {
           return false;
         }
         if (typeFilter !== 'all') {
@@ -194,8 +124,8 @@ const CertificationTracking = () => {
         if (completedBefore && c.completedDate > completedBefore) return false;
         return true;
       })
-      .sort((a, b) => a.expirationDate.localeCompare(b.expirationDate));
-  }, [tracked, search, statusFilter, agencyFilter, typeFilter, completedAfter, completedBefore]);
+      .sort((a, b) => b.completedDate.localeCompare(a.completedDate));
+  }, [archived, search, statusFilter, categoryFilter, typeFilter, completedAfter, completedBefore]);
 
   const pageSize = isDesktop ? DESKTOP_PAGE_SIZE : MOBILE_PAGE_SIZE;
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -205,15 +135,10 @@ const CertificationTracking = () => {
 
   const activeCount =
     (statusFilter !== 'all' ? 1 : 0) +
-    (agencyFilter !== 'all' ? 1 : 0) +
+    (categoryFilter !== 'all' ? 1 : 0) +
     (typeFilter !== 'all' ? 1 : 0) +
     (completedAfter ? 1 : 0) +
     (completedBefore ? 1 : 0);
-
-  const expiringSoonCount = useMemo(
-    () => tracked.reduce((n, c) => n + (getArchiveStatus(c).expiringSoon ? 1 : 0), 0),
-    [tracked],
-  );
 
   const handleDeleteConfirm = async () => {
     if (!pendingDelete) return;
@@ -228,18 +153,15 @@ const CertificationTracking = () => {
 
   return (
     <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-3xl md:max-w-4xl lg:max-w-6xl mx-auto">
-      <Breadcrumb items={[{ name: 'Available Certificates', to: '' }]} />
+      <Breadcrumb items={[{ name: 'Archive', to: '' }]} />
 
       <div className="mt-2 mb-6 flex items-start justify-between gap-4 flex-wrap">
         <PageHeader
-          icon={<IdCardIcon size={22} />}
-          title="Available Certificates"
-          subtitle="Browse and manage certificates by issuing agency."
+          icon={<ArchiveIcon size={22} />}
+          title="Archive"
+          subtitle="Certificates that are used or expired"
           className=""
         />
-        <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full sm:w-auto">
-          <ExpiringSoonSummary count={expiringSoonCount} />
-        </div>
       </div>
 
       <div className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
@@ -275,19 +197,6 @@ const CertificationTracking = () => {
             >
               <div className="grid grid-cols-1 gap-3">
                 <div className="form-field">
-                  <label className="form-label">Agency</label>
-                  <div className="flex flex-nowrap gap-1.5">
-                    {AGENCIES.map((agency) => (
-                      <AgencyFilterButton
-                        key={agency.key}
-                        agency={agency}
-                        active={agencyFilter === agency.key}
-                        onClick={() => toggleAgency(agency.key)}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="form-field">
                   <label className="form-label">Status</label>
                   <select
                     className="form-input"
@@ -295,21 +204,38 @@ const CertificationTracking = () => {
                     onChange={(e) => setParam('status', e.target.value)}
                   >
                     <option value="all">All</option>
-                    <option value="active">Active</option>
-                    <option value="expiringSoon">Expiring Soon</option>
+                    <option value="expired">Expired</option>
+                    <option value="used">Used</option>
+                    <option value="arrt">Used by ARRT</option>
+                    <option value="iema">Used by IEMA</option>
                   </select>
                 </div>
-                <div className="form-field">
-                  <label className="form-label">Type</label>
-                  <select
-                    className="form-input"
-                    value={typeFilter}
-                    onChange={(e) => setParam('type', e.target.value)}
-                  >
-                    <option value="all">Any</option>
-                    <option value="A">A</option>
-                    <option value="A+">A+</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="form-field">
+                    <label className="form-label">Category</label>
+                    <select
+                      className="form-input"
+                      value={categoryFilter}
+                      onChange={(e) => setParam('cat', e.target.value)}
+                    >
+                      <option value="all">All</option>
+                      <option value="ARRT">ARRT</option>
+                      <option value="IEMA">IEMA</option>
+                      <option value="CPR">CPR</option>
+                    </select>
+                  </div>
+                  <div className="form-field">
+                    <label className="form-label">Type</label>
+                    <select
+                      className="form-input"
+                      value={typeFilter}
+                      onChange={(e) => setParam('type', e.target.value)}
+                    >
+                      <option value="all">Any</option>
+                      <option value="A">A</option>
+                      <option value="A+">A+</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="form-field">
                   <label className="form-label">Completed after</label>
@@ -377,8 +303,8 @@ const CertificationTracking = () => {
         </p>
       ) : filtered.length === 0 ? (
         <p className="mt-2 text-sm text-gray-500 dark:text-slate-400 text-center py-12">
-          {tracked.length === 0
-            ? 'No certificates being tracked. Add one via the + button.'
+          {archived.length === 0
+            ? 'No archived certificates yet. Certificates appear here once they expire or are fully used.'
             : 'No certificates match these filters.'}
         </p>
       ) : (
@@ -453,8 +379,8 @@ const CertificationTracking = () => {
             setDetailTarget(null);
             setToast({
               message: 'Updates have been made',
-              detail: isArchived(updated)
-                ? 'This certificate is now fully used or expired. Find it in Archive.'
+              detail: !isArchived(updated)
+                ? 'This certificate is active again. Find it in Certification Tracking.'
                 : undefined,
             });
           }}
@@ -479,6 +405,4 @@ const CertificationTracking = () => {
       )}
     </main>
   );
-};
-
-export default CertificationTracking;
+}

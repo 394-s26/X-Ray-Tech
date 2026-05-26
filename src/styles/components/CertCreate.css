@@ -1,0 +1,13 @@
+@reference "../index.css";
+
+/* Step container for the Add Certificate flow. Same shape as .glass-panel
+ * (paper background, rounded corners) but without the neobrutalist border
+ * and hard drop shadow — so the multi-step process reads as one fluid card. */
+.cert-step-panel {
+  background: var(--paper);
+  border-radius: 14px;
+}
+
+.dark .cert-step-panel {
+  background: var(--bg-surface, #14111F);
+}

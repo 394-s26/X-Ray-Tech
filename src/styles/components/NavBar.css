@@ -130,6 +130,17 @@
   color: var(--ink-100);
 }
 
+.navbar-menu__item--danger { color: var(--danger-600); }
+.navbar-menu__item--danger:hover {
+  background: var(--tint-rose);
+  color: var(--danger-600);
+}
+.dark .navbar-menu__item--danger { color: #F08680; }
+.dark .navbar-menu__item--danger:hover {
+  background: rgba(200, 56, 47, 0.18);
+  color: #F08680;
+}
+
 .navbar-menu__icon {
   width: 2.5rem;
   height: 2.5rem;

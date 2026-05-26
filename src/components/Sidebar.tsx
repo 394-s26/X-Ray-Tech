@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
 import UserAvatar from './UserAvatar';
 import {
   LayoutGridIcon,
   IdCardIcon,
+  GraduationCapIcon,
   PlusIcon,
   TeamIcon,
   SettingsIcon,
   ChevronRightIcon,
   LogOutIcon,
+  ArchiveIcon,
+  RotateCwIcon,
+  ClipboardIcon,
 } from '../services/svgIcons';
 import { signOut, getTeamByCode } from '../services/authService';
 import '../styles/components/Sidebar.css';
@@ -26,6 +30,8 @@ interface NavItem {
   highlighted?: boolean;
   /** When true, the item is hidden in the mobile bottom nav. */
   mobileHidden?: boolean;
+  /** When true, the item is hidden in the desktop sidebar. */
+  desktopHidden?: boolean;
 }
 
 const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
@@ -37,13 +43,35 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     mobileHidden: true,
   },
   {
+    to: '/reporting',
+    longLabel: 'Certificate Reporting',
+    shortLabel: 'Reporting',
+    icon: (s) => <ClipboardIcon size={s} />,
+    mobileHidden: true,
+  },
+  {
     to: '/certificates',
-    longLabel: 'Certification Tracking',
-    shortLabel: 'Certifications',
+    longLabel: 'Available Certificates',
+    shortLabel: 'Certificates',
     icon: (s) => <IdCardIcon size={s} />,
     mobileHidden: true,
   },
+  {
+    to: '/browse',
+    longLabel: 'Browse Certifications',
+    shortLabel: 'Browse',
+    icon: (s) => <GraduationCapIcon size={s} />,
+    mobileHidden: true,
+  },
 ];
+
+const CYCLES_ITEM_DESKTOP: NavItem = {
+  to: '/cycles',
+  longLabel: 'License Cycles',
+  shortLabel: 'Cycles',
+  icon: (s) => <RotateCwIcon size={s} />,
+  mobileHidden: true,
+};
 
 const ADD_CERT_ITEM: NavItem = {
   to: '/certificates/new',
@@ -59,6 +87,47 @@ const SETTINGS_ITEM: NavItem = {
   longLabel: 'System Settings',
   shortLabel: 'Settings',
   icon: (s) => <SettingsIcon size={s} />,
+  mobileHidden: true,
+};
+
+const ARCHIVE_ITEM_DESKTOP: NavItem = {
+  to: '/archive',
+  longLabel: 'Archived Certifications',
+  shortLabel: 'Archive',
+  icon: (s) => <ArchiveIcon size={s} />,
+  mobileHidden: true,
+};
+
+const ARCHIVE_ITEM_MOBILE: NavItem = {
+  to: '/archive',
+  longLabel: 'Archived Certifications',
+  shortLabel: 'Archive',
+  icon: (s) => <ArchiveIcon size={s} />,
+  desktopHidden: true,
+};
+
+const HISTORY_ITEM_MOBILE: NavItem = {
+  to: '/cycles',
+  longLabel: 'License history',
+  shortLabel: 'History',
+  icon: (s) => <RotateCwIcon size={s} />,
+  desktopHidden: true,
+};
+
+const FILES_ITEM_MOBILE: NavItem = {
+  to: '/certificates',
+  longLabel: 'Available Certificates',
+  shortLabel: 'Files',
+  icon: (s) => <IdCardIcon size={s} />,
+  desktopHidden: true,
+};
+
+const TRACKING_ITEM_MOBILE: NavItem = {
+  to: '/reporting',
+  longLabel: 'Certificate Reporting',
+  shortLabel: 'Tracking',
+  icon: (s) => <ClipboardIcon size={s} />,
+  desktopHidden: true,
 };
 
 interface SidebarProps {
@@ -76,7 +145,7 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
     to={item.to}
     end={item.exact !== undefined ? item.exact : item.to === '/'}
     className={({ isActive }) =>
-      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}${item.mobileHidden ? ' app-sidebar__nav-item--mobile-hidden' : ''}`
+      `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}${item.mobileHidden ? ' app-sidebar__nav-item--mobile-hidden' : ''}${item.desktopHidden ? ' app-sidebar__nav-item--desktop-hidden' : ''}`
     }
   >
     <span className="app-sidebar__nav-icon">{item.icon(20)}</span>
@@ -92,8 +161,9 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
 const Sidebar = ({ appUser }: SidebarProps) => {
   const isManager = appUser.role === 'manager';
   const navigate = useNavigate();
+  const location = useLocation();
+  const isProfileActive = location.pathname === '/profile';
   const [team, setTeam] = useState<Team | null>(null);
-  const [teamHovered, setTeamHovered] = useState(false);
 
   useEffect(() => {
     if (!appUser.teamCode) return;
@@ -104,18 +174,15 @@ const Sidebar = ({ appUser }: SidebarProps) => {
     (item) => !item.managerOnly || isManager,
   );
 
-  const teamBg = team?.color
-    ? `${team.color}${teamHovered ? '14' : '0D'}`
-    : undefined;
-
   return (
     <aside className="app-sidebar" aria-label="Primary navigation">
       <div className="app-sidebar__inner">
         <button
           type="button"
-          className="app-sidebar__profile"
+          className={`app-sidebar__profile${isProfileActive ? ' app-sidebar__profile--active' : ''}`}
           onClick={() => navigate('/profile')}
           aria-label="Go to profile"
+          style={isProfileActive && appUser.colorCode ? { backgroundColor: `${appUser.colorCode}1A` } : undefined}
         >
           <UserAvatar user={appUser} size="lg" bordered />
           <div className="min-w-0 flex-1">
@@ -133,15 +200,14 @@ const Sidebar = ({ appUser }: SidebarProps) => {
           {visiblePrimary.map((item) => (
             <NavItemLink key={item.to} item={item} />
           ))}
+          <NavItemLink item={ARCHIVE_ITEM_DESKTOP} />
+          <NavItemLink item={CYCLES_ITEM_DESKTOP} />
           <NavLink
             to="/team"
             end={false}
             className={({ isActive }) =>
-              `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}`
+              `app-sidebar__nav-item app-sidebar__nav-item--mobile-hidden${isActive ? ' app-sidebar__nav-item--active' : ''}`
             }
-            style={{ backgroundColor: teamBg }}
-            onMouseEnter={() => setTeamHovered(true)}
-            onMouseLeave={() => setTeamHovered(false)}
           >
             <span className="app-sidebar__nav-icon"><TeamIcon size={20} /></span>
             <span className="app-sidebar__nav-label app-sidebar__nav-label--long">
@@ -154,12 +220,16 @@ const Sidebar = ({ appUser }: SidebarProps) => {
               Team
             </span>
           </NavLink>
+          <NavItemLink item={TRACKING_ITEM_MOBILE} />
+          <NavItemLink item={FILES_ITEM_MOBILE} />
         </nav>
 
         <div className="app-sidebar__bottom">
           <div className="app-sidebar__divider" />
           <nav className="app-sidebar__section" aria-label="Add certificate">
             <NavItemLink item={ADD_CERT_ITEM} />
+            <NavItemLink item={HISTORY_ITEM_MOBILE} />
+            <NavItemLink item={ARCHIVE_ITEM_MOBILE} />
           </nav>
           <nav
             className="app-sidebar__section app-sidebar__section--settings"

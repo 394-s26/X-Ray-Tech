@@ -26,9 +26,16 @@ export interface AppUser {
   iemaCycleStartYear?: number | null;
   iemaCycleEndMonth?: number | null;  // 1-12
 
+  /** Optional registry / state identification numbers */
+  arrtIdNumber?: string | null;
+  iemaIdNumber?: string | null;
+
   // 'manager' unlocks the Team Management area in the sidebar; everyone else
   // is treated as a member.
   role?: 'manager' | 'member' | null;
+
+  arrtLicenseNumber?: string | null;
+  iemaLicenseNumber?: string | null;
 
   /**
    * ISO date YYYY-MM-DD — end of ARRT-style CE probation window for this user, if applicable.
