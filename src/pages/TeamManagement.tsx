@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
+import type { Certification, CertificateCategory } from '../types/certification';
 import { CopyIcon, RotateCwIcon, FilterIcon, TeamIcon } from '../services/svgIcons';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
 import {
   getTeamByCode,
   fetchAppUser,
+  fetchUsersByUids,
+  fetchCertificatesForOwner,
   updateTeamCode,
+  removeTeamMember,
 } from '../services/authService';
 import { TeamSetupCard } from '../components/TeamSetupCard';
-import { FAKE_TEAM, type TeamEmployee } from '../data/team';
 import '../styles/components/AccountSetupFlow.css';
 
 interface TeamManagementProps {
@@ -20,7 +23,18 @@ interface TeamManagementProps {
 
 type Tier = 'red' | 'yellow' | 'green';
 
+const TRACKED_CATEGORIES: CertificateCategory[] = ['ARRT', 'IEMA'];
+// Match Dashboard.tsx (IEMA_TOTAL = 48): combined non-expired CE credits across
+// IEMA + ARRT certs, divided by the combined 2-license requirement.
+const OVERALL_CREDITS_TOTAL = 48;
+
 const DOT_COLOR: Record<Tier, string> = {
+  red: 'bg-red-500',
+  yellow: 'bg-amber-500',
+  green: 'bg-emerald-500',
+};
+
+const BAR_FILL_COLOR: Record<Tier, string> = {
   red: 'bg-red-500',
   yellow: 'bg-amber-500',
   green: 'bg-emerald-500',
@@ -40,26 +54,54 @@ const STATUS_LABEL: Record<Tier, string> = {
 
 const RANK: Record<Tier, number> = { red: 0, yellow: 1, green: 2 };
 
-function tierFromDate(dateString: string): Tier {
+interface LicenseSummary {
+  category: CertificateCategory;
+  earliestExpiry: string | null;
+  credits: number;
+  licenseNumber: string | null;
+}
+
+interface TeamMemberSummary {
+  uid: string;
+  user: AppUser;
+  isLead: boolean;
+  licenses: LicenseSummary[];
+  /** Sum of CE credits from non-expired IEMA|ARRT certs (matches Dashboard). */
+  overallCredits: number;
+}
+
+function daysUntil(dateString: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const expiry = new Date(dateString + 'T00:00:00');
-  const days = Math.floor((expiry.getTime() - today.getTime()) / 86_400_000);
+  const target = new Date(dateString + 'T00:00:00');
+  return Math.floor((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+function tierFromDate(dateString: string | null): Tier {
+  if (!dateString) return 'red';
+  const days = daysUntil(dateString);
   if (days < 30) return 'red';
   if (days < 90) return 'yellow';
   return 'green';
 }
 
-function overallTier(e: TeamEmployee): Tier {
-  const a = tierFromDate(e.arrt.earliestExpiry);
-  const i = tierFromDate(e.iema.earliestExpiry);
-  return RANK[a] < RANK[i] ? a : i;
+function worstTier(a: Tier, b: Tier): Tier {
+  return RANK[a] < RANK[b] ? a : b;
 }
 
-function soonestExpiry(e: TeamEmployee): string {
-  return e.arrt.earliestExpiry <= e.iema.earliestExpiry
-    ? e.arrt.earliestExpiry
-    : e.iema.earliestExpiry;
+function overallTier(summary: TeamMemberSummary): Tier {
+  return summary.licenses.reduce<Tier>(
+    (acc, lic) => worstTier(acc, tierFromDate(lic.earliestExpiry)),
+    'green',
+  );
+}
+
+function soonestExpiry(summary: TeamMemberSummary): string | null {
+  const dates = summary.licenses
+    .map((l) => l.earliestExpiry)
+    .filter((d): d is string => !!d);
+  if (dates.length === 0) return null;
+  return dates.reduce((a, b) => (a <= b ? a : b));
 }
 
 function formatDate(dateString: string): string {
@@ -70,12 +112,20 @@ function formatDate(dateString: string): string {
   });
 }
 
-function formatBirthday(mmdd: string): string {
-  const [m, d] = mmdd.split('-');
-  if (!m || !d) return mmdd;
-  const dt = new Date(2000, Number(m) - 1, Number(d));
-  return dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-}
+
+const displayName = (user: AppUser): string => {
+  const full = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+  return full || user.username || user.email || 'Unknown member';
+};
+
+const licenseNumberFor = (
+  user: AppUser,
+  category: CertificateCategory,
+): string | null => {
+  if (category === 'ARRT') return user.arrtLicenseNumber?.trim() || null;
+  if (category === 'IEMA') return user.iemaLicenseNumber?.trim() || null;
+  return null;
+};
 
 const generateTeamId = (existingIds: Set<string>): string => {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -90,8 +140,6 @@ const generateTeamId = (existingIds: Set<string>): string => {
   return id;
 };
 
-const displayName = (e: TeamEmployee): string => `${e.firstName} ${e.lastName}`;
-
 function darkenHex(hex: string, amount = 0.4): string {
   const h = hex.replace('#', '');
   const num = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
@@ -101,32 +149,105 @@ function darkenHex(hex: string, amount = 0.4): string {
   return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
-interface CategoryRowProps {
-  label: string;
-  expiryDate: string;
+function summarizeMember(
+  user: AppUser,
+  certs: Certification[],
+  isLead: boolean,
+): TeamMemberSummary {
+  const licenses: LicenseSummary[] = TRACKED_CATEGORIES.map((category) => {
+    const active = certs.filter(
+      (c) => c.categories.includes(category) && daysUntil(c.expirationDate) >= 0,
+    );
+    const earliestExpiry =
+      active.length === 0
+        ? null
+        : active
+            .map((c) => c.expirationDate)
+            .reduce((a, b) => (a <= b ? a : b));
+    const credits = active.reduce((s, c) => s + (c.ceCredits ?? 0), 0);
+    return {
+      category,
+      earliestExpiry,
+      credits,
+      licenseNumber: licenseNumberFor(user, category),
+    };
+  });
+  const overallCredits = certs
+    .filter(
+      (c) =>
+        (c.categories.includes('IEMA') || c.categories.includes('ARRT')) &&
+        daysUntil(c.expirationDate) >= 0,
+    )
+    .reduce((sum, c) => sum + (c.ceCredits ?? 0), 0);
+  return { uid: user.uid, user, isLead, licenses, overallCredits };
 }
 
-function CategoryRow({ label, expiryDate }: CategoryRowProps) {
-  const tier = tierFromDate(expiryDate);
+interface OverallProgressBarProps {
+  credits: number;
+  tier: Tier;
+}
+
+function OverallProgressBar({ credits, tier }: OverallProgressBarProps) {
+  const pct = Math.max(0, Math.min(100, (credits / OVERALL_CREDITS_TOTAL) * 100));
+  const creditsRounded = Math.round(credits);
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-gray-100 dark:border-slate-700 last:border-0">
-      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${DOT_COLOR[tier]}`} />
-      <span className="text-sm font-bold text-primary dark:text-slate-100 w-16 shrink-0">
-        {label}
-      </span>
-      <span className={`text-sm font-semibold ml-auto ${TEXT_COLOR[tier]}`}>
-        {formatDate(expiryDate)}
+    <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${BAR_FILL_COLOR[tier]}`}
+          style={{ width: `${pct}%`, transition: 'width 0.4s ease-out' }}
+        />
+      </div>
+      <span className="text-[10px] font-semibold tabular-nums text-gray-600 dark:text-slate-300 shrink-0 w-14 text-right">
+        {creditsRounded}/{OVERALL_CREDITS_TOTAL} CE
       </span>
     </div>
   );
 }
 
-interface EmployeeModalProps {
-  employee: TeamEmployee;
-  onClose: () => void;
+interface LicenseDetailRowProps {
+  license: LicenseSummary;
 }
 
-function EmployeeModal({ employee, onClose }: EmployeeModalProps) {
+function LicenseDetailRow({ license }: LicenseDetailRowProps) {
+  const tier = tierFromDate(license.earliestExpiry);
+  return (
+    <div className="py-3 border-b border-gray-100 dark:border-slate-700 last:border-0">
+      <div className="flex items-center gap-3">
+        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${DOT_COLOR[tier]}`} />
+        <span className="text-sm font-bold text-primary dark:text-slate-100 w-16 shrink-0">
+          {license.category}
+        </span>
+        <span className={`text-sm font-semibold ml-auto ${TEXT_COLOR[tier]}`}>
+          {license.earliestExpiry ? formatDate(license.earliestExpiry) : 'No cert on file'}
+        </span>
+      </div>
+      {license.licenseNumber && (
+        <p className="mt-1 pl-[1.625rem] text-[11px] text-gray-500 dark:text-slate-400">
+          License #{' '}
+          <span className="font-mono font-semibold text-gray-700 dark:text-slate-200">
+            {license.licenseNumber}
+          </span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+const CE_TOTAL_PER_LICENSE = 24;
+
+interface EmployeeModalProps {
+  summary: TeamMemberSummary;
+  teamCode: string;
+  onClose: () => void;
+  onRemoved: (uid: string) => void;
+}
+
+function EmployeeModal({ summary, teamCode, onClose, onRemoved }: EmployeeModalProps) {
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -135,7 +256,27 @@ function EmployeeModal({ employee, onClose }: EmployeeModalProps) {
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  const overall = overallTier(employee);
+  const overall = overallTier(summary);
+  const { user } = summary;
+
+  const handleRemove = async () => {
+    setRemoveError(null);
+    setRemoving(true);
+    try {
+      await removeTeamMember(teamCode, summary.uid);
+      onRemoved(summary.uid);
+      onClose();
+    } catch {
+      setRemoveError('Failed to remove member. Please try again.');
+      setRemoving(false);
+    }
+  };
+
+  const arrtLic = summary.licenses.find((l) => l.category === 'ARRT');
+  const iemaLic = summary.licenses.find((l) => l.category === 'IEMA');
+
+  const hasArrtId = !!user.arrtIdNumber?.trim();
+  const hasIemaId = !!user.iemaIdNumber?.trim();
 
   return (
     <div className="overlay-center" onClick={onClose}>
@@ -144,77 +285,185 @@ function EmployeeModal({ employee, onClose }: EmployeeModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-xl font-extrabold text-primary dark:text-slate-100 tracking-tight">
-              {displayName(employee)}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-              Born {formatBirthday(employee.birthday)}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-extrabold text-primary dark:text-slate-100 tracking-tight">
+                {displayName(user)}
+              </h3>
+              <span
+                className={`shrink-0 inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${TEXT_COLOR[overall]}`}
+                style={{ backgroundColor: 'rgba(0,0,0,0.04)' }}
+              >
+                <span className={`w-2 h-2 rounded-full ${DOT_COLOR[overall]}`} />
+                {STATUS_LABEL[overall]}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1 min-h-[1.25rem]">
+              {summary.isLead && <span className="font-semibold">Team lead</span>}
+              {summary.isLead && (hasArrtId || hasIemaId) && ' · '}
+              {hasArrtId && <span className="font-mono">ARRT {user.arrtIdNumber}</span>}
+              {hasArrtId && hasIemaId && ' · '}
+              {hasIemaId && <span className="font-mono">IEMA {user.iemaIdNumber}</span>}
             </p>
           </div>
-          <span
-            className={`flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full ${TEXT_COLOR[overall]}`}
-            style={{ backgroundColor: 'rgba(0,0,0,0.04)' }}
+          <button
+            type="button"
+            onClick={onClose}
+            className="cursor-pointer shrink-0 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+            aria-label="Close"
           >
-            <span className={`w-2 h-2 rounded-full ${DOT_COLOR[overall]}`} />
-            {STATUS_LABEL[overall]}
-          </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+            CE progress
+          </p>
+          {arrtLic && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-gray-500 dark:text-slate-400 w-10 shrink-0">ARRT</span>
+              <div className="flex-1 min-w-0 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${BAR_FILL_COLOR[tierFromDate(arrtLic.earliestExpiry)]}`}
+                  style={{ width: `${Math.max(0, Math.min(100, (arrtLic.credits / CE_TOTAL_PER_LICENSE) * 100))}%`, transition: 'width 0.4s ease-out' }}
+                />
+              </div>
+              <span className="text-[10px] font-semibold tabular-nums text-gray-600 dark:text-slate-300 shrink-0 w-14 text-right">
+                {Math.round(arrtLic.credits)}/{CE_TOTAL_PER_LICENSE} CE
+              </span>
+            </div>
+          )}
+          {iemaLic && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-gray-500 dark:text-slate-400 w-10 shrink-0">IEMA</span>
+              <div className="flex-1 min-w-0 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${BAR_FILL_COLOR[tierFromDate(iemaLic.earliestExpiry)]}`}
+                  style={{ width: `${Math.max(0, Math.min(100, (iemaLic.credits / CE_TOTAL_PER_LICENSE) * 100))}%`, transition: 'width 0.4s ease-out' }}
+                />
+              </div>
+              <span className="text-[10px] font-semibold tabular-nums text-gray-600 dark:text-slate-300 shrink-0 w-14 text-right">
+                {Math.round(iemaLic.credits)}/{CE_TOTAL_PER_LICENSE} CE
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="mt-6">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500 mb-2">
-            Categories
+            Licenses
           </p>
           <div>
-            <CategoryRow label="ARRT" expiryDate={employee.arrt.earliestExpiry} />
-            <CategoryRow label="IEMA" expiryDate={employee.iema.earliestExpiry} />
+            {summary.licenses.map((lic) => (
+              <LicenseDetailRow key={lic.category} license={lic} />
+            ))}
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            type="button"
-            className="global-btn cancel-btn w-auto px-4"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
+        {removeError && (
+          <p className="text-xs text-red-500 mt-4">{removeError}</p>
+        )}
+
+        <span className="block text-xs text-gray-600 dark:text-slate-300 min-h-[1rem]">
+          {!summary.isLead && confirmRemove &&
+            `Are you sure you want to remove ${displayName(user)} from the team?`}
+        </span>
+        
+
+        {!summary.isLead && (
+          <div className="mt-6">
+            {confirmRemove ? (
+              <div className="flex flex-col gap-2">
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={removing}
+                    onClick={handleRemove}
+                    className="global-btn red-btn w-auto px-3 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                  >
+                    {removing ? 'Removing…' : 'Yes, remove'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={removing}
+                    onClick={() => setConfirmRemove(false)}
+                    className="global-btn cancel-btn w-auto px-3"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmRemove(true)}
+                className="global-btn w-auto px-4 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                Remove from team
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 interface EmployeeRowProps {
-  employee: TeamEmployee;
+  summary: TeamMemberSummary;
   onClick: () => void;
 }
 
-function EmployeeRow({ employee, onClick }: EmployeeRowProps) {
-  const tier = overallTier(employee);
-  const date = soonestExpiry(employee);
+function EmployeeRow({ summary, onClick }: EmployeeRowProps) {
+  const tier = overallTier(summary);
+  const next = soonestExpiry(summary);
   return (
     <button
       type="button"
       onClick={onClick}
-      className="cursor-pointer w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors"
+      className="cursor-pointer w-full flex flex-col gap-2 px-4 py-3 text-left rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors"
     >
-      <span className={`w-3 h-3 rounded-full shrink-0 ${DOT_COLOR[tier]}`} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-primary dark:text-slate-100 truncate">
-          {displayName(employee)}
-        </p>
-        <p className={`text-[11px] font-semibold ${TEXT_COLOR[tier]}`}>
-          {STATUS_LABEL[tier]}
-        </p>
+      <div className="flex items-center gap-3">
+        <span className={`w-3 h-3 rounded-full shrink-0 ${DOT_COLOR[tier]}`} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-primary dark:text-slate-100 truncate flex items-center gap-2 flex-wrap">
+            <span>{displayName(summary.user)}</span>
+            {summary.user.arrtIdNumber && (
+              <span className="text-[10px] font-semibold text-gray-400 dark:text-slate-500 font-mono">
+                ARRT {summary.user.arrtIdNumber}
+              </span>
+            )}
+            {summary.user.iemaIdNumber && (
+              <span className="text-[10px] font-semibold text-gray-400 dark:text-slate-500 font-mono">
+                IEMA {summary.user.iemaIdNumber}
+              </span>
+            )}
+            {summary.isLead && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+                Lead
+              </span>
+            )}
+          </p>
+          <p className={`text-[11px] font-semibold ${TEXT_COLOR[tier]}`}>
+            {STATUS_LABEL[tier]}
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+            Next expiry
+          </p>
+          <p className={`text-sm font-semibold ${TEXT_COLOR[tier]}`}>
+            {next ? formatDate(next) : '—'}
+          </p>
+        </div>
       </div>
-      <div className="text-right shrink-0">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
-          Next expiry
-        </p>
-        <p className={`text-sm font-semibold ${TEXT_COLOR[tier]}`}>
-          {formatDate(date)}
-        </p>
+      <div className="pl-6">
+        <OverallProgressBar credits={summary.overallCredits} tier={tier} />
       </div>
     </button>
   );
@@ -226,13 +475,14 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
   const [team, setTeam] = useState<Team | null>(null);
   const [teamCode, setTeamCode] = useState(appUser.teamCode ?? '');
   const [leadName, setLeadName] = useState('');
+  const [members, setMembers] = useState<TeamMemberSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [regenerateSpin, setRegenerateSpin] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
 
-  const [selected, setSelected] = useState<TeamEmployee | null>(null);
+  const [selected, setSelected] = useState<TeamMemberSummary | null>(null);
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -244,10 +494,12 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
       if (!appUser.teamCode) {
         if (!cancelled) {
           setTeam(null);
+          setMembers([]);
           setLoading(false);
         }
         return;
       }
+      setLoading(true);
       const t = await getTeamByCode(appUser.teamCode);
       if (cancelled) return;
       if (!t) {
@@ -256,37 +508,59 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
       }
       setTeam(t);
       setTeamCode(t.id);
-      const lead = await fetchAppUser(t.teamLead);
-      if (!cancelled && lead) {
+
+      const memberUids = Array.from(new Set([t.teamLead, ...t.members]));
+      const [users, lead] = await Promise.all([
+        fetchUsersByUids(memberUids),
+        fetchAppUser(t.teamLead),
+      ]);
+      if (cancelled) return;
+      if (lead) {
         setLeadName(
           lead.firstName && lead.lastName
             ? `${lead.firstName} ${lead.lastName}`
             : lead.username,
         );
       }
-      if (!cancelled) setLoading(false);
+
+      // Only the team lead is authorized to read teammates' certificates.
+      // Members viewing this page don't load others' certs.
+      const canLoadCerts = appUser.uid === t.teamLead;
+      const certLists = canLoadCerts
+        ? await Promise.all(users.map((u) => fetchCertificatesForOwner(u.uid)))
+        : users.map(() => [] as Certification[]);
+      if (cancelled) return;
+
+      const summaries = users.map((u, i) =>
+        summarizeMember(u, certLists[i], u.uid === t.teamLead),
+      );
+      setMembers(summaries);
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [appUser.teamCode]);
+  }, [appUser.teamCode, appUser.uid]);
 
-  const sortedTeam = useMemo(
-    () =>
-      [...FAKE_TEAM].sort((a, b) =>
-        soonestExpiry(a).localeCompare(soonestExpiry(b)),
-      ),
-    [],
-  );
+  const sortedMembers = useMemo(() => {
+    return [...members].sort((a, b) => {
+      const ea = soonestExpiry(a);
+      const eb = soonestExpiry(b);
+      if (ea && eb) return ea.localeCompare(eb);
+      if (ea) return -1;
+      if (eb) return 1;
+      return displayName(a.user).localeCompare(displayName(b.user));
+    });
+  }, [members]);
 
-  const filteredTeam = useMemo(() => {
+  const filteredMembers = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return sortedTeam.filter((emp) => {
-      if (q && !displayName(emp).toLowerCase().includes(q)) return false;
-      if (statusFilter !== 'all' && overallTier(emp) !== statusFilter) return false;
+    return sortedMembers.filter((m) => {
+      if (q && !displayName(m.user).toLowerCase().includes(q)) return false;
+      if (statusFilter !== 'all' && overallTier(m) !== statusFilter) return false;
       return true;
     });
-  }, [sortedTeam, search, statusFilter]);
+  }, [sortedMembers, search, statusFilter]);
 
   const activeFilterCount =
     (search.trim() ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0);
@@ -538,21 +812,23 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
             {isManager
-              ? `${filteredTeam.length}${filteredTeam.length !== sortedTeam.length ? `/${sortedTeam.length}` : ''} members`
-              : `${sortedTeam.length} members`}
+              ? `${filteredMembers.length}${filteredMembers.length !== sortedMembers.length ? `/${sortedMembers.length}` : ''} members`
+              : `${sortedMembers.length} members`}
           </p>
         </div>
 
         {isManager && (
-          filteredTeam.length === 0 ? (
+          filteredMembers.length === 0 ? (
             <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
-              No members match these filters.
+              {sortedMembers.length === 0
+                ? 'No teammates yet. Share your team code to invite members.'
+                : 'No members match these filters.'}
             </p>
           ) : (
             <ul className="flex flex-col">
-              {filteredTeam.map((emp) => (
-                <li key={emp.id}>
-                  <EmployeeRow employee={emp} onClick={() => setSelected(emp)} />
+              {filteredMembers.map((m) => (
+                <li key={m.uid}>
+                  <EmployeeRow summary={m} onClick={() => setSelected(m)} />
                 </li>
               ))}
             </ul>
@@ -561,7 +837,12 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
       </section>
 
       {isManager && selected && (
-        <EmployeeModal employee={selected} onClose={() => setSelected(null)} />
+        <EmployeeModal
+          summary={selected}
+          teamCode={teamCode}
+          onClose={() => setSelected(null)}
+          onRemoved={(uid) => setMembers((prev) => prev.filter((m) => m.uid !== uid))}
+        />
       )}
     </main>
   );

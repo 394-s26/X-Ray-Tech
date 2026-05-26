@@ -34,6 +34,9 @@ export interface AppUser {
   // is treated as a member.
   role?: 'manager' | 'member' | null;
 
+  arrtLicenseNumber?: string | null;
+  iemaLicenseNumber?: string | null;
+
   /**
    * ISO date YYYY-MM-DD — end of ARRT-style CE probation window for this user, if applicable.
    * See license_ce_logic.md (ARRT probation ~6 months when CE is incomplete at cycle end).

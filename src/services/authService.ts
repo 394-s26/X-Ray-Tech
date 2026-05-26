@@ -15,13 +15,13 @@ import {
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import {
-  doc, getDoc, setDoc, runTransaction, serverTimestamp,
-  arrayUnion, arrayRemove, updateDoc, deleteDoc,
-  collection, query, where, getDocs, writeBatch,
+  collection, doc, getDoc, getDocs, query, setDoc, runTransaction, serverTimestamp,
+  arrayUnion, arrayRemove, updateDoc, deleteDoc, where, writeBatch,
 } from 'firebase/firestore';
 import { ref as storageRef, deleteObject } from 'firebase/storage';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
+import type { Certification } from '../types/certification';
 import { auth, db, storage } from './firebase';
 
 const googleProvider = new GoogleAuthProvider();
@@ -149,9 +149,22 @@ export async function addMemberToTeam(teamCode: string, uid: string): Promise<vo
   await updateDoc(doc(db, 'teams', teamCode.toUpperCase()), { members: arrayUnion(uid) });
 }
 
+export async function removeTeamMember(teamCode: string, memberUid: string): Promise<void> {
+  await Promise.all([
+    updateDoc(doc(db, 'teams', teamCode.toUpperCase()), { members: arrayRemove(memberUid) }),
+    updateDoc(doc(db, 'users', memberUid), { teamCode: null, role: null }),
+  ]);
+}
+
 export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
   const results = await Promise.all(uids.map(uid => fetchAppUser(uid)));
   return results.filter((u): u is AppUser => u !== null);
+}
+
+export async function fetchCertificatesForOwner(uid: string): Promise<Certification[]> {
+  const q = query(collection(db, 'certificates'), where('ownerId', '==', uid));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as Certification);
 }
 
 export async function changeUsername(uid: string, oldUsername: string, newUsername: string): Promise<void> {
@@ -180,7 +193,6 @@ export async function deleteAccount(appUser: AppUser, password: string): Promise
   const credential = EmailAuthProvider.credential(appUser.email, password);
   await reauthenticateWithCredential(currentUser, credential);
 
-  // Delete certificates (both ownerId and uid variants) + their Storage files
   const certsCol = collection(db, 'certificates');
   const [ownerSnap, uidSnap] = await Promise.all([
     getDocs(query(certsCol, where('ownerId', '==', appUser.uid))),
@@ -198,7 +210,6 @@ export async function deleteAccount(appUser: AppUser, password: string): Promise
     })
   );
 
-  // Delete cycleCredits subcollection
   const cycleSnap = await getDocs(collection(db, 'users', appUser.uid, 'cycleCredits'));
   if (!cycleSnap.empty) {
     const batch = writeBatch(db);
@@ -206,7 +217,6 @@ export async function deleteAccount(appUser: AppUser, password: string): Promise
     await batch.commit();
   }
 
-  // Team cleanup
   if (appUser.teamCode) {
     if (appUser.role === 'manager') {
       const teamSnap = await getDoc(doc(db, 'teams', appUser.teamCode));
@@ -228,7 +238,6 @@ export async function deleteAccount(appUser: AppUser, password: string): Promise
     }
   }
 
-  // Delete username registry, user doc, then Firebase Auth account
   await deleteDoc(doc(db, 'usernames', appUser.username));
   await deleteDoc(doc(db, 'users', appUser.uid));
   await firebaseDeleteUser(currentUser);
