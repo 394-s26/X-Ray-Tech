@@ -23,7 +23,7 @@ import {
   type CertificateInput,
   type Scantron,
 } from '../types/upload';
-import type { Certification, CertificateCategory } from '../types/certification';
+import type { AppliedCycles, Certification, CertificateCategory } from '../types/certification';
 
 export type { CertificateCategory };
 
@@ -34,7 +34,7 @@ const certCollection = () => collection(db, COLLECTION);
 // ── Manual CE certificate form (CertificateCreatePage) ─────────────────────
 
 export interface CreateCertificateInput {
-  photoFile: File;
+  photoFile: File | null;
   certificateName: string;
   providerName: string;
   completedDate: string;
@@ -42,6 +42,7 @@ export interface CreateCertificateInput {
   ceCredits: number;
   categoryType: string | null;
   categories: CertificateCategory[];
+  appliedCycles: AppliedCycles;
 }
 
 const extFromMime = (mime: string): string => {
@@ -61,15 +62,20 @@ export const createCertificateRecord = async (
 
   const certRef = doc(certCollection());
   const certId = certRef.id;
-  const ext = extFromMime(input.photoFile.type);
-  const path = `certificates/${user.uid}/${certId}.${ext}`;
-  const blobRef = storageRef(storage, path);
 
-  await uploadBytes(blobRef, input.photoFile, {
-    contentType: input.photoFile.type || 'image/jpeg',
-    customMetadata: { uid: user.uid, certId },
-  });
-  const photoURL = await getDownloadURL(blobRef);
+  let photoStoragePath = '';
+  let photoURL = '';
+  if (input.photoFile) {
+    const ext = extFromMime(input.photoFile.type);
+    const path = `certificates/${user.uid}/${certId}.${ext}`;
+    const blobRef = storageRef(storage, path);
+    await uploadBytes(blobRef, input.photoFile, {
+      contentType: input.photoFile.type || 'image/jpeg',
+      customMetadata: { uid: user.uid, certId },
+    });
+    photoStoragePath = path;
+    photoURL = await getDownloadURL(blobRef);
+  }
 
   await setDoc(certRef, {
     id: certId,
@@ -81,7 +87,8 @@ export const createCertificateRecord = async (
     ceCredits: input.ceCredits,
     categoryType: input.categoryType,
     categories: input.categories,
-    photoStoragePath: path,
+    appliedCycles: input.appliedCycles,
+    photoStoragePath,
     photoURL,
     createdAt: serverTimestamp(),
   });
@@ -204,6 +211,7 @@ export const updateCertificationRecord = async (
     ceCredits?: number;
     categoryType?: string | null;
     categories?: CertificateCategory[];
+    appliedCycles?: AppliedCycles;
   },
 ): Promise<void> => {
   await updateDoc(doc(db, COLLECTION, id), updates);

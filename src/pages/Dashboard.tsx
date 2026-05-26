@@ -9,8 +9,17 @@ import arrtLogoWhite from '../assets/arrtwhitetext.png';
 import iemaLogoWhite from '../assets/iemawhitetext.png';
 import arrtLogoBlack from '../assets/arrtblacktext.png';
 import iemaLogoBlack from '../assets/iemablacktext.png';
+import {
+  PER_LICENSE,
+  computeArrtCycle,
+  computeIemaCycle,
+  creditsInCycle,
+  isArrtSetup,
+  isIemaSetup,
+  type CycleWindow,
+} from '../utils/cycles';
 
-const IEMA_TOTAL = 48;
+const COMBINED_TOTAL = 48;
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -25,14 +34,6 @@ function daysUntil(dateString: string): number {
   return Math.floor((target.getTime() - today.getTime()) / 86_400_000);
 }
 
-function formatShortDate(dateString: string): string {
-  return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
 function formatBriefDate(dateString: string): string {
   return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
     month: 'short',
@@ -44,6 +45,22 @@ function formatRenewalDate(dateString: string): string {
   return new Date(dateString + 'T00:00:00')
     .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     .toUpperCase();
+}
+
+function formatCycleRange(startISO: string, endISO: string): string {
+  const fmt = (d: string) =>
+    new Date(d + 'T00:00:00')
+      .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      .toUpperCase();
+  return `${fmt(startISO)} TO ${fmt(endISO)}`;
+}
+
+function formatProbationDate(dateString: string): string {
+  return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function formatDuration(days: number): { value: string; unit: string } {
@@ -67,20 +84,6 @@ function urgencyTint(days: number): Tint {
   if (days < 90)  return 'tint-rose';
   if (days < 365) return 'tint-sun';
   return 'tint-mint';
-}
-
-function statusGreeting(percent: number, firstName: string): string {
-  if (percent >= 100) return `You're done, ${firstName}.`;
-  if (percent >= 75)  return `You're on track, ${firstName}.`;
-  if (percent >= 50)  return `Halfway there, ${firstName}.`;
-  return `Let's catch up, ${firstName}.`;
-}
-
-function earliestExpiryFor(certs: Certification[], category: CertificateCategory): Certification | null {
-  return certs
-    .filter((c) => c.categories.includes(category) && daysUntil(c.expirationDate) >= 0)
-    .sort((a, b) => a.expirationDate.localeCompare(b.expirationDate))[0]
-    ?? null;
 }
 
 // ── Donut ────────────────────────────────────────────────────
@@ -174,77 +177,75 @@ function Donut({ percent, segments, total, label, size = 88, strokeWidth = 11 }:
 
 // ── Top stat cards ───────────────────────────────────────────
 
+const IEMA_COLOR = 'var(--brand-600)';
+const ARRT_COLOR = '#a78ef3';
+
 interface CePointsCardProps {
-  completed: number;
-  total: number;
-  certifications: Certification[];
+  iemaHours: number;
+  arrtHours: number;
+  iemaSetup: boolean;
+  arrtSetup: boolean;
 }
 
-function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
-  const pct = total === 0 ? 0 : (completed / total) * 100;
+interface LicenseDonutProps {
+  label: 'IEMA' | 'ARRT';
+  hours: number;
+  setup: boolean;
+  color: string;
+}
 
-  const active = certifications.filter((c) => daysUntil(c.expirationDate) >= 0);
+function LicenseDonut({ label, hours, setup, color }: LicenseDonutProps) {
+  const capped = setup ? Math.min(hours, PER_LICENSE) : 0;
+  return (
+    <div className="flex flex-col items-center gap-2 min-w-0">
+      <span className="font-mono-brand text-[11px] font-semibold tracking-wide text-[var(--ink-700)]">
+        {label}
+      </span>
+      <Donut
+        size={76}
+        strokeWidth={10}
+        percent={0}
+        total={setup ? PER_LICENSE : undefined}
+        segments={setup ? [{ value: capped, color }] : undefined}
+        label={
+          setup ? (
+            <>
+              {Math.round(hours)}
+              <span className="text-[var(--ink-300)]">/</span>
+              {PER_LICENSE}
+            </>
+          ) : (
+            <span className="text-[var(--ink-400)]">—</span>
+          )
+        }
+      />
+    </div>
+  );
+}
 
-  const iemaHours = active
-    .filter((c) => c.categories.includes('IEMA'))
-    .reduce((s, c) => s + c.ceCredits, 0);
-  const arrtHours = active
-    .filter((c) => c.categories.includes('ARRT'))
-    .reduce((s, c) => s + c.ceCredits, 0);
-
-  const IEMA_COLOR = 'var(--brand-600)';
-  const ARRT_COLOR = '#a78ef3';
-
-  const breakdown = [
-    { label: 'IEMA', hours: iemaHours, swatch: IEMA_COLOR },
-    { label: 'ARRT', hours: arrtHours, swatch: ARRT_COLOR },
-  ];
+function CePointsCard({ iemaHours, arrtHours, iemaSetup, arrtSetup }: CePointsCardProps) {
+  const cappedTotal =
+    (iemaSetup ? Math.min(iemaHours, PER_LICENSE) : 0) +
+    (arrtSetup ? Math.min(arrtHours, PER_LICENSE) : 0);
+  const neitherSetup = !iemaSetup && !arrtSetup;
 
   return (
     <Link
-      to="/certificates"
+      to="/reporting"
       className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden"
     >
       <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
-      <div className="flex-1 flex items-center gap-5 min-w-0">
-        <Donut
-          percent={pct}
-          total={total}
-          segments={[
-            { value: iemaHours, color: IEMA_COLOR },
-            { value: arrtHours, color: ARRT_COLOR },
-          ]}
-          label={
-            <>
-              {Math.round(completed)}
-              <span className="text-[var(--ink-300)]">/</span>
-              {total}
-            </>
-          }
-        />
-        <ul className="flex-1 flex flex-col gap-2 min-w-0">
-          {breakdown.map((row) => (
-            <li key={row.label} className="flex items-center gap-2 min-w-0">
-              <span
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{ background: row.swatch }}
-                aria-hidden="true"
-              />
-              <span className="text-xs text-[var(--ink-700)] truncate flex-1">
-                {row.label}
-              </span>
-              <span className="hidden @[220px]:inline font-mono-brand text-xs font-semibold text-[var(--ink-900)] shrink-0">
-                {Math.round(row.hours)}h
-              </span>
-            </li>
-          ))}
-          <li className="flex items-center gap-2 pt-2 border-t border-[var(--ink-200)]">
-            <span className="text-[11px] text-[var(--ink-500)] flex-1">Total</span>
-            <span className="font-mono-brand text-xs font-semibold text-[var(--ink-900)]">
-              {Math.round(completed)}/{total}h
-            </span>
-          </li>
-        </ul>
+      <div className="flex-1 flex items-center justify-center gap-10 sm:gap-12 min-w-0">
+        <LicenseDonut label="IEMA" hours={iemaHours} setup={iemaSetup} color={IEMA_COLOR} />
+        <LicenseDonut label="ARRT" hours={arrtHours} setup={arrtSetup} color={ARRT_COLOR} />
+      </div>
+      <div className="flex items-center gap-2 pt-3 border-t border-[var(--ink-200)]">
+        <span className="text-[11px] text-[var(--ink-500)] flex-1">
+          {neitherSetup ? 'Set your cycles to see progress' : 'Combined'}
+        </span>
+        <span className="font-mono-brand text-xs font-semibold text-[var(--ink-900)]">
+          {neitherSetup ? '—' : `${Math.round(cappedTotal)}/${COMBINED_TOTAL}h`}
+        </span>
       </div>
     </Link>
   );
@@ -278,59 +279,45 @@ function LogoChip({ srcLight, srcDark, alt, tint = 'tint-paper' }: LogoChipProps
   );
 }
 
-interface RenewalCardProps {
-  label: string;
-  daysRemaining: number | null;
-  renewalDate: string | null;
-  logoLight?: string;
-  logoDark?: string;
-  logoAlt?: string;
+interface LicenseRenewalCardProps {
+  title: string;
+  cycle: CycleWindow | null;
+  logoLight: string;
+  logoDark: string;
+  logoAlt: string;
+  notSetLabel: string;
+  probationEndsISO?: string | null;
 }
 
-function RenewalCard({ label, daysRemaining, renewalDate, logoLight, logoDark, logoAlt }: RenewalCardProps) {
-  const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
+function LicenseRenewalCard({
+  title,
+  cycle,
+  logoLight,
+  logoDark,
+  logoAlt,
+  notSetLabel,
+  probationEndsISO,
+}: LicenseRenewalCardProps) {
+  const tint: 'tint-paper' | Tint = cycle == null ? 'tint-paper' : urgencyTint(cycle.daysRemaining);
+  const duration = cycle ? formatDuration(Math.max(0, cycle.daysRemaining)) : null;
   return (
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} tint={tint} />}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{title}</p>
+          {cycle && (
+            <p className="font-mono-brand text-[10px] tracking-wide text-[var(--ink-700)] mt-0.5">
+              {formatCycleRange(cycle.startISO, cycle.endISO)}
+            </p>
+          )}
+        </div>
+        <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} tint={tint} />
       </div>
-      <div className="flex-1 flex items-end gap-2">
-        <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
-          {daysRemaining == null ? '—' : daysRemaining}
+      {probationEndsISO && (
+        <span className="self-start inline-flex items-center text-[10px] font-mono-brand tracking-wide uppercase px-1.5 py-0.5 rounded border border-[var(--danger-600)] text-[var(--danger-600)]">
+          On probation through {formatProbationDate(probationEndsISO)}
         </span>
-        {daysRemaining != null && (
-          <span className="font-mono-brand text-2xl sm:text-3xl font-semibold text-[var(--ink-900)] leading-none mb-0.5">
-            {daysRemaining === 1 ? 'day' : 'days'}
-          </span>
-        )}
-      </div>
-      <p className="font-mono-brand text-[11px] text-[var(--ink-700)] tracking-wide">
-        {renewalDate ? `RENEWS ${formatRenewalDate(renewalDate)}` : 'NO RENEWAL ON FILE'}
-      </p>
-    </div>
-  );
-}
-
-interface CertCycleCardProps {
-  label: string;
-  daysRemaining: number | null;
-  renewalDate: string | null;
-  cycleNote: string;
-  logoLight?: string;
-  logoDark?: string;
-  logoAlt?: string;
-}
-
-function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoLight, logoDark, logoAlt }: CertCycleCardProps) {
-  const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
-  const duration = daysRemaining == null ? null : formatDuration(daysRemaining);
-  return (
-    <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} tint={tint} />}
-      </div>
+      )}
       <div className="flex-1 flex items-end gap-2">
         {duration ? (
           <>
@@ -346,8 +333,7 @@ function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoLight
         )}
       </div>
       <p className="font-mono-brand text-[11px] text-[var(--ink-700)] tracking-wide">
-        {cycleNote}
-        {renewalDate && <> · NEXT {formatRenewalDate(renewalDate)}</>}
+        {cycle ? `RENEWS ${formatRenewalDate(cycle.endISO)}` : notSetLabel}
       </p>
     </div>
   );
@@ -481,37 +467,41 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ appUser }: DashboardProps) {
-  const { openModal: openSetupModal, isSetupIncomplete } = useSetupReminder();
+  const { openModal: openSetupModal } = useSetupReminder();
   const { certifications, loading } = useCertifications();
 
-  const iemaCredits = useMemo(
-    () =>
-      certifications
-        .filter(
-          (c) =>
-            (c.categories.includes('IEMA') || c.categories.includes('ARRT')) &&
-            daysUntil(c.expirationDate) >= 0,
-        )
-        .reduce((sum, c) => sum + c.ceCredits, 0),
-    [certifications],
-  );
+  const iemaSetup = isIemaSetup(appUser);
+  const arrtSetup = isArrtSetup(appUser);
+  const bothSetup = iemaSetup && arrtSetup;
 
-  const earliestIema = useMemo(() => earliestExpiryFor(certifications, 'IEMA'), [certifications]);
-  const earliestArrt = useMemo(() => earliestExpiryFor(certifications, 'ARRT'), [certifications]);
+  const iemaCycle = useMemo(() => computeIemaCycle(appUser), [appUser]);
+  const arrtCycle = useMemo(() => computeArrtCycle(appUser), [appUser]);
 
-  const iemaDays = earliestIema ? daysUntil(earliestIema.expirationDate) : null;
-  const arrtDays = earliestArrt ? daysUntil(earliestArrt.expirationDate) : null;
+  const iemaHours = useMemo(() => {
+    if (!iemaCycle) return 0;
+    return creditsInCycle(certifications, 'IEMA', iemaCycle, appUser);
+  }, [certifications, iemaCycle, appUser]);
 
-  const percent = (iemaCredits / IEMA_TOTAL) * 100;
-  const remaining = Math.max(0, IEMA_TOTAL - iemaCredits);
+  const arrtHours = useMemo(() => {
+    if (!arrtCycle) return 0;
+    return creditsInCycle(certifications, 'ARRT', arrtCycle, appUser);
+  }, [certifications, arrtCycle, appUser]);
 
   const firstName = appUser.firstName?.trim() || appUser.username || 'there';
 
-  // Cycle window — bracket the user's current IEMA cycle around the earliest renewal.
-  const cycleEndYear = earliestIema
-    ? new Date(earliestIema.expirationDate + 'T00:00:00').getFullYear()
-    : new Date().getFullYear() + 1;
-  const cycleStartYear = cycleEndYear - 2;
+  const cappedIema = iemaSetup ? Math.min(iemaHours, PER_LICENSE) : 0;
+  const cappedArrt = arrtSetup ? Math.min(arrtHours, PER_LICENSE) : 0;
+  const iemaComplete = iemaSetup && iemaHours >= PER_LICENSE;
+  const arrtComplete = arrtSetup && arrtHours >= PER_LICENSE;
+
+  const greeting = (() => {
+    if (!bothSetup) return `Welcome, ${firstName}.`;
+    if (iemaComplete && arrtComplete) return `You're done, ${firstName}.`;
+    const combinedPct = ((cappedIema + cappedArrt) / COMBINED_TOTAL) * 100;
+    if (combinedPct >= 75) return `You're on track, ${firstName}.`;
+    if (combinedPct >= 50) return `Halfway there, ${firstName}.`;
+    return `Let's catch up, ${firstName}.`;
+  })();
 
   if (loading) {
     return (
@@ -521,50 +511,95 @@ export default function Dashboard({ appUser }: DashboardProps) {
     );
   }
 
+  const iemaRemaining = Math.max(0, PER_LICENSE - Math.round(iemaHours));
+  const arrtRemaining = Math.max(0, PER_LICENSE - Math.round(arrtHours));
+
+  const renderSubline = () => {
+    if (!iemaSetup && !arrtSetup) {
+      return (
+        <>
+          Track your IEMA and ARRT cycles separately.{' '}
+          <button type="button" onClick={openSetupModal} className="nb-link-accent">
+            Complete setup
+          </button>{' '}
+          to get started.
+        </>
+      );
+    }
+    if (iemaSetup && !arrtSetup) {
+      return (
+        <>
+          <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(iemaHours)}</span> of{' '}
+          <span className="font-mono-brand font-semibold text-[var(--ink-900)]">24</span> IEMA hours logged this cycle.{' '}
+          <button type="button" onClick={openSetupModal} className="nb-link-accent">
+            Finish setup
+          </button>{' '}
+          to track ARRT too.
+        </>
+      );
+    }
+    if (arrtSetup && !iemaSetup) {
+      return (
+        <>
+          <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(arrtHours)}</span> of{' '}
+          <span className="font-mono-brand font-semibold text-[var(--ink-900)]">24</span> ARRT hours logged this cycle.{' '}
+          <button type="button" onClick={openSetupModal} className="nb-link-accent">
+            Finish setup
+          </button>{' '}
+          to track IEMA too.
+        </>
+      );
+    }
+    if (iemaComplete && arrtComplete) {
+      return <>You&rsquo;ve met the 24 hour requirement on both licenses.</>;
+    }
+    return (
+      <>
+        <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(iemaHours)}</span> of{' '}
+        <span className="font-mono-brand font-semibold text-[var(--ink-900)]">24</span> IEMA hours and{' '}
+        <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(arrtHours)}</span> of{' '}
+        <span className="font-mono-brand font-semibold text-[var(--ink-900)]">24</span> ARRT hours logged.{' '}
+        {iemaRemaining > 0 && arrtRemaining > 0 && (
+          <>
+            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{iemaRemaining}</span> IEMA and{' '}
+            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{arrtRemaining}</span> ARRT to go.
+          </>
+        )}
+        {iemaRemaining > 0 && arrtRemaining === 0 && (
+          <>
+            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{iemaRemaining}</span> IEMA to go. ARRT is done.
+          </>
+        )}
+        {arrtRemaining > 0 && iemaRemaining === 0 && (
+          <>
+            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{arrtRemaining}</span> ARRT to go. IEMA is done.
+          </>
+        )}
+      </>
+    );
+  };
+
   return (
     <main className="min-h-[calc(100vh-6rem)] pt-6 pb-16 px-5 lg:px-10 w-full max-w-6xl mx-auto">
       {/* Header */}
-      <p className="overline text-[var(--brand-600)] mb-4">
-        Cycle {cycleStartYear} – {cycleEndYear}
-        {iemaDays != null && (
-          <>
-            <span className="mx-2 text-[var(--ink-300)]">·</span>
-            <span className="font-mono-brand">{iemaDays}</span> days remaining
-          </>
-        )}
-      </p>
+      {bothSetup && iemaCycle && arrtCycle && (
+        <p className="overline text-[var(--brand-600)] mb-4">
+          IEMA {new Date(iemaCycle.startISO + 'T00:00:00').getFullYear()} to {new Date(iemaCycle.endISO + 'T00:00:00').getFullYear()}
+          <span className="mx-2 text-[var(--ink-300)]">·</span>
+          ARRT {new Date(arrtCycle.startISO + 'T00:00:00').getFullYear()} to {new Date(arrtCycle.endISO + 'T00:00:00').getFullYear()}
+        </p>
+      )}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-7">
         <div className="min-w-0">
           <h1 className="font-display text-3xl lg:text-4xl font-semibold tracking-tight text-[var(--ink-900)] leading-tight">
-            {statusGreeting(percent, firstName)}
+            {greeting}
           </h1>
           <p className="mt-2 text-sm lg:text-base text-[var(--ink-700)]">
-            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(iemaCredits)}</span>
-            {' '}of{' '}
-            <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{IEMA_TOTAL}</span>
-            {' '}CE points logged.{' '}
-            {remaining > 0 && earliestIema ? (
-              <>
-                <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{Math.round(remaining)}</span>
-                {' '}to go before your IEMA renews{' '}
-                <span className="font-mono-brand font-semibold text-[var(--ink-900)]">{formatShortDate(earliestIema.expirationDate)}</span>.
-              </>
-            ) : (
-              <>You&rsquo;ve hit this cycle&rsquo;s requirement.</>
-            )}
+            {renderSubline()}
           </p>
         </div>
         <div className="flex gap-2 self-start lg:self-auto shrink-0 flex-wrap">
-          {isSetupIncomplete && (
-            <button
-              type="button"
-              onClick={openSetupModal}
-              className="nb-btn is-accent"
-            >
-              Complete setup
-            </button>
-          )}
           <Link
             to="/certificates/new"
             className="nb-btn"
@@ -577,23 +612,28 @@ export default function Dashboard({ appUser }: DashboardProps) {
 
       {/* Top stat row */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
-        <CePointsCard completed={iemaCredits} total={IEMA_TOTAL} certifications={certifications} />
-        <RenewalCard
-          label="Days to IEMA renewal"
-          daysRemaining={iemaDays}
-          renewalDate={earliestIema?.expirationDate ?? null}
+        <CePointsCard
+          iemaHours={iemaHours}
+          arrtHours={arrtHours}
+          iemaSetup={iemaSetup}
+          arrtSetup={arrtSetup}
+        />
+        <LicenseRenewalCard
+          title="New IEMA Cycle In"
+          cycle={iemaCycle}
           logoLight={iemaLogoBlack}
           logoDark={iemaLogoWhite}
           logoAlt="IEMA"
+          notSetLabel="IEMA CYCLE NOT SET"
         />
-        <CertCycleCard
-          label="ARRT certification"
-          daysRemaining={arrtDays}
-          renewalDate={earliestArrt?.expirationDate ?? null}
-          cycleNote="BIENNIAL"
+        <LicenseRenewalCard
+          title="New ARRT Cycle In"
+          cycle={arrtCycle}
           logoLight={arrtLogoBlack}
           logoDark={arrtLogoWhite}
           logoAlt="ARRT"
+          notSetLabel="ARRT CYCLE NOT SET"
+          probationEndsISO={arrtCycle?.isOnProbation ? arrtCycle.probationEndsISO : null}
         />
       </section>
 

@@ -5,6 +5,9 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   sendPasswordResetEmail,
   confirmPasswordReset,
   applyActionCode,
@@ -143,6 +146,25 @@ export async function addMemberToTeam(teamCode: string, uid: string): Promise<vo
 export async function fetchUsersByUids(uids: string[]): Promise<AppUser[]> {
   const results = await Promise.all(uids.map(uid => fetchAppUser(uid)));
   return results.filter((u): u is AppUser => u !== null);
+}
+
+export async function changeUsername(uid: string, oldUsername: string, newUsername: string): Promise<void> {
+  await runTransaction(db, async tx => {
+    const newRef = doc(db, 'usernames', newUsername);
+    const snap = await tx.get(newRef);
+    if (snap.exists()) throw new Error('Username taken');
+    tx.delete(doc(db, 'usernames', oldUsername));
+    tx.set(newRef, { uid });
+    tx.update(doc(db, 'users', uid), { username: newUsername });
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const currentUser = auth.currentUser;
+  if (!currentUser || !currentUser.email) throw new Error('Not authenticated');
+  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+  await reauthenticateWithCredential(currentUser, credential);
+  await updatePassword(currentUser, newPassword);
 }
 
 export async function updateTeamCode(
