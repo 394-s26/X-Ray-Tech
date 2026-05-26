@@ -78,6 +78,20 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.teamLead);
     }
 
+    match /fcmTokens/{docId} {
+      allow get: if isSignedIn()
+                 && (resource == null || resource.data.uid == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create: if isSignedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && docId == request.auth.uid + '_' + request.resource.data.deviceId;
+      allow update: if isSignedIn()
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.uid == request.auth.uid
+                    && docId == request.auth.uid + '_' + request.resource.data.deviceId;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
     // Default deny — any new collection must be added explicitly above.
     match /{document=**} {
       allow read, write: if false;

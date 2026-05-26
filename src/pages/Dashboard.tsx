@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
@@ -9,6 +9,7 @@ import arrtLogoWhite from '../assets/arrtwhitetext.png';
 import iemaLogoWhite from '../assets/iemawhitetext.png';
 import arrtLogoBlack from '../assets/arrtblacktext.png';
 import iemaLogoBlack from '../assets/iemablacktext.png';
+import { consumeNotificationPermissionPromptAfterLogin, requestNotificationPermissionIfDefault } from '../services/notifications';
 import {
   PER_LICENSE,
   computeArrtCycle,
@@ -467,6 +468,12 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ appUser }: DashboardProps) {
+
+  useEffect(() => {
+    if (!consumeNotificationPermissionPromptAfterLogin()) return;
+    void requestNotificationPermissionIfDefault();
+  }, []);
+
   const { openModal: openSetupModal } = useSetupReminder();
   const { certifications, loading } = useCertifications();
 

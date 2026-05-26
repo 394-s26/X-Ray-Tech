@@ -1,0 +1,16 @@
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { sendTwoMonthExpiryReminders } from '../fcm/sendTwoMonthExpiryReminders.js';
+
+/** Daily 09:00 UTC — notify owners when a certificate expires in ~2 months (60 days). */
+export const certificateTwoMonthExpiryReminders = onSchedule(
+  {
+    schedule: '0 9 * * *',
+    timeZone: 'CST',
+    region: 'us-central1',
+    timeoutSeconds: 540,
+    memory: '128MiB',
+  },
+  async () => {
+    await sendTwoMonthExpiryReminders();
+  },
+);
