@@ -202,6 +202,7 @@ export const updateCertificationRecord = async (
     completedDate?: string;
     expirationDate?: string;
     ceCredits?: number;
+    categoryType?: string | null;
     categories?: CertificateCategory[];
   },
 ): Promise<void> => {

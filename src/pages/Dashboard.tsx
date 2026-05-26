@@ -4,8 +4,11 @@ import { PlusIcon } from '../services/svgIcons';
 import { useCertifications } from '../hooks/useCertifications';
 import type { Certification, CertificateCategory } from '../types/certification';
 import type { AppUser } from '../types/auth';
-import arrtLogo from '../assets/arrt.png';
-import iemaLogo from '../assets/iema.png';
+import { useSetupReminder } from '../components/setupReminderContext';
+import arrtLogoWhite from '../assets/arrtwhitetext.png';
+import iemaLogoWhite from '../assets/iemawhitetext.png';
+import arrtLogoBlack from '../assets/arrtblacktext.png';
+import iemaLogoBlack from '../assets/iemablacktext.png';
 
 const IEMA_TOTAL = 48;
 
@@ -48,10 +51,10 @@ function formatDuration(days: number): { value: string; unit: string } {
   if (days < 60) return { value: String(days), unit: days === 1 ? 'day' : 'days' };
   if (days < 365) {
     const months = Math.round(days / 30);
-    return { value: String(months), unit: months === 1 ? 'mo' : 'mos' };
+    return { value: String(months), unit: months === 1 ? 'month' : 'months' };
   }
   const years = days / 365;
-  return { value: years.toFixed(1), unit: years === 1 ? 'yr' : 'yrs' };
+  return { value: years.toFixed(1), unit: years === 1 ? 'year' : 'years' };
 }
 
 function pluralizeHours(value: number): string {
@@ -199,7 +202,7 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
 
   return (
     <Link
-      to="/credentials"
+      to="/certificates"
       className="@container nb-card is-clickable p-5 flex flex-col gap-4 min-w-0 overflow-hidden"
     >
       <p className="font-display text-lg font-semibold text-[var(--ink-900)]">CE points</p>
@@ -247,27 +250,50 @@ function CePointsCard({ completed, total, certifications }: CePointsCardProps) {
   );
 }
 
+interface LogoChipProps {
+  srcLight?: string;
+  srcDark?: string;
+  alt?: string;
+  tint?: 'tint-paper' | Tint;
+}
+
+const LOGO_CHIP_BG: Record<NonNullable<LogoChipProps['tint']>, string> = {
+  'tint-mint':  'bg-[#c9d4c0]',
+  'tint-rose':  'bg-[#e8c9cb]',
+  'tint-sun':   'bg-[#f0e4c2]',
+  'tint-paper': 'bg-[#e5e3ec]',
+};
+
+function LogoChip({ srcLight, srcDark, alt, tint = 'tint-paper' }: LogoChipProps) {
+  const lightBg = LOGO_CHIP_BG[tint] ?? LOGO_CHIP_BG['tint-paper'];
+  return (
+    <span className={`inline-flex items-center justify-center shrink-0 rounded-md px-1 py-1 ${lightBg} dark:bg-[#3D3F5C]`}>
+      {srcLight && (
+        <img src={srcLight} alt={alt ?? ''} className="h-4 w-auto object-contain block dark:hidden" />
+      )}
+      {srcDark && (
+        <img src={srcDark} alt={alt ?? ''} className="h-4 w-auto object-contain hidden dark:block" />
+      )}
+    </span>
+  );
+}
+
 interface RenewalCardProps {
   label: string;
   daysRemaining: number | null;
   renewalDate: string | null;
-  logoSrc?: string;
+  logoLight?: string;
+  logoDark?: string;
   logoAlt?: string;
 }
 
-function RenewalCard({ label, daysRemaining, renewalDate, logoSrc, logoAlt }: RenewalCardProps) {
+function RenewalCard({ label, daysRemaining, renewalDate, logoLight, logoDark, logoAlt }: RenewalCardProps) {
   const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
   return (
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {logoSrc && (
-          <img
-            src={logoSrc}
-            alt={logoAlt ?? ''}
-            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
-          />
-        )}
+        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} tint={tint} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         <span className="font-mono-brand text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--ink-900)] leading-none">
@@ -291,24 +317,19 @@ interface CertCycleCardProps {
   daysRemaining: number | null;
   renewalDate: string | null;
   cycleNote: string;
-  logoSrc?: string;
+  logoLight?: string;
+  logoDark?: string;
   logoAlt?: string;
 }
 
-function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoSrc, logoAlt }: CertCycleCardProps) {
+function CertCycleCard({ label, daysRemaining, renewalDate, cycleNote, logoLight, logoDark, logoAlt }: CertCycleCardProps) {
   const tint = daysRemaining == null ? 'tint-paper' : urgencyTint(daysRemaining);
   const duration = daysRemaining == null ? null : formatDuration(daysRemaining);
   return (
     <div className={`nb-card ${tint} p-5 flex flex-col gap-4 min-w-0`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display text-lg font-semibold text-[var(--ink-900)]">{label}</p>
-        {logoSrc && (
-          <img
-            src={logoSrc}
-            alt={logoAlt ?? ''}
-            className="h-6 w-auto object-contain shrink-0 rounded-md bg-black/70 px-0.75 py-1"
-          />
-        )}
+        {(logoLight || logoDark) && <LogoChip srcLight={logoLight} srcDark={logoDark} alt={logoAlt} tint={tint} />}
       </div>
       <div className="flex-1 flex items-end gap-2">
         {duration ? (
@@ -356,7 +377,7 @@ function RecentCertifications({ certifications }: { certifications: Certificatio
           Recent certifications
           <span className="ml-2 text-xs font-normal text-[var(--ink-500)]">this cycle</span>
         </h3>
-        <Link to="/credentials" className="text-xs font-medium text-[var(--brand-700)] hover:underline whitespace-nowrap">
+        <Link to="/certificates" className="text-xs font-medium text-[var(--brand-700)] hover:underline whitespace-nowrap">
           See all {certifications.length}{' '}›
         </Link>
       </div>
@@ -460,6 +481,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ appUser }: DashboardProps) {
+  const { openModal: openSetupModal, isSetupIncomplete } = useSetupReminder();
   const { certifications, loading } = useCertifications();
 
   const iemaCredits = useMemo(
@@ -533,13 +555,24 @@ export default function Dashboard({ appUser }: DashboardProps) {
             )}
           </p>
         </div>
-        <Link
-          to="/certificates/new"
-          className="nb-btn self-start lg:self-auto shrink-0"
-        >
-          <PlusIcon size={16} />
-          Add certification
-        </Link>
+        <div className="flex gap-2 self-start lg:self-auto shrink-0 flex-wrap">
+          {isSetupIncomplete && (
+            <button
+              type="button"
+              onClick={openSetupModal}
+              className="nb-btn is-accent"
+            >
+              Complete setup
+            </button>
+          )}
+          <Link
+            to="/certificates/new"
+            className="nb-btn"
+          >
+            <PlusIcon size={16} />
+            Add certification
+          </Link>
+        </div>
       </div>
 
       {/* Top stat row */}
@@ -549,7 +582,8 @@ export default function Dashboard({ appUser }: DashboardProps) {
           label="Days to IEMA renewal"
           daysRemaining={iemaDays}
           renewalDate={earliestIema?.expirationDate ?? null}
-          logoSrc={iemaLogo}
+          logoLight={iemaLogoBlack}
+          logoDark={iemaLogoWhite}
           logoAlt="IEMA"
         />
         <CertCycleCard
@@ -557,7 +591,8 @@ export default function Dashboard({ appUser }: DashboardProps) {
           daysRemaining={arrtDays}
           renewalDate={earliestArrt?.expirationDate ?? null}
           cycleNote="BIENNIAL"
-          logoSrc={arrtLogo}
+          logoLight={arrtLogoBlack}
+          logoDark={arrtLogoWhite}
           logoAlt="ARRT"
         />
       </section>

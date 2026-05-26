@@ -20,6 +20,16 @@ export interface AppUser {
   hospitalAddress?: string | null;
   colorCode?: string | null;
 
+  // License cycle anchors. ARRT cycle month is derived from the birth month;
+  // IEMA cycle end month is the accreditation month and stored independently.
+  arrtCycleStartYear?: number | null;
+  iemaCycleStartYear?: number | null;
+  iemaCycleEndMonth?: number | null;  // 1-12
+
+  /** Optional registry / state identification numbers */
+  arrtIdNumber?: string | null;
+  iemaIdNumber?: string | null;
+
   // 'manager' unlocks the Team Management area in the sidebar; everyone else
   // is treated as a member.
   role?: 'manager' | 'member' | null;

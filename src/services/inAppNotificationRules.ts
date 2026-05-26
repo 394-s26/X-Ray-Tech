@@ -66,22 +66,19 @@ function pushCeUrgency(
   const scope = license;
   let title: string;
   let body: string;
-  let severity: InAppNotification['severity'] = 'warning';
+  const severity: InAppNotification['severity'] = tier === 3 ? 'urgent' : 'warning';
 
   const head = certHeadline(anchorCert);
 
   if (tier === 1) {
     title = `${license}: CE deadline in ${days} days`;
     body = `${head}. You still need more than 10 CE credits (${Math.ceil(remaining)} remaining) before then. Category A or A+ only.`;
-    severity = 'warning';
   } else if (tier === 2) {
     title = `${license}: CE deadline approaching`;
     body = `${head}. Within 60 days of that date you still need over 5 CE credits (${Math.ceil(remaining)} left).`;
-    severity = 'warning';
   } else {
     title = `${license}: Finish CE credits soon`;
     body = `${head} — under 30 days away. Fewer than 5 CE credits left (${Math.ceil(remaining)} remaining). Wrap up accredited courses now.`;
-    severity = 'urgent';
   }
 
   out.push({
@@ -90,7 +87,7 @@ function pushCeUrgency(
     body,
     severity,
     scope,
-    href: '/credentials',
+    href: '/certificates',
   });
 }
 
@@ -119,7 +116,7 @@ function pushCyclePair(
     body: `A new biennial CE cycle follows this reporting period. Related timing: ${head}. Schedule exams or coursework early — ${license} and ${otherLicense} treat CE earned in the last month of a cycle differently (check each registry's rules).`,
     severity: 'info',
     scope,
-    href: '/credentials',
+    href: '/certificates',
   });
 }
 
@@ -156,7 +153,7 @@ export function buildInAppNotifications(params: BuildInAppNotificationsParams): 
       title: 'Multiple certificates expired',
       body: `${expired.length} uploaded certificates are past expiration. Replace or renew documentation so CE totals stay accurate.`,
       severity: 'urgent',
-      href: '/credentials',
+      href: '/certificates',
     });
   }
 
