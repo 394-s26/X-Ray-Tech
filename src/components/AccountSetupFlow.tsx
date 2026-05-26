@@ -117,10 +117,6 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    const next = birthMonth && birthDay ? `${birthMonth}-${birthDay}` : '';
-    setFormData(prev => (prev.birthday === next ? prev : { ...prev, birthday: next }));
-  }, [birthMonth, birthDay]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [foundTeam, setFoundTeam] = useState<{ name: string; manager: string; color: string } | null>(null);
   const [teamLookupLoading, setTeamLookupLoading] = useState(false);
@@ -345,10 +341,10 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
                 value={birthMonth}
                 onChange={e => {
                   const m = e.target.value;
+                  const d = (m && birthDay && parseInt(birthDay, 10) > daysInMonth(parseInt(m, 10))) ? '' : birthDay;
                   setBirthMonth(m);
-                  if (m && birthDay && parseInt(birthDay, 10) > daysInMonth(parseInt(m, 10))) {
-                    setBirthDay('');
-                  }
+                  if (d !== birthDay) setBirthDay(d);
+                  setFormData(prev => ({ ...prev, birthday: m && d ? `${m}-${d}` : '' }));
                   setErrors(prev => ({ ...prev, birthday: undefined as unknown as string }));
                 }}
               >
@@ -363,7 +359,9 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
                 className="form-input"
                 value={birthDay}
                 onChange={e => {
-                  setBirthDay(e.target.value);
+                  const d = e.target.value;
+                  setBirthDay(d);
+                  setFormData(prev => ({ ...prev, birthday: birthMonth && d ? `${birthMonth}-${d}` : '' }));
                   setErrors(prev => ({ ...prev, birthday: undefined as unknown as string }));
                 }}
               >
@@ -454,40 +452,6 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
             </div>
           </div>
 
-          <div className="w-full mt-6">
-            <p className="setup-flow__mini-title">Identification numbers</p>
-            <p className="setup-flow__field-hint" style={{ marginLeft: 0, marginTop: 4 }}>
-              Optional — your ARRT and IEMA registry or state ID numbers.
-            </p>
-          </div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:gap-4">
-            <div className="form-field w-full">
-              <label className="form-label">
-                ARRT identification number <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                className="form-input"
-                type="text"
-                placeholder="e.g. 1234567"
-                value={formData.arrtIdNumber}
-                onChange={e => setField('arrtIdNumber', e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-            <div className="form-field w-full">
-              <label className="form-label">
-                IEMA identification number <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                className="form-input"
-                type="text"
-                placeholder="e.g. IL-12345"
-                value={formData.iemaIdNumber}
-                onChange={e => setField('iemaIdNumber', e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-          </div>
         </div>
       </>
     );
@@ -691,6 +655,41 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
             value={formData.hospitalAddress}
             onChange={e => setField('hospitalAddress', e.target.value)}
           />
+        </div>
+
+        <div className="w-full mt-10">
+          <p className="setup-flow__mini-title">Identification numbers</p>
+          <p className="setup-flow__field-hint" style={{ marginLeft: 0, marginTop: 4 }}>
+            Your ARRT and IEMA registry or state ID numbers.
+          </p>
+        </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:gap-4">
+          <div className="form-field w-full">
+            <label className="form-label">
+              ARRT identification number <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="e.g. 1234567"
+              value={formData.arrtIdNumber}
+              onChange={e => setField('arrtIdNumber', e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+          <div className="form-field w-full">
+            <label className="form-label">
+              IEMA identification number <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              className="form-input"
+              type="text"
+              placeholder="e.g. IL-12345"
+              value={formData.iemaIdNumber}
+              onChange={e => setField('iemaIdNumber', e.target.value)}
+              autoComplete="off"
+            />
+          </div>
         </div>
       </div>
     </>
