@@ -46,6 +46,34 @@ export const renderPdfToCanvases = async (
   return canvases;
 };
 
+/**
+ * Render only the first page of a PDF (loaded by URL) to a canvas, sized for a
+ * thumbnail. Used by archive cards and other lightweight previews.
+ */
+export const renderPdfThumbnailFromUrl = async (
+  url: string,
+  scale = 1.0,
+  signal?: AbortSignal,
+): Promise<HTMLCanvasElement> => {
+  const res = await fetch(url, { signal });
+  if (!res.ok) throw new Error(`Failed to fetch PDF (${res.status})`);
+  const buf = await res.arrayBuffer();
+  const pdf = await getDocument({ data: new Uint8Array(buf) }).promise;
+  try {
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Failed to get 2D context');
+    await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+    return canvas;
+  } finally {
+    await pdf.destroy();
+  }
+};
+
 export const loadImageFileToCanvas = async (file: File): Promise<HTMLCanvasElement> => {
   const url = URL.createObjectURL(file);
   try {

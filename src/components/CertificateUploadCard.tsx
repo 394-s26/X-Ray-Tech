@@ -278,11 +278,18 @@ export const CertificateUploadCard = ({
               <input
                 id="cert-credits"
                 className="form-number"
-                type="number"
-                min={0}
-                step={0.5}
+                type="text"
+                inputMode="decimal"
                 value={form.ceCredits}
-                onChange={e => updateField('ceCredits', e.target.value)}
+                onChange={e => {
+                  const raw = e.target.value.replace(/[^\d.]/g, '');
+                  const first = raw.indexOf('.');
+                  const cleaned =
+                    first === -1
+                      ? raw
+                      : raw.slice(0, first + 1) + raw.slice(first + 1).replace(/\./g, '');
+                  updateField('ceCredits', cleaned);
+                }}
                 disabled={isBusy}
               />
             </div>

@@ -93,7 +93,7 @@
 .app-sidebar__nav-icon { flex-shrink: 0; }
 
 .app-sidebar__nav-label {
-  line-height: 1;
+  line-height: 1.25;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -107,6 +107,7 @@
 .app-sidebar__divider { display: none; }
 
 .app-sidebar__nav-item--mobile-hidden { display: none; }
+.app-sidebar__nav-item--desktop-hidden { display: flex; }
 
 /* Mobile: Add Certificate as a soft-brutalist FAB */
 .app-sidebar__nav-item.highlighted {
@@ -115,11 +116,11 @@
   border: 1.5px solid var(--ink-900);
   box-shadow: 3px 3px 0 var(--ink-900);
   flex: 0 0 auto;
-  width: 6rem;
+  width: 3.25rem;
   height: 3.25rem;
   border-radius: 12px;
   padding: 0;
-  margin: 0 1rem;
+  margin: 0 0.5rem;
 }
 .app-sidebar__nav-item.highlighted:hover {
   background: var(--brand-700);
@@ -212,6 +213,21 @@
     box-shadow: 0 0 0 var(--ink-300);
   }
 
+  .app-sidebar__profile--active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--ink-900);
+  }
+  .dark .app-sidebar__profile--active {
+    box-shadow: 0 0 0 var(--ink-300);
+  }
+  .app-sidebar__profile--active:hover {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--ink-900);
+  }
+  .dark .app-sidebar__profile--active:hover {
+    box-shadow: 0 0 0 var(--ink-300);
+  }
+
   .app-sidebar__profile-chevron {
     flex-shrink: 0;
     color: var(--ink-400);
@@ -266,6 +282,7 @@
   .dark .app-sidebar__divider { background: var(--ink-700); }
 
   .app-sidebar__nav-item--mobile-hidden { display: flex; }
+  .app-sidebar__nav-item--desktop-hidden { display: none; }
 
   .app-sidebar__nav-item.highlighted {
     background: var(--brand-600);
