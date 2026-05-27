@@ -11,8 +11,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
-    "firebase": "^12.12.1",
+    "firebase": "^12.13.0",
     "firebase-functions": "^7.2.5",
+    "firebase-tools": "^15.18.0",
     "gsap": "^3.15.0",
     "mailchecker": "^6.0.20",
     "pdfjs-dist": "^5.7.284",
