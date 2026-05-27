@@ -247,6 +247,7 @@ function EmployeeModal({ summary, teamCode, onClose, onRemoved }: EmployeeModalP
   const [removing, setRemoving] = useState(false);
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removed, setRemoved] = useState(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -264,8 +265,9 @@ function EmployeeModal({ summary, teamCode, onClose, onRemoved }: EmployeeModalP
     setRemoving(true);
     try {
       await removeTeamMember(teamCode, summary.uid);
+      setRemoved(true);
       onRemoved(summary.uid);
-      onClose();
+      setTimeout(onClose, 1500);
     } catch {
       setRemoveError('Failed to remove member. Please try again.');
       setRemoving(false);
@@ -376,7 +378,11 @@ function EmployeeModal({ summary, teamCode, onClose, onRemoved }: EmployeeModalP
 
         {!summary.isLead && (
           <div className="mt-6">
-            {confirmRemove ? (
+            {removed ? (
+              <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                {displayName(user)} has been removed from the team.
+              </p>
+            ) : confirmRemove ? (
               <div className="flex flex-col gap-2">
                 
                 <div className="flex items-center gap-2">
@@ -817,7 +823,7 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
           </p>
         </div>
 
-        {isManager && (
+        {isManager ? (
           filteredMembers.length === 0 ? (
             <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
               {sortedMembers.length === 0
@@ -829,6 +835,27 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
               {filteredMembers.map((m) => (
                 <li key={m.uid}>
                   <EmployeeRow summary={m} onClick={() => setSelected(m)} />
+                </li>
+              ))}
+            </ul>
+          )
+        ) : (
+          sortedMembers.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-8">
+              No teammates yet.
+            </p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-gray-100 dark:divide-slate-700">
+              {sortedMembers.map((m) => (
+                <li key={m.uid} className="flex items-center gap-3 px-4 py-3">
+                  <p className="text-sm font-semibold text-primary dark:text-slate-100">
+                    {displayName(m.user)}
+                    {m.isLead && (
+                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+                        Lead
+                      </span>
+                    )}
+                  </p>
                 </li>
               ))}
             </ul>
