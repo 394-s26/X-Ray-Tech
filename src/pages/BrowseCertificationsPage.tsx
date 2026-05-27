@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { PageHeader } from '../components/PageHeader';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { GraduationCapIcon, ArrowRightIcon, FilterIcon } from '../services/svgIcons';
-import certData from '../data/availableCertifications.json';
 import arrtLogo from '../assets/arrt.png';
 import iemaLogo from '../assets/iema.png';
 
@@ -31,12 +32,6 @@ const AGENCY_LOGOS: Partial<Record<Agency, string>> = {
 
 const AGENCIES: Agency[] = ['ARRT', 'IEMA', 'CPR'];
 
-const certifications = certData as Certification[];
-
-const maxCredits = Math.max(...certifications.map((c) => c.credits), 1);
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 interface DualRangeSliderProps {
   min: number;
@@ -95,13 +90,41 @@ function DualRangeSlider({ min, max, low, high, onLowChange, onHighChange }: Dua
 }
 
 export function BrowseCertificationsPage() {
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedAgencies, setSelectedAgencies] = useState<Set<Agency>>(new Set());
   const [nameSearch, setNameSearch] = useState('');
   const [minCredits, setMinCredits] = useState(0);
-  const [maxCreditsFilter, setMaxCreditsFilter] = useState(maxCredits);
-  const [approvedUntil, setApprovedUntil] = useState('');
+  const [maxCreditsFilter, setMaxCreditsFilter] = useState(0);
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    getDocs(collection(db, 'certification_courses')).then((snap) => {
+      const docs: Certification[] = snap.docs.map((doc) => {
+        const d = doc.data();
+        const firstLicense = ((d.licenses as string[])?.[0] ?? 'arrt').toUpperCase() as Agency;
+        return {
+          id: doc.id,
+          title: d.title ?? '',
+          description: d.description ?? '',
+          agency: firstLicense,
+          credits: parseFloat(d.num_credits ?? '0'),
+          approvalEnds: d.expiration ?? '',
+          link: d.link ?? '',
+        };
+      });
+      const max = Math.max(...docs.map((c) => c.credits), 1);
+      setCertifications(docs);
+      setMaxCreditsFilter(max);
+      setLoading(false);
+    });
+  }, []);
+
+  const maxCredits = useMemo(
+    () => Math.max(...certifications.map((c) => c.credits), 1),
+    [certifications],
+  );
 
   const toggleAgency = (agency: Agency) => {
     setSelectedAgencies((prev) => {
@@ -114,15 +137,13 @@ export function BrowseCertificationsPage() {
   const activeFilterCount =
     (selectedAgencies.size > 0 ? 1 : 0) +
     (nameSearch.trim() ? 1 : 0) +
-    (minCredits > 0 || maxCreditsFilter < maxCredits ? 1 : 0) +
-    (approvedUntil ? 1 : 0);
+    (minCredits > 0 || maxCreditsFilter < maxCredits ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedAgencies(new Set());
     setNameSearch('');
     setMinCredits(0);
     setMaxCreditsFilter(maxCredits);
-    setApprovedUntil('');
     setPage(1);
   };
 
@@ -132,10 +153,9 @@ export function BrowseCertificationsPage() {
       if (selectedAgencies.size > 0 && !selectedAgencies.has(c.agency)) return false;
       if (q && !c.title.toLowerCase().includes(q)) return false;
       if (c.credits < minCredits || c.credits > maxCreditsFilter) return false;
-      if (approvedUntil && c.approvalEnds < approvedUntil) return false;
       return true;
     });
-  }, [selectedAgencies, nameSearch, minCredits, maxCreditsFilter, approvedUntil]);
+  }, [selectedAgencies, nameSearch, minCredits, maxCreditsFilter, certifications]);
 
   const PAGE_SIZE = 6;
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
@@ -234,15 +254,6 @@ export function BrowseCertificationsPage() {
                   />
                 </div>
 
-                <div className="form-field flex-1 min-w-[160px]">
-                  <label className="form-label">Approved until (on or after)</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={approvedUntil}
-                    onChange={(e) => setApprovedUntil(e.target.value)}
-                  />
-                </div>
               </div>
             </div>
 
@@ -261,8 +272,12 @@ export function BrowseCertificationsPage() {
         </div>
       )}
 
+      {loading && (
+        <p className="text-center text-gray-400 dark:text-slate-500 py-16">Loading certifications…</p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {paged.map((cert) => {
+        {!loading && paged.map((cert) => {
           const color = AGENCY_COLORS[cert.agency];
           return (
             <a
@@ -270,7 +285,7 @@ export function BrowseCertificationsPage() {
               href={cert.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="nb-card is-clickable p-5 flex flex-col gap-3 min-w-0"
+              className="nb-card is-clickable p-5 flex flex-col gap-3 min-w-0 h-64"
             >
               <div className="flex items-center gap-3">
                 {AGENCY_LOGOS[cert.agency] ? (
@@ -292,7 +307,7 @@ export function BrowseCertificationsPage() {
                 </h2>
               </div>
 
-              <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed flex-1">
+              <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed flex-1 overflow-hidden line-clamp-4">
                 {cert.description}
               </p>
 
@@ -300,7 +315,7 @@ export function BrowseCertificationsPage() {
                 <span className="font-semibold" style={{ color }}>
                   {cert.credits} {cert.credits === 1 ? 'credit' : 'credits'}
                 </span>
-                <span>Approved until {formatDate(cert.approvalEnds)}</span>
+                <span>Approved until {cert.approvalEnds}</span>
               </div>
 
               <span className="flex items-center justify-end gap-1 text-xs font-semibold underline underline-offset-2" style={{ color }}>
@@ -312,47 +327,82 @@ export function BrowseCertificationsPage() {
         })}
       </div>
 
-      {visible.length === 0 && (
+      {!loading && visible.length === 0 && (
         <p className="text-center text-gray-400 dark:text-slate-500 py-16">
           No certifications found for this filter.
         </p>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1 mt-8">
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-            className="cursor-pointer px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF] disabled:opacity-30 disabled:cursor-default transition-colors"
-          >
-            ‹
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setPage(n)}
-              className={
-                'cursor-pointer min-w-[2rem] px-2 py-1.5 rounded-lg text-sm font-semibold border transition-colors ' +
-                (n === safePage
-                  ? 'border-[#7C49D5] dark:border-[#A876FF] bg-[#7C49D5]/10 dark:bg-[#A876FF]/15 text-[#7C49D5] dark:text-[#A876FF]'
-                  : 'border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF]')
-              }
+      {totalPages > 1 && (() => {
+        // Always 7 fixed slots: first, ellipsis-or-gap, p-1, p, p+1, ellipsis-or-gap, last
+        type Slot = { kind: 'page'; n: number } | { kind: 'ellipsis' } | { kind: 'ghost' };
+        let slots: Slot[];
+        if (totalPages <= 7) {
+          slots = Array.from({ length: totalPages }, (_, i) => ({ kind: 'page', n: i + 1 }));
+        } else if (safePage <= 4) {
+          // near start: 1 2 3 4 5 ··· last
+          slots = [1, 2, 3, 4, 5].map((n) => ({ kind: 'page', n }) as Slot)
+            .concat([{ kind: 'ellipsis' }, { kind: 'page', n: totalPages }]);
+        } else if (safePage >= totalPages - 3) {
+          // near end: 1 ··· last-4 last-3 last-2 last-1 last
+          slots = ([{ kind: 'page', n: 1 }, { kind: 'ellipsis' }] as Slot[])
+            .concat([4, 3, 2, 1, 0].map((d) => ({ kind: 'page', n: totalPages - d }) as Slot));
+        } else {
+          // middle: 1 ··· p-1 p p+1 ··· last
+          slots = [
+            { kind: 'page', n: 1 }, { kind: 'ellipsis' },
+            { kind: 'page', n: safePage - 1 }, { kind: 'page', n: safePage }, { kind: 'page', n: safePage + 1 },
+            { kind: 'ellipsis' }, { kind: 'page', n: totalPages },
+          ];
+        }
+
+        const btnBase = 'min-w-[2rem] px-2 py-1.5 rounded-lg text-sm font-semibold border transition-colors';
+        const btnIdle = 'cursor-pointer border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF]';
+        const btnActive = 'border-[#7C49D5] dark:border-[#A876FF] bg-[#7C49D5]/10 dark:bg-[#A876FF]/15 text-[#7C49D5] dark:text-[#A876FF]';
+        const btnNav = 'cursor-pointer px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF] disabled:opacity-30 disabled:cursor-default transition-colors';
+
+        return (
+          <div className="flex items-center justify-center gap-1 mt-8">
+            <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage === 1} className={btnNav}>‹</button>
+            {slots.map((slot, i) =>
+              slot.kind === 'page' ? (
+                <button key={slot.n} type="button" onClick={() => setPage(slot.n)} className={`${btnBase} ${slot.n === safePage ? btnActive : btnIdle}`}>
+                  {slot.n}
+                </button>
+              ) : slot.kind === 'ellipsis' ? (
+                <span key={`ellipsis-${i}`} className="min-w-[2rem] px-2 py-1.5 text-sm text-center text-gray-400 dark:text-slate-500 select-none">···</span>
+              ) : (
+                <span key={`ghost-${i}`} className="min-w-[2rem] px-2 py-1.5" aria-hidden />
+              )
+            )}
+            <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages} className={btnNav}>›</button>
+          </div>
+        );
+      })()}
+
+      <section className="mt-12">
+        <h2 className="text-lg font-bold text-primary dark:text-slate-50 mb-4">Recommended Sources</h2>
+        <div className="rounded-2xl glass-panel p-5 flex flex-col gap-2">
+          {[
+            { label: 'ARRT CE Finder', href: 'https://apps.arrt.org/FindCE' },
+            { label: 'IEMA Accreditation', href: 'https://iemaohs.illinois.gov/accreditation.html' },
+            { label: 'American Heart Association', href: 'https://www.heart.org/' },
+            { label: 'Philips Learning', href: 'http://www.learn.philips.com/' },
+            { label: 'ISCD', href: 'https://iscd.org/' },
+          ].map(({ label, href }) => (
+            <a
+              key={href}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-medium text-[#7C49D5] dark:text-[#A876FF] hover:underline underline-offset-2"
             >
-              {n}
-            </button>
+              <ArrowRightIcon size={13} />
+              {label}
+            </a>
           ))}
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-            className="cursor-pointer px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:border-[#7C49D5] hover:text-[#7C49D5] dark:hover:border-[#A876FF] dark:hover:text-[#A876FF] disabled:opacity-30 disabled:cursor-default transition-colors"
-          >
-            ›
-          </button>
         </div>
-      )}
+      </section>
     </main>
   );
 }
