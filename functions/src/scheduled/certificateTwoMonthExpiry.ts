@@ -7,7 +7,7 @@ export const certificateTwoMonthExpiryReminders = onSchedule(
     schedule: '00 9 * * *',
     timeZone: 'CST',
     region: 'us-central1',
-    timeoutSeconds: 540,
+    timeoutSeconds: 120,
     memory: '256MiB',
   },
   async () => {
