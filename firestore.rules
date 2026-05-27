@@ -92,6 +92,11 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
+    match /fcmTokens/{uid} {
+    	allow read, delete: if true;
+      allow create, update: if isSignedIn();
+    }
+
     // Default deny — any new collection must be added explicitly above.
     match /{document=**} {
       allow read, write: if false;

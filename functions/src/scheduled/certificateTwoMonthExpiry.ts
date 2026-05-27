@@ -4,11 +4,11 @@ import { sendTwoMonthExpiryReminders } from '../fcm/sendTwoMonthExpiryReminders.
 /** Daily 09:00 UTC — notify owners when a certificate expires in ~2 months (60 days). */
 export const certificateTwoMonthExpiryReminders = onSchedule(
   {
-    schedule: '0 9 * * *',
+    schedule: '00 9 * * *',
     timeZone: 'CST',
     region: 'us-central1',
     timeoutSeconds: 540,
-    memory: '128MiB',
+    memory: '256MiB',
   },
   async () => {
     await sendTwoMonthExpiryReminders();
