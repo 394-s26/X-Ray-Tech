@@ -1,40 +1,12 @@
 import type { Timestamp } from 'firebase/firestore';
+import type { CertificateContentType } from './certificate';
 
-export type CertificateContentType = 'image/jpeg' | 'image/png' | 'application/pdf';
-
-export type ValidationStatus = 'pending' | 'ok' | 'failed';
-
-export interface Certificate {
-  id: string;
-  uid: string;
-  storagePath: string;
-  displayFileName: string;
-  contentType: CertificateContentType;
-  byteSize: number;
-  ocrText: string;
-  ocrConfidence: number;
-  providerName: string | null;
-  completedDate: string | null;
-  expirationDate: string | null;
-  ceCredits: number | null;
-  examName: string | null;
-  uploadedAt: Timestamp;
-  validated: ValidationStatus;
-  validationError?: string;
-}
-
-export interface CertificateInput {
-  uid: string;
-  displayFileName: string;
-  contentType: CertificateContentType;
-  ocrText: string;
-  ocrConfidence: number;
-  providerName: string | null;
-  completedDate: string | null;
-  expirationDate: string | null;
-  ceCredits: number | null;
-  examName: string | null;
-}
+export type {
+  Certificate,
+  CertificateContentType,
+  CertificateInput,
+  ValidationStatus,
+} from './certificate';
 
 export interface Scantron {
   id: string;

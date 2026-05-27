@@ -21,17 +21,21 @@ import {
 import { ref as storageRef, deleteObject } from 'firebase/storage';
 import type { AppUser } from '../types/auth';
 import type { Team } from '../types/team';
-import type { Certification } from '../types/certification';
 import { auth, db, storage } from './firebase';
+import { markNotificationPermissionPromptAfterLogin } from './notifications';
+import { deleteCurrentDeviceFcmToken } from './fcmTokenService';
+import type { Certification } from '../types/certification';
 
 const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async (): Promise<void> => {
   await signInWithPopup(auth, googleProvider);
+  markNotificationPermissionPromptAfterLogin();
 };
 
 export const signInWithEmail = async (email: string, password: string): Promise<void> => {
   await signInWithEmailAndPassword(auth, email, password);
+  markNotificationPermissionPromptAfterLogin();
 };
 
 export const checkUsernameAvailable = async (username: string): Promise<boolean> => {
@@ -63,6 +67,14 @@ export const registerWithEmail = async (
 };
 
 export const signOut = async (): Promise<void> => {
+  const uid = auth.currentUser?.uid;
+  if (uid) {
+    try {
+      await deleteCurrentDeviceFcmToken(uid);
+    } catch {
+      /* best-effort */
+    }
+  }
   await firebaseSignOut(auth);
 };
 

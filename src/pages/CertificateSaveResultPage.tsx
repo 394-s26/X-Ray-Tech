@@ -131,20 +131,20 @@ export const CertificateSaveResultPage = () => {
       />
 
       <section
-        className="rounded-2xl text-[var(--ink-900)] dark:text-[var(--fg)] p-6 lg:p-8 relative overflow-hidden max-w-180"
+        className="rounded-2xl text-[var(--ink-900)] dark:text-[var(--fg)] p-6 lg:p-8 relative overflow-hidden mx-auto max-w-2xl"
       >
-        <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 min-[514px]:grid-cols-[auto_1fr]">
-          <div className="flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48">
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className="flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40">
             <span
               role="img"
               aria-label={isError ? 'Sad face' : 'Celebration'}
-              className="text-[8rem] sm:text-[10rem] leading-none select-none"
+              className="text-[6rem] sm:text-[8rem] leading-none select-none"
               style={{ fontFamily: EMOJI_FONT_STACK }}
             >
               {emoji}
             </span>
           </div>
-          <div className="flex flex-col items-start text-left gap-2">
+          <div className="flex flex-col items-center text-center gap-2">
             <h2 className="text-xl sm:text-2xl font-bold text-primary dark:text-slate-50">
               {outcome.title}
             </h2>
