@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Certification } from '../types/certification';
+import type { AppUser } from '../types/auth';
 import { CertificateIcon } from '../services/svgIcons';
-import { getArchiveStatus, isFullyUsed, type LifecycleStatus } from '../services/archiveLogic';
+import { CertImagePlaceholder } from './CertImagePlaceholder';
+import {
+  getArchiveStatus,
+  getLicenseUsage,
+  isFullyUsed,
+  type LicenseUsage,
+  type LifecycleStatus,
+} from '../services/archiveLogic';
 import { renderPdfThumbnailFromUrl } from '../services/pdfRender';
 
 export const formatCertDate = (iso: string): string =>
@@ -70,26 +78,16 @@ function PdfThumbnail({ url, alt }: { url: string; alt: string }) {
   );
 }
 
-type ChipTone =
-  | 'arrtUsed'
-  | 'arrtAvailable'
-  | 'iemaUsed'
-  | 'iemaAvailable'
-  | 'cpr';
+type ChipTone = 'spent' | 'inUse' | 'available' | 'cpr';
 
 function StatusChip({ tone, label }: { tone: ChipTone; label: string }) {
-  const cls =
-    tone === 'arrtUsed' || tone === 'iemaUsed' || tone === 'cpr'
-      ? 'bg-gray-200 text-[var(--ink-700)] dark:bg-secondary/30 dark:text-[var(--ink-100)]'
-      : tone === 'arrtAvailable' || tone === 'iemaAvailable'
-        ? 'bg-gray-200 text-[var(--ink-700)] dark:bg-secondary/30 dark:text-[var(--ink-100)]'
-        : '';
+  const cls = 'bg-gray-200 text-[var(--ink-700)] dark:bg-secondary/30 dark:text-[var(--ink-100)]';
   const dotCls =
-    tone === 'arrtUsed' || tone === 'iemaUsed' || tone === 'cpr'
+    tone === 'spent' || tone === 'cpr'
       ? 'bg-red-500'
-      : tone === 'arrtAvailable' || tone === 'iemaAvailable'
-        ? 'bg-emerald-500'
-        : '';
+      : tone === 'inUse'
+        ? 'bg-amber-500'
+        : 'bg-emerald-500';
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}
@@ -100,13 +98,33 @@ function StatusChip({ tone, label }: { tone: ChipTone; label: string }) {
   );
 }
 
+const LICENSE_LABELS: Record<LicenseUsage, (license: 'ARRT' | 'IEMA') => string> = {
+  available: (l) => `${l} Available`,
+  inUse: (l) => `${l} In Use`,
+  spent: (l) => `${l} Used`,
+};
+
+const USAGE_TONE: Record<LicenseUsage, ChipTone> = {
+  available: 'available',
+  inUse: 'inUse',
+  spent: 'spent',
+};
+
 const LIFECYCLE_LABEL: Record<LifecycleStatus, string> = {
   active: 'Active',
   expiringSoon: 'Expiring Soon',
   expired: 'Expired',
 };
 
-function LifecycleLabel({ status, used = false }: { status: LifecycleStatus; used?: boolean }) {
+function LifecycleLabel({
+  status,
+  used = false,
+  usedLabel = 'Used',
+}: {
+  status: LifecycleStatus;
+  used?: boolean;
+  usedLabel?: string;
+}) {
   const cls =
     used
       ? 'bg-[var(--danger-100)] text-[var(--danger-600)]'
@@ -119,7 +137,7 @@ function LifecycleLabel({ status, used = false }: { status: LifecycleStatus; use
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}
     >
-      {used ? 'Used' : LIFECYCLE_LABEL[status]}
+      {used ? usedLabel : LIFECYCLE_LABEL[status]}
     </span>
   );
 }
@@ -127,9 +145,13 @@ function LifecycleLabel({ status, used = false }: { status: LifecycleStatus; use
 export function CertificateCard({
   cert,
   onOpen,
+  usedLabel,
+  appUser,
 }: {
   cert: Certification;
   onOpen: (cert: Certification) => void;
+  usedLabel?: string;
+  appUser?: AppUser;
 }) {
   const status = getArchiveStatus(cert);
   const cprOnly =
@@ -137,6 +159,16 @@ export function CertificateCard({
     !cert.categories.includes('ARRT') &&
     !cert.categories.includes('IEMA');
   const fullyUsed = isFullyUsed(cert);
+  const arrtUsage: LicenseUsage = appUser
+    ? getLicenseUsage(cert, 'ARRT', appUser)
+    : status.usedByArrt
+      ? 'spent'
+      : 'available';
+  const iemaUsage: LicenseUsage = appUser
+    ? getLicenseUsage(cert, 'IEMA', appUser)
+    : status.usedByIema
+      ? 'spent'
+      : 'available';
   const isPdf = isPdfPath(cert.photoStoragePath);
   const expiryTooltip = status.expired
     ? `Expired ${formatCertDate(cert.expirationDate)}`
@@ -198,12 +230,14 @@ export function CertificateCard({
             {cert.certificateName}
           </span>
           <span className="shrink-0 flex items-center">
-            <LifecycleLabel status={status.lifecycle} used={fullyUsed} />
+            <LifecycleLabel status={status.lifecycle} used={fullyUsed} usedLabel={usedLabel} />
           </span>
         </div>
 
         <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
-          {isPdf ? (
+          {!cert.photoURL ? (
+            <CertImagePlaceholder />
+          ) : isPdf ? (
             <PdfThumbnail url={cert.photoURL} alt={cert.certificateName} />
           ) : (
             <img
@@ -218,16 +252,16 @@ export function CertificateCard({
         <div className="px-3 py-2.5 flex flex-col gap-2">
           <div className="flex flex-wrap gap-1">
             {cprOnly ? (
-              <StatusChip tone="cpr" label="CPR Already Used" />
+              <StatusChip tone="cpr" label="CPR Used" />
             ) : (
               <>
                 <StatusChip
-                  tone={status.usedByArrt ? 'arrtUsed' : 'arrtAvailable'}
-                  label={status.usedByArrt ? 'ARRT Already Used' : 'ARRT Available'}
+                  tone={USAGE_TONE[arrtUsage]}
+                  label={LICENSE_LABELS[arrtUsage]('ARRT')}
                 />
                 <StatusChip
-                  tone={status.usedByIema ? 'iemaUsed' : 'iemaAvailable'}
-                  label={status.usedByIema ? 'IEMA Already Used' : 'IEMA Available'}
+                  tone={USAGE_TONE[iemaUsage]}
+                  label={LICENSE_LABELS[iemaUsage]('IEMA')}
                 />
               </>
             )}

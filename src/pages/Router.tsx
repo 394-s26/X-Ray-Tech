@@ -84,14 +84,14 @@ const Router = () => {
         />
         <Route
           path="/certificates"
-          element={requireAuth(<CredentialTracking />)}
+          element={requireAuth(appUser ? <CredentialTracking appUser={appUser} /> : <></>)}
         />
         <Route path="/cycles" element={requireAuth(appUser ? <CyclesPage appUser={appUser} /> : <></>)} />
         <Route
           path="/reporting"
           element={requireAuth(appUser ? <CertificateReporting appUser={appUser} /> : <></>)}
         />
-        <Route path="/archive" element={requireAuth(<Archive />)} />
+        <Route path="/archive" element={requireAuth(appUser ? <Archive appUser={appUser} /> : <></>)} />
         <Route
           path="/certificates/new"
           element={requireAuth(<CertificateCreatePage />)}

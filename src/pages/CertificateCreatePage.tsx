@@ -1,5 +1,6 @@
 import { useId, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
 import { CertificateUploadIcon, PlusIcon } from '../services/svgIcons';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
@@ -24,6 +25,40 @@ const ALL_PREPROCESSING_OPTIONS: PreprocessingOptions = {
 const PRIMARY_BTN =
   'rounded-lg bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-[var(--fg-on-brand)] px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50';
 
+// Per-account image upload allowance. Once the cap is reached, certificates can
+// still be created — they just save without a photo and fall back to a placeholder.
+const IMAGE_UPLOAD_LIMIT = 48;
+const MAX_UPLOAD_SIZE_MB = 50;
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+
+function imageUploadKey(): string {
+  let uid = 'anon';
+  try {
+    uid = getAuth().currentUser?.uid ?? 'anon';
+  } catch {
+    /* firebase not ready — fall back to a shared key */
+  }
+  return `cert-image-uploads:${uid}`;
+}
+
+function readImageUploadCount(): number {
+  try {
+    return parseInt(window.localStorage.getItem(imageUploadKey()) ?? '0', 10) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function bumpImageUploadCount(): number {
+  const next = readImageUploadCount() + 1;
+  try {
+    window.localStorage.setItem(imageUploadKey(), String(next));
+  } catch {
+    /* ignore storage failures */
+  }
+  return next;
+}
+
 export const CertificateCreatePage = () => {
   const formId = useId();
   const navigate = useNavigate();
@@ -39,14 +74,15 @@ export const CertificateCreatePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [badFileType, setBadFileType] = useState(false);
-  const [noTextDetected, setNoTextDetected] = useState(false);
+  const [imagesUsed, setImagesUsed] = useState(() => readImageUploadCount());
 
   const pipeline = useOcrPipeline();
   const isReadingFile =
     pipeline.status === 'loading' || pipeline.status === 'recognizing';
   const formDisabled = loading || isReadingFile;
 
-  const UNSUPPORTED_IMAGE_TYPES = ['image/heic', 'image/heif', 'image/avif', 'image/tiff', 'image/bmp', 'image/svg+xml'];
+  const imagesRemaining = Math.max(0, IMAGE_UPLOAD_LIMIT - imagesUsed);
+  const imageLimitReached = imagesRemaining <= 0;
 
   const clearForm = () => {
     setCertificateName('');
@@ -56,16 +92,13 @@ export const CertificateCreatePage = () => {
     setPoints('');
     setCategoryType('');
     setBadFileType(false);
-    setNoTextDetected(false);
   };
 
   const runOcrOnFile = async (file: File) => {
     clearForm();
-    setNoTextDetected(false);
     try {
       const { text } = await pipeline.processFile(file, ALL_PREPROCESSING_OPTIONS);
       if (text.trim().length < 15) {
-        setNoTextDetected(true);
         return;
       }
       const parsed = parseCertificateText(text);
@@ -86,13 +119,23 @@ export const CertificateCreatePage = () => {
   };
 
   const acceptFile = (file: File | null | undefined) => {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
+    if (imageLimitReached) {
+      setError(
+        `Image upload limit reached (${IMAGE_UPLOAD_LIMIT} per account). You can still save this certificate — it will use a placeholder image.`,
+      );
+      return;
+    }
     setBadFileType(false);
-    setNoTextDetected(false);
-    if (UNSUPPORTED_IMAGE_TYPES.includes(file.type)) {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       setBadFileType(true);
       return;
     }
+    if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024) {
+      setError(`That image is too large. Maximum file size is ${MAX_UPLOAD_SIZE_MB} MB.`);
+      return;
+    }
+    setError(null);
     setPhotoFile(file);
     setPhotoPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev);
@@ -113,7 +156,6 @@ export const CertificateCreatePage = () => {
       return null;
     });
     setBadFileType(false);
-    setNoTextDetected(false);
     pipeline.reset();
     clearForm();
   };
@@ -160,6 +202,9 @@ export const CertificateCreatePage = () => {
         categories: [],
         appliedCycles: {},
       });
+      if (photoFile) {
+        setImagesUsed(bumpImageUploadCount());
+      }
       const successState: CertificateSaveResultState = {
         status: 'success',
         certId: id,
@@ -196,13 +241,11 @@ export const CertificateCreatePage = () => {
       <PageHeader
         icon={<PlusIcon size={22} />}
         title="Add certificate"
-        subtitle="Upload a photo and we'll pre-fill the details from the certificate text. Apply it to a license later from the Cycle Manager."
+        subtitle="Add a certificate to track it. You can apply it to a license later from the Cycle Manager."
       />
 
-      <section className="rounded-2xl cert-step-panel p-5 lg:p-6 relative overflow-hidden mx-auto max-w-180">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary dark:bg-secondary pointer-events-none" />
-
-        <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-5 pt-2">
+      <section className="rounded-2xl cert-step-panel p-5 lg:p-6 relative overflow-hidden mx-auto max-w-5xl">
+        <form id={formId} onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2 lg:items-start pt-2">
           <div className="form-field">
             <label htmlFor={`${formId}-photo`} className="form-label">
               Certificate photo <span className="text-gray-400 font-normal">(optional)</span>
@@ -211,8 +254,8 @@ export const CertificateCreatePage = () => {
               id={`${formId}-photo`}
               name="photo"
               type="file"
-              accept="image/*"
-              disabled={formDisabled}
+              accept="image/jpeg,image/png"
+              disabled={formDisabled || imageLimitReached}
               onChange={handlePhotoChange}
               className="sr-only"
             />
@@ -220,26 +263,38 @@ export const CertificateCreatePage = () => {
             {!photoFile ? (
               <div
                 role="button"
-                tabIndex={0}
+                tabIndex={imageLimitReached ? -1 : 0}
+                aria-disabled={imageLimitReached}
                 onKeyDown={(ke) => {
-                  if (ke.key === 'Enter' || ke.key === ' ') {
+                  if ((ke.key === 'Enter' || ke.key === ' ') && !imageLimitReached) {
                     ke.preventDefault();
                     openFilePicker();
                   }
                 }}
                 onDrop={handleOverlayDrop}
                 onDragOver={(ev) => ev.preventDefault()}
-                onClick={openFilePicker}
-                className="relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-white/60 px-6 py-10 text-center transition-colors hover:border-primary/40 hover:bg-primary/[0.03] dark:border-slate-600 dark:bg-slate-800/40 dark:hover:border-primary-light/50"
+                onClick={() => {
+                  if (!imageLimitReached) openFilePicker();
+                }}
+                className={
+                  imageLimitReached
+                    ? 'relative flex min-h-[200px] cursor-not-allowed flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-800/40'
+                    : 'relative flex min-h-[200px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-white/60 px-6 py-10 text-center transition-colors hover:border-primary/40 hover:bg-primary/[0.03] dark:border-slate-600 dark:bg-slate-800/40 dark:hover:border-primary-light/50'
+                }
               >
                 <div className="rounded-full bg-primary/10 p-4 dark:bg-primary-light/15">
                   <CertificateUploadIcon size={36} className="text-primary dark:text-secondary" />
                 </div>
                 <p className="text-base font-semibold text-primary dark:text-slate-100">
-                  Upload certificate photo
+                  Upload a photo
                 </p>
                 <p className="text-sm text-gray-500 dark:text-slate-400">
-                  Drag and drop or click to select an image
+                  {imageLimitReached
+                    ? 'This certificate will be saved with a placeholder image.'
+                    : 'Drag and drop or click to add an image'}
+                </p>
+                <p className="text-xs text-gray-400 dark:text-slate-500">
+                  Supported formats: JPG, PNG · Max {MAX_UPLOAD_SIZE_MB} MB
                 </p>
               </div>
             ) : (
@@ -256,9 +311,7 @@ export const CertificateCreatePage = () => {
                         aria-hidden="true"
                       />
                       <p className="text-sm font-semibold">
-                        {pipeline.status === 'loading'
-                          ? 'Reading image…'
-                          : `Extracting text… ${Math.round(pipeline.progress * 100)}%`}
+                        Processing image…
                       </p>
                     </div>
                   </div>
@@ -272,7 +325,7 @@ export const CertificateCreatePage = () => {
                       ev.stopPropagation();
                       clearPhoto();
                     }}
-                    className="global-btn outline default-btn max-w-[10rem] py-2 text-xs"
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-primary-light/50"
                   >
                     Replace image
                   </button>
@@ -280,34 +333,29 @@ export const CertificateCreatePage = () => {
               </div>
             )}
 
-            {!badFileType && pipeline.error && (
-              <p className="text-xs text-amber-700 dark:text-amber-400">
-                Couldn't read text from this image. Try a clearer photo.
-              </p>
-            )}
-            {!badFileType && noTextDetected && (
-              <p className="text-xs text-amber-700 dark:text-amber-400">
-                No text detected — consider uploading a different image.
-              </p>
-            )}
-            {!badFileType && pipeline.status === 'done' && !pipeline.error && !noTextDetected && (
-              <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                Certificate text auto-filled.
-              </p>
-            )}
             {!photoFile && (
               badFileType ? (
                 <p className="text-xs text-red-600 dark:text-red-400">
-                  Unsupported file type. Please convert to JPEG or PNG and try again.
+                  Unsupported file type. Please use a JPG or PNG image.
                 </p>
               ) : (
                 <p className="text-xs text-gray-500 dark:text-slate-400">
-                  Upload a photo or scan from email or mail.
+                  Upload a photo of your certificate.{' '}
+                  <span
+                    className={
+                      imageLimitReached
+                        ? 'font-medium text-red-600 dark:text-red-400'
+                        : 'font-medium text-sky-600 dark:text-sky-400'
+                    }
+                  >
+                   {imagesRemaining} of {IMAGE_UPLOAD_LIMIT} image uploads remaining
+                  </span>
                 </p>
               )
             )}
           </div>
 
+          <div className="flex flex-col gap-5">
           <div className="form-field">
             <label htmlFor={`${formId}-name`} className="form-label">
               Certificate name <span className="text-red-500">*</span>
@@ -429,6 +477,7 @@ export const CertificateCreatePage = () => {
             >
               {loading ? 'Saving…' : 'Save certificate'}
             </button>
+          </div>
           </div>
         </form>
 

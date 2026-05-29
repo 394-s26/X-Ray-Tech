@@ -8,6 +8,33 @@ import {
   getEffectiveAppliedCycles,
 } from '../utils/cycles';
 
+type License = Exclude<CertificateCategory, 'CPR'>;
+
+export type LicenseUsage = 'available' | 'inUse' | 'spent';
+
+/**
+ * Per-license state for a cert: 'inUse' = applied to the user's current cycle,
+ * 'spent' = applied to a past cycle (matches the red X in CycleManager),
+ * 'available' = not applied to this license yet.
+ */
+export const getLicenseUsage = (
+  cert: Certification,
+  license: License,
+  appUser: AppUser,
+): LicenseUsage => {
+  const applied = getEffectiveAppliedCycles(cert, appUser)[license];
+  if (!applied) return 'available';
+  const cycle = license === 'ARRT' ? computeArrtCycle(appUser) : computeIemaCycle(appUser);
+  if (cycle && applied === cycle.startISO) return 'inUse';
+  return 'spent';
+};
+
+const isLicenseSpent = (
+  cert: Certification,
+  license: License,
+  appUser: AppUser,
+): boolean => getLicenseUsage(cert, license, appUser) === 'spent';
+
 export type LifecycleStatus = 'active' | 'expiringSoon' | 'expired';
 
 export const EXPIRING_SOON_DAYS = 30;
@@ -38,8 +65,18 @@ export const isFullyUsed = (cert: Certification): boolean => {
     : cert.categories.includes('ARRT') && cert.categories.includes('IEMA');
 };
 
-export const isArchived = (cert: Certification, today?: Date): boolean => {
-  return getArchiveStatus(cert, today).expired || isFullyUsed(cert);
+export const isArchived = (
+  cert: Certification,
+  appUser: AppUser,
+  today?: Date,
+): boolean => {
+  if (getArchiveStatus(cert, today).expired) return true;
+  const cprOnly =
+    cert.categories.includes('CPR') &&
+    !cert.categories.includes('ARRT') &&
+    !cert.categories.includes('IEMA');
+  if (cprOnly) return true;
+  return isLicenseSpent(cert, 'ARRT', appUser) && isLicenseSpent(cert, 'IEMA', appUser);
 };
 
 export const getArchiveStatus = (

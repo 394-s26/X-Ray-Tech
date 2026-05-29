@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Certification } from '../types/certification';
+import type { AppUser } from '../types/auth';
 import { useCertifications } from '../hooks/useCertifications';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
@@ -99,7 +100,11 @@ function getInt(params: URLSearchParams, key: string, fallback: number): number 
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-const CertificationTracking = () => {
+interface CertificationTrackingProps {
+  appUser: AppUser;
+}
+
+const CertificationTracking = ({ appUser }: CertificationTrackingProps) => {
   const { certifications, loading } = useCertifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -165,8 +170,8 @@ const CertificationTracking = () => {
   };
 
   const tracked = useMemo(
-    () => certifications.filter((c) => !isArchived(c)),
-    [certifications],
+    () => certifications.filter((c) => !isArchived(c, appUser)),
+    [certifications, appUser],
   );
 
   const filtered = useMemo(() => {
@@ -385,7 +390,7 @@ const CertificationTracking = () => {
         <>
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pageItems.map((c) => (
-              <CertificateCard key={c.id} cert={c} onOpen={setPhotoTarget} />
+              <CertificateCard key={c.id} cert={c} onOpen={setPhotoTarget} usedLabel="In Use" appUser={appUser} />
             ))}
           </section>
 
@@ -453,7 +458,7 @@ const CertificationTracking = () => {
             setDetailTarget(null);
             setToast({
               message: 'Updates have been made',
-              detail: isArchived(updated)
+              detail: isArchived(updated, appUser)
                 ? 'This certificate is now fully used or expired. Find it in Archive.'
                 : undefined,
             });

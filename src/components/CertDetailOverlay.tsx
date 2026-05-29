@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PencilIcon, XIcon } from '../services/svgIcons';
+import { CertImagePlaceholder } from './CertImagePlaceholder';
 import type { Certification } from '../types/certification';
 import { updateCertificationRecord } from '../services/certificateService';
 
@@ -149,7 +150,13 @@ export function CertDetailOverlay({
       title="View certificate photo"
       className="shrink-0 w-full sm:w-32 self-stretch sm:self-start rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 cursor-pointer hover:border-primary/50 dark:hover:border-primary-light/50 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
     >
-      <img src={cert.photoURL} alt="Certificate thumbnail" className="w-full h-32 sm:h-40 object-cover" />
+      {cert.photoURL ? (
+        <img src={cert.photoURL} alt="Certificate thumbnail" className="w-full h-32 sm:h-40 object-cover" />
+      ) : (
+        <div className="w-full h-32 sm:h-40">
+          <CertImagePlaceholder />
+        </div>
+      )}
     </button>
   );
 
