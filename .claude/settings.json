@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk 'END{print \"LINES=\"NR}' src/components/AddCertificationModal.tsx)",
+      "Bash(echo \"DONE_TSC_$?\")",
+      "Bash(npx tsc *)",
+      "Bash(echo \"tsc exit=$?\")",
+      "Bash(echo \"ESLINT_DONE=$?\")"
+    ]
+  }
+}

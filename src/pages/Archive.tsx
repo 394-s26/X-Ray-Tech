@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Certification } from '../types/certification';
+import type { AppUser } from '../types/auth';
 import { useCertifications } from '../hooks/useCertifications';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
@@ -31,7 +32,11 @@ function getInt(params: URLSearchParams, key: string, fallback: number): number 
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-export default function Archive() {
+interface ArchiveProps {
+  appUser: AppUser;
+}
+
+export default function Archive({ appUser }: ArchiveProps) {
   const { certifications, loading } = useCertifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [photoTarget, setPhotoTarget] = useState<Certification | null>(null);
@@ -93,8 +98,8 @@ export default function Archive() {
   };
 
   const archived = useMemo(
-    () => certifications.filter((c) => isArchived(c)),
-    [certifications],
+    () => certifications.filter((c) => isArchived(c, appUser)),
+    [certifications, appUser],
   );
 
   const filtered = useMemo(() => {
@@ -311,7 +316,7 @@ export default function Archive() {
         <>
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pageItems.map((c) => (
-              <CertificateCard key={c.id} cert={c} onOpen={setPhotoTarget} />
+              <CertificateCard key={c.id} cert={c} onOpen={setPhotoTarget} usedLabel="Fully Used" appUser={appUser} />
             ))}
           </section>
 
@@ -379,7 +384,7 @@ export default function Archive() {
             setDetailTarget(null);
             setToast({
               message: 'Updates have been made',
-              detail: !isArchived(updated)
+              detail: !isArchived(updated, appUser)
                 ? 'This certificate is active again. Find it in Certification Tracking.'
                 : undefined,
             });

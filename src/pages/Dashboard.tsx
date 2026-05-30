@@ -5,6 +5,7 @@ import { useCertifications } from '../hooks/useCertifications';
 import type { Certification, CertificateCategory } from '../types/certification';
 import type { AppUser } from '../types/auth';
 import { useSetupReminder } from '../components/setupReminderContext';
+import { Donut } from '../components/Donut';
 import arrtLogoWhite from '../assets/arrtwhitetext.png';
 import iemaLogoWhite from '../assets/iemawhitetext.png';
 import arrtLogoBlack from '../assets/arrtblacktext.png';
@@ -23,10 +24,6 @@ import {
 const COMBINED_TOTAL = 48;
 
 // ── Helpers ──────────────────────────────────────────────────
-
-function clampPct(percent: number): number {
-  return Math.max(0, Math.min(100, percent));
-}
 
 function daysUntil(dateString: string): number {
   const today = new Date();
@@ -85,95 +82,6 @@ function urgencyTint(days: number): Tint {
   if (days < 90)  return 'tint-rose';
   if (days < 365) return 'tint-sun';
   return 'tint-mint';
-}
-
-// ── Donut ────────────────────────────────────────────────────
-
-interface DonutSegment {
-  value: number;
-  color: string;
-}
-
-interface DonutProps {
-  percent: number;
-  segments?: DonutSegment[];
-  total?: number;
-  label?: React.ReactNode;
-  size?: number;
-  strokeWidth?: number;
-}
-
-function Donut({ percent, segments, total, label, size = 88, strokeWidth = 11 }: DonutProps) {
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * r;
-  const pct = clampPct(percent);
-
-  let arcs: { color: string; dasharray: string; dashoffset: number }[] = [];
-  if (segments && total && total > 0) {
-    let cumulative = 0;
-    arcs = segments.map((seg) => {
-      const portion = clampPct((seg.value / total) * 100) / 100;
-      const arcLength = portion * circumference;
-      const arc = {
-        color: seg.color,
-        dasharray: `${arcLength} ${circumference}`,
-        dashoffset: -cumulative * circumference,
-      };
-      cumulative += portion;
-      return arc;
-    });
-  }
-
-  return (
-    <div
-      className="relative shrink-0"
-      style={{ width: size, height: size, flex: `0 0 ${size}px` }}
-    >
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
-        <circle
-          cx={cx} cy={cy} r={r}
-          fill="none"
-          strokeWidth={strokeWidth}
-          stroke="var(--ink-200)"
-        />
-        {arcs.length > 0 ? (
-          arcs.map((arc, i) => (
-            <circle
-              key={i}
-              cx={cx} cy={cy} r={r}
-              fill="none"
-              stroke={arc.color}
-              strokeWidth={strokeWidth}
-              strokeLinecap="butt"
-              strokeDasharray={arc.dasharray}
-              strokeDashoffset={arc.dashoffset}
-              transform={`rotate(-90 ${cx} ${cy})`}
-              style={{ transition: 'stroke-dasharray 0.6s ease-out, stroke-dashoffset 0.6s ease-out' }}
-            />
-          ))
-        ) : (
-          <circle
-            cx={cx} cy={cy} r={r}
-            fill="none"
-            stroke="var(--brand-600)"
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - pct / 100)}
-            transform={`rotate(-90 ${cx} ${cy})`}
-            style={{ transition: 'stroke-dashoffset 0.6s ease-out' }}
-          />
-        )}
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <span className="font-mono-brand text-sm font-semibold text-[var(--ink-900)]">
-          {label ?? `${Math.round(pct)}%`}
-        </span>
-      </div>
-    </div>
-  );
 }
 
 // ── Top stat cards ───────────────────────────────────────────
