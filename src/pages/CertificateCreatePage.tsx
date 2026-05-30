@@ -1,10 +1,11 @@
-import { useId, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
+import { useEffect, useId, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { CertificateUploadIcon, PlusIcon } from '../services/svgIcons';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { PageHeader } from '../components/PageHeader';
 import {
+  countUserCertificateImages,
   createCertificateRecord,
   describeCertificateSaveError,
 } from '../services/certificateService';
@@ -31,34 +32,6 @@ const IMAGE_UPLOAD_LIMIT = 48;
 const MAX_UPLOAD_SIZE_MB = 50;
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
 
-function imageUploadKey(): string {
-  let uid = 'anon';
-  try {
-    uid = getAuth().currentUser?.uid ?? 'anon';
-  } catch {
-    /* firebase not ready — fall back to a shared key */
-  }
-  return `cert-image-uploads:${uid}`;
-}
-
-function readImageUploadCount(): number {
-  try {
-    return parseInt(window.localStorage.getItem(imageUploadKey()) ?? '0', 10) || 0;
-  } catch {
-    return 0;
-  }
-}
-
-function bumpImageUploadCount(): number {
-  const next = readImageUploadCount() + 1;
-  try {
-    window.localStorage.setItem(imageUploadKey(), String(next));
-  } catch {
-    /* ignore storage failures */
-  }
-  return next;
-}
-
 export const CertificateCreatePage = () => {
   const formId = useId();
   const navigate = useNavigate();
@@ -74,7 +47,31 @@ export const CertificateCreatePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [badFileType, setBadFileType] = useState(false);
-  const [imagesUsed, setImagesUsed] = useState(() => readImageUploadCount());
+  const [imagesUsed, setImagesUsed] = useState(0);
+  // Starts loaded when there's no signed-in user (nothing to fetch), avoiding a
+  // synchronous setState inside the effect below.
+  const [usageLoaded, setUsageLoaded] = useState(() => !getAuth().currentUser?.uid);
+
+  // Load the account's current image usage from live data so deleted certs free
+  // a slot and pre-existing images count toward the allowance.
+  useEffect(() => {
+    let active = true;
+    const uid = getAuth().currentUser?.uid;
+    if (!uid) return;
+    countUserCertificateImages(uid)
+      .then((count) => {
+        if (active) setImagesUsed(count);
+      })
+      .catch(() => {
+        /* treat an unreadable count as zero rather than blocking uploads */
+      })
+      .finally(() => {
+        if (active) setUsageLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const pipeline = useOcrPipeline();
   const isReadingFile =
@@ -82,7 +79,7 @@ export const CertificateCreatePage = () => {
   const formDisabled = loading || isReadingFile;
 
   const imagesRemaining = Math.max(0, IMAGE_UPLOAD_LIMIT - imagesUsed);
-  const imageLimitReached = imagesRemaining <= 0;
+  const imageLimitReached = usageLoaded && imagesRemaining <= 0;
 
   const clearForm = () => {
     setCertificateName('');
@@ -203,7 +200,7 @@ export const CertificateCreatePage = () => {
         appliedCycles: {},
       });
       if (photoFile) {
-        setImagesUsed(bumpImageUploadCount());
+        setImagesUsed((used) => used + 1);
       }
       const successState: CertificateSaveResultState = {
         status: 'success',
