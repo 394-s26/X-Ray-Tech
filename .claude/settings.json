@@ -5,7 +5,11 @@
       "Bash(echo \"DONE_TSC_$?\")",
       "Bash(npx tsc *)",
       "Bash(echo \"tsc exit=$?\")",
-      "Bash(echo \"ESLINT_DONE=$?\")"
+      "Bash(echo \"ESLINT_DONE=$?\")",
+      "Bash(python3.13 -m venv /Users/nannyhabers/Documents/NorthwesternUniversity/Classes/Spring2026/CS394/class-projects/X-Ray-Tech/functions-python/venv)",
+      "Bash(/Users/nannyhabers/Documents/NorthwesternUniversity/Classes/Spring2026/CS394/class-projects/X-Ray-Tech/functions-python/venv/bin/python -m pip install --upgrade pip)",
+      "Bash(/Users/nannyhabers/Documents/NorthwesternUniversity/Classes/Spring2026/CS394/class-projects/X-Ray-Tech/functions-python/venv/bin/pip install *)",
+      "Bash(/Users/nannyhabers/Documents/NorthwesternUniversity/Classes/Spring2026/CS394/class-projects/X-Ray-Tech/functions-python/venv/bin/python -c \"import firebase_functions, os; print\\('firebase_functions OK at', os.path.dirname\\(firebase_functions.__file__\\)\\)\")"
     ]
   }
 }
