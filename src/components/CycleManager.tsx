@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type {
   AppliedCycles,
   Certification,
@@ -13,12 +13,22 @@ import {
   getEffectiveAppliedCycles,
   type CycleWindow,
 } from '../utils/cycles';
-import { isCategoryA, unusedPointsByLicense } from '../services/archiveLogic';
+import { isCategoryA } from '../services/archiveLogic';
 import { updateCertificationRecord } from '../services/certificateService';
-import { CreditBar } from './CreditBar';
+import { Donut } from './Donut';
 import { CertDetailOverlay } from './CertDetailOverlay';
 import { PhotoOverlay } from './PhotoOverlay';
-import { XIcon } from '../services/svgIcons';
+import { ChevronRightIcon, XIcon } from '../services/svgIcons';
+import arrtLogoBlack from '../assets/arrtblacktext.png';
+import arrtLogoWhite from '../assets/arrtwhitetext.png';
+import iemaLogoBlack from '../assets/iemablacktext.png';
+import iemaLogoWhite from '../assets/iemawhitetext.png';
+
+// Black-text logos for light mode, white-text for dark mode.
+const LICENSE_LOGO: Record<License, { light: string; dark: string }> = {
+  ARRT: { light: arrtLogoBlack, dark: arrtLogoWhite },
+  IEMA: { light: iemaLogoBlack, dark: iemaLogoWhite },
+};
 
 function formatCycleRange(cycle: CycleWindow): string {
   const fmt = (iso: string) =>
@@ -31,6 +41,86 @@ function formatCycleRange(cycle: CycleWindow): string {
 }
 
 type License = Exclude<CertificateCategory, 'CPR'>;
+
+interface CycleSegment {
+  cert: Certification;
+  value: number;
+  color: string;
+}
+
+/**
+ * Fixed-height footer for a cycle donut card: shows the reported certificates
+ * one at a time (so the card never grows with the count), with prev/next
+ * buttons and horizontal swipe on touch devices.
+ */
+function ReportedCertsCarousel({ segments }: { segments: CycleSegment[] }) {
+  const [index, setIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const count = segments.length;
+
+  if (count === 0) {
+    return (
+      <div className="flex h-14 w-full items-center justify-center border-t border-[var(--ink-200)] dark:border-[var(--ink-700)] text-[10px] text-[var(--ink-500)]">
+        No certificates applied yet.
+      </div>
+    );
+  }
+
+  const safe = Math.min(index, count - 1);
+  const seg = segments[safe];
+  const go = (delta: number) => setIndex(() => (safe + delta + count) % count);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 30) go(dx < 0 ? 1 : -1);
+    touchStartX.current = null;
+  };
+
+  const navBtn =
+    'grid h-9 w-9 shrink-0 place-items-center rounded-md text-[var(--ink-600)] transition-all duration-150 hover:bg-[var(--ink-100)] hover:text-[var(--brand-700)] active:scale-90 active:bg-[var(--brand-50)] active:text-[var(--brand-700)] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[var(--ink-600)] disabled:active:scale-100 disabled:active:bg-transparent dark:text-[var(--ink-300)] dark:hover:bg-[var(--ink-800)] dark:hover:text-[var(--ink-100)] dark:active:bg-[rgba(91,63,228,0.25)] dark:active:text-[var(--ink-100)]';
+
+  return (
+    <div
+      className="flex h-14 w-full flex-col justify-center gap-0.5 border-t border-[var(--ink-200)] dark:border-[var(--ink-700)] pt-2"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      <div className="flex items-center gap-1">
+        <button type="button" onClick={() => go(-1)} disabled={count <= 1} aria-label="Previous certificate" className={navBtn}>
+          <ChevronRightIcon size={20} className="rotate-180" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: seg.color }} />
+          <span
+            className="min-w-0 flex-1 truncate text-[10px] text-[var(--ink-700)] dark:text-[var(--ink-200)]"
+            title={seg.cert.certificateName}
+          >
+            {seg.cert.certificateName}
+          </span>
+          <span className="font-mono-brand shrink-0 text-[10px] font-semibold tabular-nums text-[var(--ink-900)] dark:text-[var(--ink-100)]">
+            {Math.round(seg.value)} points
+          </span>
+        </div>
+        <button type="button" onClick={() => go(1)} disabled={count <= 1} aria-label="Next certificate" className={navBtn}>
+          <ChevronRightIcon size={20} />
+        </button>
+      </div>
+      {/* Always rendered (invisible when there's only one) so the button row
+          above keeps a fixed position instead of jumping when the counter appears. */}
+      <p
+        className={`text-center font-mono-brand text-[9px] tabular-nums text-[var(--ink-400)] ${
+          count > 1 ? '' : 'invisible'
+        }`}
+      >
+        {safe + 1} / {count}
+      </p>
+    </div>
+  );
+}
 
 const formatDate = (iso: string): string =>
   new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
@@ -76,6 +166,25 @@ const isExpired = (cert: Certification): boolean => {
   return Number.isFinite(exp) && exp < startOfTodayMs();
 };
 
+// 24 distinct colours (one per possible cycle point) for the certificate
+// segments in the cycle donuts, so individual contributions are easy to tell
+// apart. Evenly spaced hues at a mid tone that reads on both light and dark.
+const SEGMENT_COLORS = Array.from(
+  { length: 24 },
+  (_, i) => `hsl(${i * 15}, 68%, 52%)`,
+);
+
+// Deterministic colour per certificate id, so a cert keeps the same colour
+// regardless of how many other certs are applied or how they're sorted. (Index-
+// by-rank reshuffled every colour whenever a cert was added/removed.)
+function colorForCert(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return SEGMENT_COLORS[hash % SEGMENT_COLORS.length];
+}
+
 type SortKey = 'newest' | 'oldest' | 'name' | 'unassigned';
 
 const SORT_LABELS: Record<SortKey, string> = {
@@ -100,11 +209,6 @@ export function CycleManager({ certifications, appUser }: CycleManagerProps) {
       IEMA: iemaCycle ? creditsInCycle(certifications, 'IEMA', iemaCycle, appUser) : 0,
     }),
     [certifications, appUser, arrtCycle, iemaCycle],
-  );
-
-  const unused = useMemo(
-    () => unusedPointsByLicense(certifications, appUser),
-    [certifications, appUser],
   );
 
   // Licenses whose *current* cycle this cert is still counting toward. An
@@ -281,41 +385,68 @@ export function CycleManager({ certifications, appUser }: CycleManagerProps) {
     void writeUpdate(cert, nextCategories, nextApplied);
   };
 
+  // Certs counting toward this license's current cycle, each tagged with a
+  // stable per-cert colour so the donut breakdown reads clearly (a 4-pt cert is
+  // plainly 4 of the filled points) and a cert keeps its colour as others are
+  // added or removed. Sorted largest-first for a readable arrangement.
+  const cycleSegments = (license: License, cycle: CycleWindow): CycleSegment[] =>
+    certifications
+      .filter((c) => {
+        const eff = getEffectiveAppliedCycles(c, appUser);
+        return eff[license] === cycle.startISO && (c.ceCredits || 0) > 0;
+      })
+      .sort((a, b) => (b.ceCredits || 0) - (a.ceCredits || 0))
+      .map((cert) => ({
+        cert,
+        value: cert.ceCredits || 0,
+        color: colorForCert(cert.id),
+      }));
+
   const renderSummary = (license: License, cycle: CycleWindow | null) => {
-    if (!cycle) {
-      return (
-        <div className="flex flex-col gap-2 py-4 sm:py-5">
-          <p className="font-display text-base sm:text-lg font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">
-            {license} current cycle
-          </p>
-          <p className="text-sm text-[var(--ink-500)]">
-            Set up {license} in your profile to track credits.
-          </p>
-        </div>
-      );
-    }
+    const setup = !!cycle;
+    const segs = setup ? cycleSegments(license, cycle) : [];
     const usedRounded = Math.round(used[license]);
-    const unusedRounded = Math.round(unused[license === 'ARRT' ? 'arrt' : 'iema']);
+    // Past the cap the ring is full, so scale segments to the total applied (not
+    // just the cap). This keeps every cert proportional — a 1-pt cert stays
+    // small and a 10-pt cert stays large — instead of dropping over-cap certs.
+    const segSum = segs.reduce((sum, s) => sum + s.value, 0);
+    const donutTotal = Math.max(PER_LICENSE, segSum);
+    const logo = LICENSE_LOGO[license];
     return (
-      <div className="flex flex-col gap-3 py-4 sm:py-5">
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 sm:gap-3">
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <p className="font-display text-base sm:text-lg font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">
-              {license} current cycle
-            </p>
-            <p className="font-mono-brand text-[11px] sm:text-xs text-[var(--ink-500)] tabular-nums">
+      <div className="relative flex flex-col items-center gap-3 rounded-xl border border-[var(--ink-200)] dark:border-[var(--ink-700)] bg-[var(--paper)] dark:bg-[var(--bg-surface,#14111F)] p-4 pt-9">
+        <img src={logo.light} alt={`${license} logo`} className="absolute left-3 top-3 h-4 w-auto dark:hidden" />
+        <img src={logo.dark} alt="" aria-hidden="true" className="absolute left-3 top-3 h-4 w-auto hidden dark:block" />
+        <div className="flex w-full flex-col items-center gap-0.5 text-center">
+          <p className="font-display text-sm font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)]">
+            {license}
+          </p>
+          {setup ? (
+            <p className="font-mono-brand text-[10px] text-[var(--ink-500)] tabular-nums">
               {formatCycleRange(cycle)}
             </p>
-          </div>
-          <p className="font-mono-brand text-2xl sm:text-3xl font-semibold text-[var(--ink-900)] dark:text-[var(--ink-100)] tabular-nums shrink-0">
-            {usedRounded}
-            <span className="text-base sm:text-lg text-[var(--ink-500)] font-normal">{` / ${PER_LICENSE}h`}</span>
-          </p>
+          ) : (
+            <p className="text-[10px] text-[var(--ink-500)]">Set up in your profile</p>
+          )}
         </div>
-        <CreditBar used={used[license]} cap={PER_LICENSE} label={`${license} current cycle credits`} />
-        <p className="text-xs text-[var(--ink-500)] tabular-nums">
-          {unusedRounded} pts unused
-        </p>
+        <Donut
+          size={100}
+          strokeWidth={12}
+          percent={0}
+          total={setup ? donutTotal : undefined}
+          segments={setup ? segs.map((s) => ({ value: s.value, color: s.color })) : undefined}
+          label={
+            setup ? (
+              <>
+                {usedRounded}
+                <span className="text-[var(--ink-300)]">/</span>
+                {PER_LICENSE}
+              </>
+            ) : (
+              <span className="text-[var(--ink-400)]">—</span>
+            )
+          }
+        />
+        {setup && <ReportedCertsCarousel segments={segs} />}
       </div>
     );
   };
@@ -479,9 +610,9 @@ export function CycleManager({ certifications, appUser }: CycleManagerProps) {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-col divide-y divide-[var(--ink-200)] dark:divide-[var(--ink-700)]">
-        {renderSummary('ARRT', arrtCycle)}
+      <div className="grid grid-cols-1 min-[500px]:grid-cols-2 gap-3">
         {renderSummary('IEMA', iemaCycle)}
+        {renderSummary('ARRT', arrtCycle)}
       </div>
 
       <div className="flex flex-col gap-2">
