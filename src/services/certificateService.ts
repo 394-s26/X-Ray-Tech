@@ -187,6 +187,17 @@ export const listUserCertifications = async (uid: string): Promise<Certification
   return snap.docs.map((d) => d.data() as Certification);
 };
 
+/**
+ * Number of certificate images this account currently has stored. Drives the
+ * per-account image-upload allowance — derived from live data so deleting a
+ * certificate frees a slot, and certs uploaded before the limit existed count
+ * toward it too.
+ */
+export const countUserCertificateImages = async (uid: string): Promise<number> => {
+  const certs = await listUserCertifications(uid);
+  return certs.filter((c) => (c.photoURL ?? '').length > 0).length;
+};
+
 export const getCertificateDownloadUrl = (cert: Certificate): Promise<string> => {
   return getDownloadURL(storageRef(storage, cert.storagePath));
 };

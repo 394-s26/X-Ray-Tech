@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Certification } from '../types/certification';
 import { ArrowLeftIcon, DownloadIcon, PencilIcon, TrashIcon, XIcon } from '../services/svgIcons';
+import { CertImagePlaceholder } from './CertImagePlaceholder';
 import {
   expiryStatus,
   formatExpiryDate,
@@ -197,7 +198,13 @@ export function PhotoOverlay({ cert, onClose, onEdit, onDelete }: PhotoOverlayPr
               </dl>
             </aside>
           )}
-          {isPdf ? (
+          {!cert.photoURL ? (
+            <div
+              className={`h-[70vh] w-full overflow-hidden rounded-lg transition-opacity duration-200 ${statsCollapsed ? 'opacity-100' : 'opacity-30'}`}
+            >
+              <CertImagePlaceholder label="No image uploaded" />
+            </div>
+          ) : isPdf ? (
             <iframe
               src={cert.photoURL}
               title={cert.certificateName}
