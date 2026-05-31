@@ -12,6 +12,18 @@ def _doc_id(title: str, license_key: str) -> str:
     return f"{license_key}_{slug}"
 
 
+def _clear_collection(db, collection):
+    batch = db.batch()
+    count = 0
+    for doc in collection.stream():
+        batch.delete(doc.reference)
+        count += 1
+        if count % 500 == 0:
+            batch.commit()
+            batch = db.batch()
+    batch.commit()
+
+
 @https_fn.on_request(timeout_sec=540, memory=2048)
 def sync_certification_courses(_req: https_fn.Request) -> https_fn.Response:
     db = firestore.client()
@@ -20,6 +32,8 @@ def sync_certification_courses(_req: https_fn.Request) -> https_fn.Response:
     arrt_courses = scrape_arrt_courses()
     cpr_courses = scrape_cpr_courses()
     all_courses = arrt_courses + cpr_courses
+
+    _clear_collection(db, collection)
 
     batch = db.batch()
     count = 0
