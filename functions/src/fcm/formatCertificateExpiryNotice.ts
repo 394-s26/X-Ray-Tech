@@ -90,6 +90,10 @@ export function buildCertificateExpiryNotice(
     body,
     data: {
       type: 'certificate_expiry',
+      title,
+      body,
+      tag: `certificate_expiry_${certificate.id}`,
+      icon: '/favicon.svg',
       certificateId: certificate.id,
       uid: certificate.uid,
       displayFileName: certificate.displayFileName,

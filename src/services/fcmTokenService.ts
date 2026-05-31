@@ -2,17 +2,34 @@ import { deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/fir
 import { db } from './firebase';
 
 const DEVICE_ID_KEY = 'xray-fcm-device-id';
+const SESSION_DEVICE_ID_KEY = 'xray-fcm-device-id-session';
 
 function getOrCreateDeviceId(): string {
   try {
     let id = localStorage.getItem(DEVICE_ID_KEY);
     if (!id) {
+      id = sessionStorage.getItem(SESSION_DEVICE_ID_KEY);
+    }
+    if (!id) {
       id = crypto.randomUUID();
-      localStorage.setItem(DEVICE_ID_KEY, id);
+      try {
+        localStorage.setItem(DEVICE_ID_KEY, id);
+      } catch {
+        sessionStorage.setItem(SESSION_DEVICE_ID_KEY, id);
+      }
     }
     return id;
   } catch {
-    return 'unknown-device';
+    try {
+      let id = sessionStorage.getItem(SESSION_DEVICE_ID_KEY);
+      if (!id) {
+        id = crypto.randomUUID();
+        sessionStorage.setItem(SESSION_DEVICE_ID_KEY, id);
+      }
+      return id;
+    } catch {
+      return crypto.randomUUID();
+    }
   }
 }
 
