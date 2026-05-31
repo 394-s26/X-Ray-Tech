@@ -66,10 +66,10 @@ export async function sendTwoMonthExpiryReminders(): Promise<TwoMonthReminderRun
   for (const doc of snap.docs) {
     const data = doc.data();
 
-    // if (data.twoMonthExpiryNotificationSent === true) {
-    //   result.skippedAlreadySent += 1;
-    //   continue;
-    // }
+    if (data.twoMonthExpiryNotificationSent === true) {
+      result.skippedAlreadySent += 1;
+      continue;
+    }
 
     const certificate = toCertificateForFcm(doc.id, data);
     if (!certificate) {
