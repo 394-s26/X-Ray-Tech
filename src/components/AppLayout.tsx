@@ -3,7 +3,7 @@ import type { AppUser } from '../types/auth';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { SetupReminderProvider } from './SetupModal';
-import { FCM_TOKEN_REFRESH_MS, refreshFcmTokenIfDue } from '../services/notifications';
+import { FCM_TOKEN_REFRESH_MS, ensureFcmTokenForCurrentUser } from '../services/notifications';
 import { useSyncCycleCredits } from '../hooks/useSyncCycleCredits';
 
 interface AppLayoutProps {
@@ -13,17 +13,17 @@ interface AppLayoutProps {
 
 const AppLayout = ({ appUser, onAppUserUpdate, children }: PropsWithChildren<AppLayoutProps>) => {
   useEffect(() => {
-    void refreshFcmTokenIfDue();
+    void ensureFcmTokenForCurrentUser();
 
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
-        void refreshFcmTokenIfDue();
+        void ensureFcmTokenForCurrentUser();
       }
     };
     document.addEventListener('visibilitychange', onVisible);
 
     const intervalId = window.setInterval(() => {
-      void refreshFcmTokenIfDue();
+      void ensureFcmTokenForCurrentUser();
     }, FCM_TOKEN_REFRESH_MS);
 
     return () => {

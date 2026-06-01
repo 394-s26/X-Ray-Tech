@@ -1,4 +1,4 @@
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { getMessaging, type MulticastMessage } from 'firebase-admin/messaging';
 import { logger } from 'firebase-functions';
 import type { Certificate } from '../types/certificate.js';
@@ -25,7 +25,9 @@ export interface SendCertificateExpiryNotificationResult {
   invalidTokens: string[];
 }
 
-async function loadFcmTokensForUser(uid: string): Promise<string[]> {
+async function loadFcmTokensForUser(
+  uid: string,
+): Promise<{ tokens: string[]; docs: QueryDocumentSnapshot[] }> {
   const snap = await getFirestore()
     .collection(FCM_TOKENS_COLLECTION)
     .where('uid', '==', uid)
@@ -38,7 +40,32 @@ async function loadFcmTokensForUser(uid: string): Promise<string[]> {
       tokens.add(token);
     }
   }
-  return [...tokens];
+  return { tokens: [...tokens], docs: snap.docs };
+}
+
+async function deleteInvalidFcmTokenDocs(
+  docs: QueryDocumentSnapshot[],
+  invalidTokens: string[],
+): Promise<void> {
+  if (invalidTokens.length === 0) return;
+
+  const invalid = new Set(invalidTokens);
+  const db = getFirestore();
+  const batch = db.batch();
+  let pending = 0;
+
+  for (const doc of docs) {
+    const token = doc.data().token;
+    if (typeof token === 'string' && invalid.has(token)) {
+      batch.delete(doc.ref);
+      pending += 1;
+    }
+  }
+
+  if (pending > 0) {
+    await batch.commit();
+    logger.info('Removed invalid FCM token docs', { removed: pending });
+  }
 }
 
 /**
@@ -67,12 +94,13 @@ export async function sendCertificateExpiryNotification(
 
   requireExpirationDate(certificate);
 
-  const tokens = await loadFcmTokensForUser(uid);
+  const { tokens, docs: tokenDocs } = await loadFcmTokensForUser(uid);
 
   if (tokens.length === 0) {
     logger.info('No FCM tokens for user; skipping expiry notification', {
       uid,
       certificateId: certificate.id,
+      registeredDevices: tokenDocs.length,
     });
     return {
       uid,
@@ -83,17 +111,15 @@ export async function sendCertificateExpiryNotification(
     };
   }
 
-  const { title, body, data } = buildCertificateExpiryNotice(certificate, msUntilExpiry);
+  const { data } = buildCertificateExpiryNotice(certificate, msUntilExpiry);
 
+  // Data-only: a top-level `notification` field makes the browser auto-show a push while
+  // firebase-messaging-sw.js also calls showNotification → duplicate toasts.
   const message: MulticastMessage = {
     tokens,
-    notification: { title, body },
     data,
     webpush: {
       fcmOptions: { link: '/' },
-      notification: {
-        icon: '/favicon.svg',
-      },
     },
   };
 
@@ -118,6 +144,8 @@ export async function sendCertificateExpiryNotification(
     }
   });
 
+  await deleteInvalidFcmTokenDocs(tokenDocs, invalidTokens);
+
   const result: SendCertificateExpiryNotificationResult = {
     uid,
     tokensAttempted: tokens.length,
@@ -128,6 +156,7 @@ export async function sendCertificateExpiryNotification(
 
   logger.info('Certificate expiry FCM batch finished', {
     certificateId: certificate.id,
+    registeredDevices: tokenDocs.length,
     ...result,
   });
 

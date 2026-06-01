@@ -5,6 +5,7 @@ import { upsertFcmToken } from './fcmTokenService';
 
 const NOTIFY_AFTER_LOGIN_KEY = 'xray-tech:notify-permission-after-login';
 const FCM_LAST_SYNC_KEY = 'xray-fcm-last-sync';
+const FCM_PROMPTED_ON_DEVICE_KEY = 'xray-fcm-permission-prompted';
 
 /** Re-fetch and persist FCM token after this interval (web has no onTokenRefresh). */
 export const FCM_TOKEN_REFRESH_MS = 24 * 60 * 60 * 1000;
@@ -24,6 +25,22 @@ export function consumeNotificationPermissionPromptAfterLogin(): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+function wasNotificationPermissionPromptedOnThisDevice(): boolean {
+  try {
+    return localStorage.getItem(FCM_PROMPTED_ON_DEVICE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markNotificationPermissionPromptedOnThisDevice(): void {
+  try {
+    localStorage.setItem(FCM_PROMPTED_ON_DEVICE_KEY, '1');
+  } catch {
+    /* quota / private mode */
   }
 }
 
@@ -57,10 +74,13 @@ const messaging = getMessaging(app);
 
 onMessage(messaging, (payload) => {
   console.log('[FCM] Foreground message:', payload);
-  const title = payload.notification?.title ?? 'X-Ray Tech';
-  const body = payload.notification?.body ?? '';
+  const data = payload.data ?? {};
+  const title = data.title ?? payload.notification?.title ?? 'X-Ray Tech';
+  const body = data.body ?? payload.notification?.body ?? '';
+  const icon = data.icon ?? '/favicon.svg';
+  const tag = data.tag ?? data.certificateId ?? 'fcm-default';
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-    new Notification(title, { body, icon: '/favicon.svg' });
+    new Notification(title, { body, icon, tag });
   }
 });
 
@@ -136,4 +156,32 @@ export async function refreshFcmTokenIfDue(): Promise<void> {
 export async function requestNotificationPermissionIfDefault(): Promise<void> {
   const shouldPrompt = Notification.permission === 'default';
   await syncFcmTokenForCurrentUser({ requestPermission: shouldPrompt });
+}
+
+/**
+ * Register this browser for push on every visit when allowed.
+ * Prompts once per device (localStorage), or again right after sign-in.
+ */
+export async function ensureFcmTokenForCurrentUser(): Promise<void> {
+  if (!auth.currentUser?.uid) return;
+
+  if (typeof Notification === 'undefined') return;
+
+  const permission = Notification.permission;
+
+  if (permission === 'granted') {
+    await syncFcmTokenForCurrentUser();
+    return;
+  }
+
+  if (permission !== 'default') return;
+
+  const shouldPrompt =
+    consumeNotificationPermissionPromptAfterLogin() ||
+    !wasNotificationPermissionPromptedOnThisDevice();
+
+  if (!shouldPrompt) return;
+
+  markNotificationPermissionPromptedOnThisDevice();
+  await syncFcmTokenForCurrentUser({ requestPermission: true });
 }
