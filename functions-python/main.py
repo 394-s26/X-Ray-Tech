@@ -1,4 +1,4 @@
-from firebase_functions import https_fn
+from firebase_functions import scheduler_fn
 from firebase_admin import initialize_app, firestore
 from arrt_extractor import scrape_arrt_courses
 from cpr_extractor import scrape_cpr_courses
@@ -24,8 +24,12 @@ def _clear_collection(db, collection):
     batch.commit()
 
 
-@https_fn.on_request(timeout_sec=540, memory=2048)
-def sync_certification_courses(_req: https_fn.Request) -> https_fn.Response:
+@scheduler_fn.on_schedule(
+    schedule="0 0 1,15 * *",  # Runs on the 1st and 15th of every month
+    timeout_sec=540,
+    memory=2048,
+)
+def sync_certification_courses(_event: scheduler_fn.ScheduledEvent) -> None:
     db = firestore.client()
     collection = db.collection("certification_courses")
 
@@ -50,4 +54,4 @@ def sync_certification_courses(_req: https_fn.Request) -> https_fn.Response:
 
     batch.commit()
 
-    return https_fn.Response(f"Synced {count} courses to certification_courses.")
+    print(f"Synced {count} courses to certification_courses.")
