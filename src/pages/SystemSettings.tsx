@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../contexts/themeContext';
 import { PageHeader } from '../components/PageHeader';
 import { DeleteAccountDialog } from '../components/DeleteAccountDialog';
+import { useWalkthrough } from '../components/walkthroughContext';
 import { SettingsIcon } from '../services/svgIcons';
 
 interface SystemSettingsProps {
@@ -204,6 +205,28 @@ const AppearanceCard = () => {
   );
 };
 
+const WalkthroughCard = () => {
+  const { open } = useWalkthrough();
+
+  return (
+    <SectionCard title="Introductory Walkthrough">
+      <p className="text-sm text-[var(--ink-500)] dark:text-[var(--fg-muted)]">
+        A quick tour of the dashboard, certificates, license cycles, teams, and notifications.
+        We showed it the first time you signed in — view it again any time.
+      </p>
+      <div>
+        <button
+          type="button"
+          className="global-btn default-btn px-5 py-2 rounded-xl text-sm"
+          onClick={open}
+        >
+          Replay walkthrough
+        </button>
+      </div>
+    </SectionCard>
+  );
+};
+
 interface DangerZoneCardProps {
   appUser: AppUser;
 }
@@ -254,6 +277,7 @@ export const SystemSettings = ({ appUser }: SystemSettingsProps) => {
 
       <DesktopNotificationsCard />
       <AppearanceCard />
+      <WalkthroughCard />
       <DangerZoneCard appUser={appUser} />
     </div>
   );

@@ -32,6 +32,8 @@ interface NavItem {
   mobileHidden?: boolean;
   /** When true, the item is hidden in the desktop sidebar. */
   desktopHidden?: boolean;
+  /** Stable id targeted by the walkthrough overlay highlight. */
+  walkthroughId?: string;
 }
 
 const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
@@ -41,6 +43,7 @@ const PRIMARY_ITEMS: ReadonlyArray<NavItem> = [
     shortLabel: 'Overview',
     icon: (s) => <LayoutGridIcon size={s} />,
     mobileHidden: true,
+    walkthroughId: 'dashboard',
   },
   {
     to: '/reporting',
@@ -71,6 +74,7 @@ const CYCLES_ITEM_DESKTOP: NavItem = {
   shortLabel: 'Cycles',
   icon: (s) => <RotateCwIcon size={s} />,
   mobileHidden: true,
+  walkthroughId: 'cycles',
 };
 
 const ADD_CERT_ITEM: NavItem = {
@@ -80,6 +84,7 @@ const ADD_CERT_ITEM: NavItem = {
   icon: (s) => <PlusIcon size={s} />,
   exact: true,
   highlighted: true,
+  walkthroughId: 'add-cert',
 };
 
 const SETTINGS_ITEM: NavItem = {
@@ -88,6 +93,7 @@ const SETTINGS_ITEM: NavItem = {
   shortLabel: 'Settings',
   icon: (s) => <SettingsIcon size={s} />,
   mobileHidden: true,
+  walkthroughId: 'settings',
 };
 
 const ARCHIVE_ITEM_DESKTOP: NavItem = {
@@ -112,6 +118,7 @@ const HISTORY_ITEM_MOBILE: NavItem = {
   shortLabel: 'History',
   icon: (s) => <RotateCwIcon size={s} />,
   desktopHidden: true,
+  walkthroughId: 'cycles',
 };
 
 const FILES_ITEM_MOBILE: NavItem = {
@@ -144,6 +151,7 @@ const NavItemLink = ({ item }: { item: NavItem }) => (
   <NavLink
     to={item.to}
     end={item.exact !== undefined ? item.exact : item.to === '/'}
+    data-walkthrough-id={item.walkthroughId}
     className={({ isActive }) =>
       `app-sidebar__nav-item${isActive ? ' app-sidebar__nav-item--active' : ''}${item.highlighted ? ' highlighted' : ''}${item.mobileHidden ? ' app-sidebar__nav-item--mobile-hidden' : ''}${item.desktopHidden ? ' app-sidebar__nav-item--desktop-hidden' : ''}`
     }
@@ -205,6 +213,7 @@ const Sidebar = ({ appUser }: SidebarProps) => {
           <NavLink
             to="/team"
             end={false}
+            data-walkthrough-id="team"
             className={({ isActive }) =>
               `app-sidebar__nav-item app-sidebar__nav-item--mobile-hidden${isActive ? ' app-sidebar__nav-item--active' : ''}`
             }

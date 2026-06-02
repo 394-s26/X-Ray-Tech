@@ -461,8 +461,7 @@ export default function LandingPage() {
 
           <p ref={subRef} className="lp-hero-sub">
             One live screen for every CE credit and renewal date.
-            {' '}<span className="lp-mono">40 of 48</span> points logged.{' '}
-            <span className="lp-mono">87 days</span> to renewal. No spreadsheet, no four state-board tabs.
+            No spreadsheet, no four state-board tabs.
           </p>
 
           <div ref={ctaRef} className="lp-hero-cta-wrap">
