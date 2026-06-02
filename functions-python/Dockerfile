@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
 # Chromium system dependencies required by Playwright
 RUN apt-get update && apt-get install -y \
     libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
