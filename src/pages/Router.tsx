@@ -19,6 +19,7 @@ import { BrowseCertificationsPage } from './BrowseCertificationsPage';
 import { ForgotPasswordPage } from './ForgotPasswordPage';
 import { AuthActionPage } from './AuthActionPage';
 import ProfilePage from './ProfilePage';
+import SystemSettings from './SystemSettings';
 import LandingPage from './LandingPage';
 import AppLayout from '../components/AppLayout';
 
@@ -146,6 +147,10 @@ const Router = () => {
         <Route
           path="/profile"
           element={requireAuth(appUser ? <ProfilePage appUser={appUser} onAppUserUpdate={setAppUser} /> : <></>)}
+        />
+        <Route
+          path="/settings"
+          element={requireAuth(appUser ? <SystemSettings appUser={appUser} /> : <></>)}
         />
         <Route path="/browse" element={requireAuth(<BrowseCertificationsPage />)} />
         <Route

@@ -568,6 +568,16 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
     });
   }, [sortedMembers, search, statusFilter]);
 
+  const complianceCounts = useMemo(() => {
+    let compliant = 0;
+    let nonCompliant = 0;
+    for (const m of members) {
+      if (overallTier(m) === 'red') nonCompliant += 1;
+      else compliant += 1;
+    }
+    return { compliant, nonCompliant };
+  }, [members]);
+
   const activeFilterCount =
     (search.trim() ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0);
 
@@ -816,11 +826,26 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
               </p>
             )}
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
-            {isManager
-              ? `${filteredMembers.length}${filteredMembers.length !== sortedMembers.length ? `/${sortedMembers.length}` : ''} members`
-              : `${sortedMembers.length} members`}
-          </p>
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            {isManager && (
+              <>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+                  <span className={`w-1.5 h-1.5 rounded-full ${DOT_COLOR.green}`} />
+                  {complianceCounts.compliant} compliant
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-red-600 dark:text-red-400">
+                  <span className={`w-1.5 h-1.5 rounded-full ${DOT_COLOR.red}`} />
+                  {complianceCounts.nonCompliant} non-compliant
+                </span>
+                <span className="text-gray-300 dark:text-slate-600">·</span>
+              </>
+            )}
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+              {isManager
+                ? `${filteredMembers.length}${filteredMembers.length !== sortedMembers.length ? `/${sortedMembers.length}` : ''} members`
+                : `${sortedMembers.length} members`}
+            </p>
+          </div>
         </div>
 
         {isManager ? (

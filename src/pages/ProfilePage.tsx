@@ -6,9 +6,7 @@ import {
   checkUsernameAvailable,
   changeUsername,
   changePassword,
-  signOut,
 } from '../services/authService';
-import { DeleteAccountDialog } from '../components/DeleteAccountDialog';
 import { COLORS } from '../utils/colors';
 import UserAvatar from '../components/UserAvatar';
 import { BirthdayInput } from '../components/BirthdayInput';
@@ -300,9 +298,6 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-  // ── Delete Account ────────────────────────────────────────
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const pwStrength = checkPasswordStrength(newPassword);
   const passwordsMatch = newPassword === confirmPassword;
@@ -655,30 +650,6 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
         )}
       </SectionCard>
 
-      {/* Danger Zone */}
-      <div className="nb-card p-6 flex flex-col gap-3 border border-red-200 dark:border-red-900">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-red-600 dark:text-red-400">Danger Zone</h2>
-        <p className="text-sm text-[var(--ink-500)] dark:text-[var(--fg-muted)]">
-          Permanently delete your account, all your certifications, and remove you from any teams. This cannot be undone.
-        </p>
-        <div>
-          <button
-            type="button"
-            className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            Delete Account
-          </button>
-        </div>
-      </div>
-
-      {showDeleteDialog && (
-        <DeleteAccountDialog
-          appUser={appUser}
-          onSuccess={() => void signOut()}
-          onCancel={() => setShowDeleteDialog(false)}
-        />
-      )}
     </div>
   );
 };
