@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
+import { useMobileMenu } from './mobileMenuContext';
 import {
   BellIcon,
   LogOutIcon,
@@ -48,9 +49,10 @@ interface MenuItemProps {
   onClick: () => void;
   to?: string;
   variant?: 'default' | 'danger';
+  walkthroughId?: string;
 }
 
-function MenuItem({ icon, label, onClick, to, variant = 'default' }: MenuItemProps) {
+function MenuItem({ icon, label, onClick, to, variant = 'default', walkthroughId }: MenuItemProps) {
   const className = `navbar-menu__item${variant === 'danger' ? ' navbar-menu__item--danger' : ''}`;
   const content = (
     <>
@@ -60,13 +62,25 @@ function MenuItem({ icon, label, onClick, to, variant = 'default' }: MenuItemPro
   );
   if (to) {
     return (
-      <Link to={to} role="menuitem" className={className} onClick={onClick}>
+      <Link
+        to={to}
+        role="menuitem"
+        className={className}
+        onClick={onClick}
+        data-walkthrough-id={walkthroughId}
+      >
         {content}
       </Link>
     );
   }
   return (
-    <button type="button" role="menuitem" className={className} onClick={onClick}>
+    <button
+      type="button"
+      role="menuitem"
+      className={className}
+      onClick={onClick}
+      data-walkthrough-id={walkthroughId}
+    >
       {content}
     </button>
   );
@@ -78,7 +92,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { isOpen: menuOpen, setOpen: setMenuOpen } = useMobileMenu();
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -127,7 +141,12 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
         menuOpen ? 'pointer-events-none' : ''
       }`}
     >
-      <Link to="/" aria-label="X-Ray Tech home" className="lg:hidden">
+      <Link
+        to="/"
+        aria-label="X-Ray Tech home"
+        className="lg:hidden"
+        data-walkthrough-id="dashboard"
+      >
         <BrandLogo />
       </Link>
 
@@ -155,7 +174,7 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
         <div className="lg:hidden">
           <HamburgerButton
             open={menuOpen}
-            onClick={() => setMenuOpen((o) => !o)}
+            onClick={() => setMenuOpen(!menuOpen)}
           />
         </div>
       </div>
@@ -174,12 +193,14 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
                 label="Add Certificate"
                 onClick={close}
                 to="/certificates/new"
+                walkthroughId="add-cert"
               />
               <MenuItem
                 icon={<TeamIcon size={18} />}
                 label="Team"
                 onClick={close}
                 to="/team"
+                walkthroughId="team"
               />
               <MenuItem
                 icon={
@@ -199,6 +220,7 @@ export default function Navbar({ mode = 'full', appUser = null }: NavbarProps) {
                 label="Settings"
                 onClick={close}
                 to="/settings"
+                walkthroughId="settings"
               />
               <MenuItem
                 icon={<LogOutIcon size={18} />}
