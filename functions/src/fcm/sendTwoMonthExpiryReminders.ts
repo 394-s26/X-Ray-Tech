@@ -1,5 +1,6 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
+import { sendCertificateExpiryEmail } from '../email/sendCertificateExpiryEmail.js';
 import { msUntilExpirationDate, requireExpirationDate } from './formatCertificateExpiryNotice.js';
 import { sendCertificateExpiryNotification } from './sendCertificateExpiryNotification.js';
 import { toCertificateForFcm } from './toCertificateForFcm.js';
@@ -17,6 +18,11 @@ export interface TwoMonthReminderRunResult {
   skippedNoOwner: number;
   skippedNoTokens: number;
   failed: number;
+  // Email (sent alongside the desktop/FCM notification).
+  emailSent: number;
+  emailSkippedAlreadySent: number;
+  emailSkippedNoAddress: number;
+  emailFailed: number;
 }
 
 /** YYYY-MM-DD for the calendar day `daysFromNow` days after today (UTC). */
@@ -47,6 +53,10 @@ export async function sendTwoMonthExpiryReminders(): Promise<TwoMonthReminderRun
     skippedNoOwner: 0,
     skippedNoTokens: 0,
     failed: 0,
+    emailSent: 0,
+    emailSkippedAlreadySent: 0,
+    emailSkippedNoAddress: 0,
+    emailFailed: 0,
   };
 
   logger.info('Two-month expiry reminder run started', {
@@ -66,11 +76,6 @@ export async function sendTwoMonthExpiryReminders(): Promise<TwoMonthReminderRun
   for (const doc of snap.docs) {
     const data = doc.data();
 
-    if (data.twoMonthExpiryNotificationSent === true) {
-      result.skippedAlreadySent += 1;
-      continue;
-    }
-
     const certificate = toCertificateForFcm(doc.id, data);
     if (!certificate) {
       result.skippedNoOwner += 1;
@@ -79,37 +84,59 @@ export async function sendTwoMonthExpiryReminders(): Promise<TwoMonthReminderRun
 
     const msUntilExpiry = msUntilExpirationDate(requireExpirationDate(certificate));
 
-    try {
-      const sendResult = await sendCertificateExpiryNotification({
-        certificate,
-        msUntilExpiry,
-      });
-
-      if (sendResult.tokensAttempted === 0) {
-        result.skippedNoTokens += 1;
-        logger.warn('No FCM tokens for owner — user must allow notifications while logged in', {
-          certificateId: doc.id,
-          ownerId: certificate.uid,
-          fcmQuery: `fcmTokens where uid == ${certificate.uid}`,
+    // ── Desktop / FCM notification ─────────────────────────────────────────
+    if (data.twoMonthExpiryNotificationSent === true) {
+      result.skippedAlreadySent += 1;
+    } else {
+      try {
+        const sendResult = await sendCertificateExpiryNotification({
+          certificate,
+          msUntilExpiry,
         });
-        continue;
-      }
 
-      if (sendResult.successCount > 0) {
-        await doc.ref.update({
-          twoMonthExpiryNotificationSent: true,
-          twoMonthExpiryNotificationSentAt: FieldValue.serverTimestamp(),
-        });
-        result.sent += 1;
-      } else {
+        if (sendResult.tokensAttempted === 0) {
+          result.skippedNoTokens += 1;
+          logger.warn('No FCM tokens for owner — user must allow notifications while logged in', {
+            certificateId: doc.id,
+            ownerId: certificate.uid,
+            fcmQuery: `fcmTokens where uid == ${certificate.uid}`,
+          });
+        } else if (sendResult.successCount > 0) {
+          await doc.ref.update({
+            twoMonthExpiryNotificationSent: true,
+            twoMonthExpiryNotificationSentAt: FieldValue.serverTimestamp(),
+          });
+          result.sent += 1;
+        } else {
+          result.failed += 1;
+        }
+      } catch (err) {
         result.failed += 1;
+        logger.error('Failed to send two-month expiry notification', {
+          certificateId: doc.id,
+          err: String(err),
+        });
       }
-    } catch (err) {
-      result.failed += 1;
-      logger.error('Failed to send two-month expiry notification', {
-        certificateId: doc.id,
-        err: String(err),
-      });
+    }
+
+    // ── Email notification (same copy, sent in the same run) ───────────────
+    if (data.twoMonthExpiryEmailSent === true) {
+      result.emailSkippedAlreadySent += 1;
+    } else {
+      try {
+        const emailResult = await sendCertificateExpiryEmail({ certificate, msUntilExpiry });
+        if (emailResult.skippedNoEmail) {
+          result.emailSkippedNoAddress += 1;
+        } else if (emailResult.sent) {
+          result.emailSent += 1;
+        }
+      } catch (err) {
+        result.emailFailed += 1;
+        logger.error('Failed to send two-month expiry email', {
+          certificateId: doc.id,
+          err: String(err),
+        });
+      }
     }
   }
 
