@@ -241,7 +241,7 @@ const DangerZoneCard = ({ appUser }: DangerZoneCardProps) => {
           Danger Zone
         </h2>
         <p className="text-sm text-[var(--ink-500)] dark:text-[var(--fg-muted)]">
-          Permanently delete your account, all your certifications, and remove you from any teams. This cannot be undone.
+          Permanently delete your account, all your certifications and scantrons, and remove you from any teams. This cannot be undone.
         </p>
         <div>
           <button

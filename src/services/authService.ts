@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   updatePassword,
   reauthenticateWithCredential,
+  reauthenticateWithPopup,
   EmailAuthProvider,
   sendPasswordResetEmail,
   confirmPasswordReset,
@@ -198,12 +199,17 @@ export async function changePassword(currentPassword: string, newPassword: strin
   await updatePassword(currentUser, newPassword);
 }
 
-export async function deleteAccount(appUser: AppUser, password: string): Promise<void> {
+export async function deleteAccount(appUser: AppUser): Promise<void> {
   const currentUser = auth.currentUser;
-  if (!currentUser || !appUser.email) throw new Error('Not authenticated');
+  if (!currentUser) throw new Error('Not authenticated');
 
-  const credential = EmailAuthProvider.credential(appUser.email, password);
-  await reauthenticateWithCredential(currentUser, credential);
+  // Re-authenticate up front so a cancel/failure aborts before anything is deleted.
+  // Google users have no password, so re-auth via popup; password users rely on a
+  // recent login (the final firebaseDeleteUser surfaces requires-recent-login if stale).
+  const isGoogle = currentUser.providerData.some(p => p.providerId === 'google.com');
+  if (isGoogle) {
+    await reauthenticateWithPopup(currentUser, googleProvider);
+  }
 
   const certsCol = collection(db, 'certificates');
   const [ownerSnap, uidSnap] = await Promise.all([
@@ -221,6 +227,26 @@ export async function deleteAccount(appUser: AppUser, password: string): Promise
       await deleteDoc(d.ref);
     })
   );
+
+  // Scantrons (uid-keyed).
+  const scantronSnap = await getDocs(
+    query(collection(db, 'scantrons'), where('uid', '==', appUser.uid)),
+  );
+  if (!scantronSnap.empty) {
+    const batch = writeBatch(db);
+    scantronSnap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+
+  // FCM push-notification tokens across all of this user's devices.
+  const fcmSnap = await getDocs(
+    query(collection(db, 'fcmTokens'), where('uid', '==', appUser.uid)),
+  );
+  if (!fcmSnap.empty) {
+    const batch = writeBatch(db);
+    fcmSnap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
 
   const cycleSnap = await getDocs(collection(db, 'users', appUser.uid, 'cycleCredits'));
   if (!cycleSnap.empty) {
