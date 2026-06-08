@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppUser } from '../types/auth';
 import { deleteAccount } from '../services/authService';
+import { auth } from '../services/firebase';
 
 const CONFIRM_WORD = 'delete';
 
@@ -11,18 +12,25 @@ interface DeleteAccountDialogProps {
 }
 
 export function DeleteAccountDialog({ appUser, onSuccess, onCancel }: DeleteAccountDialogProps) {
+  // Password-provider users must re-enter their password to re-authenticate
+  // before Firebase will delete the account. Google users re-auth via popup.
+  const isPasswordUser =
+    auth.currentUser?.providerData.some(p => p.providerId === 'password') ?? false;
+
   const [typed, setTyped] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const matches = typed.trim().toLowerCase() === CONFIRM_WORD;
+  const canSubmit = matches && (!isPasswordUser || password.length > 0);
 
   const handleDelete = async () => {
-    if (!matches || loading) return;
+    if (!canSubmit || loading) return;
     setLoading(true);
     setError(null);
     try {
-      await deleteAccount(appUser);
+      await deleteAccount(appUser, isPasswordUser ? password : undefined);
       onSuccess();
     } catch (err) {
       const code = (err as { code?: string })?.code ?? '';
@@ -32,7 +40,9 @@ export function DeleteAccountDialog({ appUser, onSuccess, onCancel }: DeleteAcco
         setLoading(false);
         return;
       }
-      if (code === 'auth/requires-recent-login') {
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        setError('Incorrect password. Please try again.');
+      } else if (code === 'auth/requires-recent-login') {
         setError('For your security, please sign out and sign back in, then try again.');
       } else {
         setError(`Failed to delete account${code ? ` (${code})` : ''}. Please try again.`);
@@ -71,8 +81,28 @@ export function DeleteAccountDialog({ appUser, onSuccess, onCancel }: DeleteAcco
             placeholder={CONFIRM_WORD}
             onKeyDown={e => { if (e.key === 'Enter') void handleDelete(); }}
           />
-          {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
         </div>
+
+        {isPasswordUser && (
+          <div className="form-field mt-3">
+            <label htmlFor="delete-account-password" className="form-label">
+              Confirm your password
+            </label>
+            <input
+              id="delete-account-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError(null); }}
+              disabled={loading}
+              className={`form-input ${error ? 'is-error' : ''}`}
+              placeholder="Enter your password"
+              onKeyDown={e => { if (e.key === 'Enter') void handleDelete(); }}
+            />
+          </div>
+        )}
+
+        {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
 
         <div className="mt-5 flex justify-end gap-2">
           <button
@@ -86,7 +116,7 @@ export function DeleteAccountDialog({ appUser, onSuccess, onCancel }: DeleteAcco
           <button
             type="button"
             onClick={() => void handleDelete()}
-            disabled={loading || !matches}
+            disabled={loading || !canSubmit}
             className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? 'Deleting…' : 'Delete My Account'}
