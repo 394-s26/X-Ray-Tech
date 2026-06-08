@@ -26,6 +26,7 @@ export function DeleteAccountDialog({ appUser, onSuccess, onCancel }: DeleteAcco
       onSuccess();
     } catch (err) {
       const code = (err as { code?: string })?.code ?? '';
+      console.error('deleteAccount failed:', code, err);
       if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
         // User dismissed the Google re-auth popup; nothing was deleted.
         setLoading(false);
@@ -34,7 +35,7 @@ export function DeleteAccountDialog({ appUser, onSuccess, onCancel }: DeleteAcco
       if (code === 'auth/requires-recent-login') {
         setError('For your security, please sign out and sign back in, then try again.');
       } else {
-        setError('Failed to delete account. Please try again.');
+        setError(`Failed to delete account${code ? ` (${code})` : ''}. Please try again.`);
       }
     } finally {
       setLoading(false);

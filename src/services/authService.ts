@@ -276,7 +276,9 @@ export async function deleteAccount(appUser: AppUser): Promise<void> {
     }
   }
 
-  await deleteDoc(doc(db, 'usernames', appUser.username));
+  if (appUser.username) {
+    await deleteDoc(doc(db, 'usernames', appUser.username));
+  }
   await deleteDoc(doc(db, 'users', appUser.uid));
   await firebaseDeleteUser(currentUser);
 }

@@ -487,6 +487,9 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
   const [codeCopied, setCodeCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<TeamMemberSummary | null>(null);
 
@@ -609,6 +612,19 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
+  const handleLeaveTeam = async () => {
+    setLeaveError(null);
+    setLeaving(true);
+    try {
+      await removeTeamMember(teamCode, appUser.uid);
+      // Clears teamCode/role locally so the page falls back to the "no team" view.
+      onAppUserUpdate?.({ ...appUser, teamCode: null, role: null });
+    } catch {
+      setLeaveError('Failed to leave team. Please try again.');
+      setLeaving(false);
+    }
+  };
+
   const hasNoTeam = !appUser.teamCode;
 
   // No-team state: show the setup card with its own header (no breadcrumb since there's no team to crumb to)
@@ -728,6 +744,15 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
               </button>
             )}
           </span>
+          {!isManager && (
+            <button
+              type="button"
+              onClick={() => { setLeaveError(null); setConfirmLeave(true); }}
+              className="sm:ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              Leave team
+            </button>
+          )}
           {isManager && <span className="text-gray-300 dark:text-slate-600">·</span>}
           {isManager && (
             <button
@@ -895,6 +920,44 @@ const TeamManagement = ({ appUser, onAppUserUpdate }: TeamManagementProps) => {
           onClose={() => setSelected(null)}
           onRemoved={(uid) => setMembers((prev) => prev.filter((m) => m.uid !== uid))}
         />
+      )}
+
+      {confirmLeave && (
+        <div
+          className="overlay-center"
+          onClick={() => { if (!leaving) setConfirmLeave(false); }}
+        >
+          <div
+            className="overlay-panel overlay-panel--sm rounded-2xl p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-black dark:text-slate-100">Leave team?</h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-slate-300 leading-snug">
+              You'll be removed from{' '}
+              <span className="font-semibold text-gray-900 dark:text-slate-100">{team.name}</span>{' '}
+              and lose access to its shared view. You can rejoin later with the team code.
+            </p>
+            {leaveError && <p className="text-xs text-red-500 mt-3">{leaveError}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmLeave(false)}
+                disabled={leaving}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleLeaveTeam()}
+                disabled={leaving}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {leaving ? 'Leaving…' : 'Leave team'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
