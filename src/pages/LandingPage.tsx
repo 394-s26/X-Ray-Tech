@@ -461,7 +461,7 @@ export default function LandingPage() {
 
           <p ref={subRef} className="lp-hero-sub">
             One live screen for every CE credit and renewal date.
-            No spreadsheet, no four state-board tabs.
+            No more spreadsheet tracking.
           </p>
 
           <div ref={ctaRef} className="lp-hero-cta-wrap">
@@ -594,25 +594,37 @@ export default function LandingPage() {
                 Short and honest about how we treat the data you trust us with.
               </p>
             </div>
-            <div className="lp-section-detail-col">
-              <div className="lp-promise-block">
-                <span className="lp-eyebrow lp-eyebrow--inline">What we promise today</span>
-                <ul className="lp-section-list">
-                  <li>OCR runs locally in your browser before files reach Firebase Storage.</li>
-                  <li>EXIF metadata (GPS, camera serials, timestamps) is stripped before storage.</li>
-                  <li>Each file is locked to your account, other users can't read it through the app.</li>
-                  <li>Scan-tron tests are stored as text only, never uploaded as files.</li>
-                </ul>
-              </div>
-              <div className="lp-promise-block">
-                <span className="lp-eyebrow lp-eyebrow--inline lp-eyebrow--warn">Do not upload</span>
-                <ul className="lp-section-list">
-                  <li>Patient records, PHI, or any HIPAA-regulated data</li>
-                  <li>Identification documents (passports, driver's licenses, SSNs)</li>
-                  <li>Financial documents, insurance cards, or anything with account numbers</li>
-                  <li>Anything you do not personally have the right to upload</li>
-                </ul>
-              </div>
+            <div className="lp-section-detail-col lp-liability-body">
+              <span className="lp-eyebrow lp-eyebrow--inline">What we promise today</span>
+              <p className="lp-liability-para">
+                We don't collect much data from you. That being said we do collect basic profile details you enter
+                during setup, such as your name, license info, plus the key fields from
+                each certificate you add, such as the provider, expiration dates, and its amount of points.
+              </p>
+              <p className="lp-liability-para">
+                The text recognition (OCR) we use on your certificate uploads runs locally in your browser. This is done to ensure your data remains private and secure. 
+              </p>
+              <p className="lp-liability-para">
+                Photos you upload are stored exactly as you provide them. We do not strip metadata
+                (EXIF), so remove anything sensitive like GPS location before adding a certificate.
+              </p>
+              <p className="lp-liability-para">
+                Your certificate files are private to your account, and other users can't read
+                them. The one exception is that if you join a team, your team lead can view your
+                certification records to track license compliance.
+              </p>
+
+              <span className="lp-eyebrow lp-eyebrow--inline lp-eyebrow--warn">Do not upload</span>
+              <p className="lp-liability-para">
+                Patient records, PHI, or HIPAA-regulated data. Identification documents like
+                passports, driver's licenses, or SSNs. Financial documents, insurance cards, or
+                anything with account numbers. Anything you don't personally have the right to
+                upload.
+              </p>
+
+              <p className="lp-liability-terms">
+                By creating an account, you agree to these terms.
+              </p>
             </div>
           </div>
         </section>
