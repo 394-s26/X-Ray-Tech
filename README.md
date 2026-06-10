@@ -20,6 +20,7 @@
 
   <p align="center">
     Continuing-education credit tracking for Illinois x-ray technologists — automatically reads CE certificates and manages ARRT &amp; IEMA license cycles.
+  </br>
     <a href="https://xraytech.web.app">View Demo</a>
     &middot;
     <a href="https://github.com/394-s26/X-Ray-Tech/issues/new?labels=bug">Report Bug</a>
