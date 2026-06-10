@@ -29,6 +29,17 @@ const isLicenseMissing = (u: AppUser): boolean =>
   u.iemaCycleStartYear == null ||
   u.iemaCycleEndMonth == null;
 
+// True when the user has entered *some* license info but not all of it — the
+// step was skipped or saved partially, so it's in progress rather than empty.
+const isLicensePartial = (u: AppUser): boolean =>
+  isLicenseMissing(u) &&
+  (u.arrtCycleStartYear != null ||
+    u.iemaCycleStartYear != null ||
+    u.iemaCycleEndMonth != null);
+
+const isProfileMissing = (u: AppUser): boolean =>
+  !u.firstName || !u.lastName || !u.birthday;
+
 const isTeamMissing = (u: AppUser): boolean => !u.teamCode;
 
 const isSetupIncompleteFor = (u: AppUser): boolean =>
@@ -153,6 +164,8 @@ interface SetupModalProps {
 
 const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
   const licenseMissing = isLicenseMissing(appUser);
+  const licensePartial = isLicensePartial(appUser);
+  const profileMissing = isProfileMissing(appUser);
   const teamMissing = isTeamMissing(appUser);
   const iemaYearOptions = buildRecentYearOptions();
 
@@ -253,20 +266,25 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
         </div>
 
         <div className="px-6 sm:px-8 pb-5 flex flex-col gap-3">
-          {/* Profile (always done by this point) */}
+          {/* Profile */}
           <ChecklistRow done title="Create your account" />
-          <ChecklistRow done title="Tell us about you" />
+          <ChecklistRow done={!profileMissing} title="Tell us about you" />
 
           {/* License cycles */}
           {licenseMissing ? (
             <ChecklistSection
               done={false}
+              partial={licensePartial}
               title="Add your license cycles"
-              subtitle="So we can pin CE deadlines to the right dates."
+              subtitle={
+                licensePartial
+                  ? 'You’ve started this — finish the remaining fields below.'
+                  : 'So we can pin CE deadlines to the right dates.'
+              }
             >
               <div className="form-field">
                 <label className="form-label">
-                  Year your ARRT cycle began
+                  Year your ARRT cycle began <span className="text-red-500">*</span>
                 </label>
                 <select
                   className="form-input"
@@ -289,7 +307,7 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="form-field">
                   <label className="form-label">
-                    Year your IEMA cycle began
+                    Year your IEMA cycle began <span className="text-red-500">*</span>
                   </label>
                   <select
                     className="form-input"
@@ -305,7 +323,7 @@ const SetupModal = ({ appUser, onAppUserUpdate, onClose }: SetupModalProps) => {
                 </div>
                 <div className="form-field">
                   <label className="form-label">
-                    Month your IEMA cycle ends
+                    Month your IEMA cycle ends <span className="text-red-500">*</span>
                   </label>
                   <select
                     className="form-input"
@@ -444,22 +462,33 @@ const ChecklistRow = ({ done, title }: ChecklistRowProps) => (
 
 interface ChecklistSectionProps {
   done: boolean;
+  partial?: boolean;
   title: string;
   subtitle?: string;
   children: ReactNode;
 }
 
-const ChecklistSection = ({ done, title, subtitle, children }: ChecklistSectionProps) => (
+const ChecklistSection = ({ done, partial = false, title, subtitle, children }: ChecklistSectionProps) => (
   <div
     className="rounded-xl border overflow-hidden"
     style={{ borderColor: 'var(--ink-200)' }}
   >
     <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'var(--paper)' }}>
-      <CheckmarkDot done={done} />
+      <CheckmarkDot done={done} partial={partial} />
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${done ? 'text-[var(--ink-500)] line-through' : 'text-[var(--ink-900)]'}`}>
-          {title}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className={`text-sm font-medium ${done ? 'text-[var(--ink-500)] line-through' : 'text-[var(--ink-900)]'}`}>
+            {title}
+          </p>
+          {partial && !done && (
+            <span
+              className="shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
+              style={{ background: '#FEEFCB', color: '#B45309' }}
+            >
+              In progress
+            </span>
+          )}
+        </div>
         {subtitle && (
           <p className="text-xs text-[var(--ink-500)] mt-0.5">{subtitle}</p>
         )}
@@ -473,21 +502,31 @@ const ChecklistSection = ({ done, title, subtitle, children }: ChecklistSectionP
   </div>
 );
 
-const CheckmarkDot = ({ done }: { done: boolean }) => (
-  <span
-    className="grid place-items-center w-6 h-6 rounded-full shrink-0"
-    style={{
-      background: done ? 'var(--brand-600)' : 'transparent',
-      border: done ? '1.5px solid var(--brand-600)' : '1.5px solid var(--ink-300)',
-      color: done ? 'var(--fg-on-brand, #fff)' : 'transparent',
-    }}
-  >
-    {done && (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-    )}
-  </span>
-);
+const CheckmarkDot = ({ done, partial = false }: { done: boolean; partial?: boolean }) => {
+  const border = done
+    ? '1.5px solid var(--brand-600)'
+    : partial
+      ? '1.5px solid #D97706'
+      : '1.5px solid var(--ink-300)';
+  return (
+    <span
+      className="grid place-items-center w-6 h-6 rounded-full shrink-0"
+      style={{
+        background: done ? 'var(--brand-600)' : 'transparent',
+        border,
+        color: done ? 'var(--fg-on-brand, #fff)' : 'transparent',
+      }}
+    >
+      {done ? (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : partial ? (
+        // Half-filled to signal an in-progress step.
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#D97706' }} />
+      ) : null}
+    </span>
+  );
+};
 
 export default SetupReminderProvider;

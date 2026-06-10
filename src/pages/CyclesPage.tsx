@@ -43,6 +43,12 @@ function dotColor(cycle: CycleSummary): string {
   return 'var(--ink-300)';
 }
 
+// Numeral color that stays legible against each dot's fill: white on the dark
+// current-cycle fill, dark ink on the light past/upcoming fills.
+function dotTextColor(cycle: CycleSummary): string {
+  return cycle.isCurrent ? 'var(--paper)' : 'var(--ink-900)';
+}
+
 interface CycleCardProps {
   cycle: CycleSummary;
   hours: number;
@@ -186,16 +192,17 @@ function CycleTimeline({ cycles, certifications, category, appUser }: CycleTimel
           })}
         </div>
         <div className="relative flex gap-4 items-center h-5 px-1">
-          {cycles.map((cycle) => (
+          {cycles.map((cycle, i) => (
             <div
               key={cycle.startISO}
               className="flex-shrink-0 w-full sm:w-[calc((100%-2*1rem)/3)] flex justify-center relative"
             >
               <span
-                className="w-5 h-5 rounded-full border-[2px] border-[var(--paper)] dark:border-[var(--card-bg)]"
-                style={{ background: dotColor(cycle) }}
-                aria-hidden
-              />
+                className="w-5 h-5 rounded-full border-[2px] border-[var(--paper)] dark:border-[var(--card-bg)] flex items-center justify-center text-[10px] font-semibold leading-none"
+                style={{ background: dotColor(cycle), color: dotTextColor(cycle) }}
+              >
+                {i + 1}
+              </span>
             </div>
           ))}
         </div>

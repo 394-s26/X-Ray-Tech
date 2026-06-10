@@ -109,7 +109,6 @@ const TeamCard = ({ name, code, manager, color }: TeamCardProps) => (
 
 export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) => {
   const [step, setStep] = useState<Step>(1);
-  const [skippedSteps, setSkippedSteps] = useState<Set<Step>>(new Set());
   const [teamMode, setTeamMode] = useState<'join' | 'create'>('join');
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamId, setNewTeamId] = useState(() => generateTeamId());
@@ -259,20 +258,15 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
     }
   };
 
-  const markSkipped = (s: Step) => {
-    setSkippedSteps(prev => {
-      const next = new Set(prev);
-      next.add(s);
-      return next;
-    });
-  };
-
   const handleFinish = async (teamSkipped: boolean) => {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const licenseSkipped = skippedSteps.has(2);
-      const avatarSkipped = skippedSteps.has(3);
+      // Even when a step is skipped, persist whatever the user did enter so
+      // partially-filled fields aren't discarded. The IEMA cycle is saved
+      // both-or-nothing to avoid storing an inconsistent half-entered cycle.
+      const iemaComplete =
+        formData.iemaCycleStartYear.trim() && formData.iemaCycleEndMonth.trim();
 
       const update: Partial<AppUser> = {
         firstName: formData.firstName.trim(),
@@ -280,18 +274,14 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         lastName: formData.lastName.trim(),
         birthday: formData.birthday,
         teamCode: teamSkipped ? null : (teamMode === 'create' ? newTeamId : formData.teamCode.trim()),
-        hospitalAddress: avatarSkipped ? user.hospitalAddress ?? null : formData.hospitalAddress.trim() || null,
-        colorCode: avatarSkipped ? user.colorCode ?? null : formData.colorCode,
+        hospitalAddress: formData.hospitalAddress.trim() || null,
+        colorCode: formData.colorCode,
         role: teamSkipped ? null : (teamMode === 'create' ? 'manager' : 'member'),
-        arrtCycleStartYear: licenseSkipped || !formData.arrtCycleStartYear.trim()
-          ? null
-          : parseInt(formData.arrtCycleStartYear, 10),
-        iemaCycleStartYear: licenseSkipped || !formData.iemaCycleStartYear.trim()
-          ? null
-          : parseInt(formData.iemaCycleStartYear, 10),
-        iemaCycleEndMonth: licenseSkipped || !formData.iemaCycleEndMonth.trim()
-          ? null
-          : parseInt(formData.iemaCycleEndMonth, 10),
+        arrtCycleStartYear: formData.arrtCycleStartYear.trim()
+          ? parseInt(formData.arrtCycleStartYear, 10)
+          : null,
+        iemaCycleStartYear: iemaComplete ? parseInt(formData.iemaCycleStartYear, 10) : null,
+        iemaCycleEndMonth: iemaComplete ? parseInt(formData.iemaCycleEndMonth, 10) : null,
         arrtIdNumber: formData.arrtIdNumber.trim() || null,
         iemaIdNumber: formData.iemaIdNumber.trim() || null,
         setupCompleted: true,
@@ -401,7 +391,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
             </p>
           </div>
           <div className="form-field max-w-60 w-full">
-            <label className="form-label">Year your current ARRT cycle began</label>
+            <label className="form-label">Year your current ARRT cycle began <span className="text-red-500">*</span></label>
             <select
               className="form-input"
               value={formData.arrtCycleStartYear}
@@ -423,7 +413,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
           </div>
           <div className="flex gap-4">
             <div className="form-field max-w-60 w-full">
-              <label className="form-label">Year your current IEMA cycle began</label>
+              <label className="form-label">Year your current IEMA cycle began <span className="text-red-500">*</span></label>
               <select
                 className="form-input"
                 value={formData.iemaCycleStartYear}
@@ -437,7 +427,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
               <p className="setup-flow__field-error">{errors.iemaCycleStartYear}</p>
             </div>
             <div className="form-field max-w-60 w-full">
-              <label className="form-label">Month your IEMA cycle ends</label>
+              <label className="form-label">Month your IEMA cycle ends <span className="text-red-500">*</span></label>
               <select
                 className="form-input"
                 value={formData.iemaCycleEndMonth}
@@ -460,9 +450,12 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   const renderTeamStep = () => (
     <>
-      <div className="setup-flow__mode-toggle">
+      <p className="setup-flow__mode-prompt">Are you joining an existing team or creating a new one?</p>
+      <div className="setup-flow__mode-toggle" role="tablist">
         <button
           type="button"
+          role="tab"
+          aria-selected={teamMode === 'join'}
           className={`setup-flow__mode-btn${teamMode === 'join' ? ' setup-flow__mode-btn--active' : ''}`}
           onClick={() => { setTeamMode('join'); setNewTeamErrors({}); setErrors({}); }}
         >
@@ -470,6 +463,8 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={teamMode === 'create'}
           className={`setup-flow__mode-btn${teamMode === 'create' ? ' setup-flow__mode-btn--active' : ''}`}
           onClick={() => { setTeamMode('create'); setErrors({}); setNewTeamErrors({}); }}
         >
@@ -489,7 +484,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
       {teamMode === 'join' ? (
         <div className="setup-flow__body">
           <div className="form-field">
-            <label className="form-label">Team code</label>
+            <label className="form-label">Team code <span className="text-red-500">*</span></label>
             <input
               className="form-input"
               type="text"
@@ -521,7 +516,7 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
       ) : (
         <div className="setup-flow__body">
           <div className="form-field">
-            <label className="form-label">Team name</label>
+            <label className="form-label">Team name <span className="text-red-500">*</span></label>
             <input
               className="form-input"
               type="text"
@@ -702,22 +697,10 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
       return;
     }
     if (step === 2) {
-      if (validateLicenseStep()) {
-        setSkippedSteps(prev => {
-          const next = new Set(prev);
-          next.delete(2);
-          return next;
-        });
-        setStep(3);
-      }
+      if (validateLicenseStep()) setStep(3);
       return;
     }
     if (step === 3) {
-      setSkippedSteps(prev => {
-        const next = new Set(prev);
-        next.delete(3);
-        return next;
-      });
       setStep(4);
       return;
     }
@@ -728,11 +711,9 @@ export const AccountSetupFlow = ({ user, onComplete }: AccountSetupFlowProps) =>
 
   const skipCurrent = () => {
     if (step === 4) {
-      markSkipped(4);
       handleFinish(true);
       return;
     }
-    markSkipped(step);
     setErrors({});
     setStep((step + 1) as Step);
   };
