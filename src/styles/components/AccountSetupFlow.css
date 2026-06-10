@@ -131,25 +131,31 @@
   @apply text-xs text-gray-400 dark:text-gray-300 mt-0.5 px-1;
 }
 
-.setup-flow__mode-toggle {
-  @apply self-center flex p-1 rounded-xl bg-gray-100 dark:bg-slate-800 gap-1;
+.setup-flow__mode-prompt {
+  @apply self-center text-sm font-medium text-gray-600 dark:text-gray-200 -mb-2;
 }
 
+.setup-flow__mode-toggle {
+  @apply self-center flex p-1.5 rounded-2xl bg-gray-100 dark:bg-slate-800 gap-2 border-2 border-gray-200 dark:border-slate-600 shadow-sm;
+}
+
+/* Inactive option still reads as a pressable button (outlined white pill) so
+   users notice both choices instead of only seeing the active one. */
 .setup-flow__mode-btn {
-  @apply px-6 py-2 rounded-xl text-sm font-semibold text-gray-500 dark:text-gray-100 bg-transparent transition-all duration-200 cursor-pointer;
+  @apply px-6 py-2.5 rounded-xl text-sm font-semibold text-primary dark:text-gray-100 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-500 shadow-xs transition-all duration-200 cursor-pointer;
 }
 
 .setup-flow__mode-btn:hover {
-  @apply bg-gray-200 dark:bg-gray-700;
+  @apply border-primary bg-gray-50 dark:bg-gray-700;
 }
 
 .setup-flow__mode-btn--active {
-  @apply bg-primary text-white shadow-sm;
+  @apply bg-primary text-white border-primary shadow;
 }
 
 .setup-flow__mode-btn--active:hover {
-  @apply bg-primary-light
-} 
+  @apply bg-primary-light border-primary-light;
+}
 
 .setup-flow__team-id-row {
   @apply flex gap-2 items-center;

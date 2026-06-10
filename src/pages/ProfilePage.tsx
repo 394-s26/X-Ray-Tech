@@ -7,6 +7,9 @@ import {
   changeUsername,
   changePassword,
 } from '../services/authService';
+import { migrateAppliedCyclesForProfileChange } from '../services/certificateService';
+import { computeArrtCycle, computeIemaCycle } from '../utils/cycles';
+import { writeCyclesChangedNotice } from '../utils/cycleChangeNotice';
 import { COLORS } from '../utils/colors';
 import UserAvatar from '../components/UserAvatar';
 import { BirthdayInput } from '../components/BirthdayInput';
@@ -31,11 +34,29 @@ const daysInMonth = (monthNum: number): number => {
   return 31;
 };
 
-const buildRecentYearOptions = (): number[] => {
-  const currentYear = new Date().getFullYear();
+/**
+ * Recent-year options. If `anchorMonth` (1-12) is provided AND it falls *after*
+ * the current calendar month, the current year is excluded — the user's cycle
+ * couldn't have started yet this year. (Mirrors the setup flow so the profile
+ * editor enforces the same rule.) Birth month equal to the current month is
+ * allowed because the cycle starts on the first of the month.
+ */
+const buildRecentYearOptions = (anchorMonth?: number | null): number[] => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const maxYear = anchorMonth && anchorMonth > currentMonth ? currentYear - 1 : currentYear;
   const years: number[] = [];
-  for (let y = currentYear; y >= currentYear - 9; y--) years.push(y);
+  for (let y = maxYear; y >= currentYear - 9; y--) years.push(y);
   return years;
+};
+
+const monthNumFromBirthday = (birthday: string | undefined | null): number | null => {
+  if (!birthday) return null;
+  const m = birthday.match(/^(\d{2})-\d{2}$/);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  return n >= 1 && n <= 12 ? n : null;
 };
 
 // ── Password helpers ──────────────────────────────────────────
@@ -90,6 +111,18 @@ const SectionCard = ({ title, children }: { title: string; children: React.React
 export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
   const isEmailUser = auth.currentUser?.providerData[0]?.providerId === 'password';
 
+  // If a save actually shifted the IEMA or ARRT cycle window, leave a one-shot
+  // notice for the timeline page (/cycles) to surface as a banner. Compared on
+  // the current-cycle startISO: an unchanged grid (e.g. an even-year anchor tweak
+  // that rolls to the same window) leaves it identical, so no banner fires.
+  const noteCycleChange = (nextUser: AppUser, realigned: number) => {
+    const iemaMoved =
+      computeIemaCycle(appUser)?.startISO !== computeIemaCycle(nextUser)?.startISO;
+    const arrtMoved =
+      computeArrtCycle(appUser)?.startISO !== computeArrtCycle(nextUser)?.startISO;
+    if (iemaMoved || arrtMoved) writeCyclesChangedNotice({ realigned });
+  };
+
   // ── Personal Info ─────────────────────────────────────────
   const [firstName, setFirstName] = useState(appUser.firstName ?? '');
   const [middleName, setMiddleName] = useState(appUser.middleName ?? '');
@@ -128,7 +161,18 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
         birthday,
       };
       await updateUserProfile(appUser.uid, update);
-      onAppUserUpdate({ ...appUser, ...update });
+      const nextUser = { ...appUser, ...update };
+      // Birthday anchors the ARRT cycle (its birth month); if that shifts the
+      // active cycle, re-point certs applied to it. Best-effort — a failure
+      // here must not block the profile update from reflecting.
+      let realigned = 0;
+      try {
+        realigned = await migrateAppliedCyclesForProfileChange(appUser.uid, appUser, nextUser);
+      } catch (err) {
+        console.error('Failed to migrate applied cycles after birthday change', err);
+      }
+      noteCycleChange(nextUser, realigned);
+      onAppUserUpdate(nextUser);
       setPersonalSuccess(true);
       setTimeout(() => setPersonalSuccess(false), 2500);
     } finally {
@@ -137,7 +181,6 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
   };
 
   // ── License Cycles & Identification ──────────────────────
-  const yearOptions = buildRecentYearOptions();
   const [arrtYear, setArrtYear] = useState(
     appUser.arrtCycleStartYear != null ? String(appUser.arrtCycleStartYear) : '',
   );
@@ -153,18 +196,34 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
   const [licenseSaving, setLicenseSaving] = useState(false);
   const [licenseSuccess, setLicenseSuccess] = useState(false);
 
+  // Year options mirror the setup flow: the anchor month (ARRT birth month /
+  // IEMA end month) drops the current year when it falls after the current
+  // month, so these react to a birthday or end-month change made on this page.
+  const arrtMonthNum = monthNumFromBirthday(birthday);
+  const arrtYearOptions = buildRecentYearOptions(arrtMonthNum);
+  const iemaMonthNum = iemaMonth.trim() ? parseInt(iemaMonth, 10) : null;
+  const iemaYearOptions = buildRecentYearOptions(iemaMonthNum);
+
   const validateLicense = (): boolean => {
     const errs: Record<string, string> = {};
-    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
     if (arrtYear.trim()) {
       const y = parseInt(arrtYear, 10);
-      if (!/^\d{4}$/.test(arrtYear) || y < 1980 || y > currentYear + 1)
+      if (!/^\d{4}$/.test(arrtYear) || y < 1980 || y > currentYear + 1) {
         errs.arrtYear = 'Enter a valid 4-digit year.';
+      } else if (arrtMonthNum && arrtMonthNum > currentMonth && y >= currentYear) {
+        errs.arrtYear = `Your ${MONTH_NAMES[arrtMonthNum - 1]} cycle for ${y} hasn't started yet. Pick ${currentYear - 1} or earlier.`;
+      }
     }
     if (iemaYear.trim()) {
       const y = parseInt(iemaYear, 10);
-      if (!/^\d{4}$/.test(iemaYear) || y < 1980 || y > currentYear + 1)
+      if (!/^\d{4}$/.test(iemaYear) || y < 1980 || y > currentYear + 1) {
         errs.iemaYear = 'Enter a valid 4-digit year.';
+      } else if (iemaMonthNum && iemaMonthNum > currentMonth && y >= currentYear) {
+        errs.iemaYear = `Your ${MONTH_NAMES[iemaMonthNum - 1]} cycle for ${y} hasn't started yet. Pick ${currentYear - 1} or earlier.`;
+      }
     }
     if (iemaYear.trim() && !iemaMonth.trim()) errs.iemaMonth = 'Choose the cycle end month.';
     if (iemaMonth.trim() && !iemaYear.trim()) errs.iemaYear = 'Enter the year your IEMA cycle began.';
@@ -184,7 +243,18 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
         iemaIdNumber: iemaIdNumber.trim() || null,
       };
       await updateUserProfile(appUser.uid, update);
-      onAppUserUpdate({ ...appUser, ...update });
+      const nextUser = { ...appUser, ...update };
+      // Editing the cycle anchors can shift the active ARRT/IEMA window; keep
+      // certs applied to it pointing at the now-current cycle. Best-effort — a
+      // failure here must not block the profile update from reflecting.
+      let realigned = 0;
+      try {
+        realigned = await migrateAppliedCyclesForProfileChange(appUser.uid, appUser, nextUser);
+      } catch (err) {
+        console.error('Failed to migrate applied cycles after license cycle change', err);
+      }
+      noteCycleChange(nextUser, realigned);
+      onAppUserUpdate(nextUser);
       setLicenseSuccess(true);
       setTimeout(() => setLicenseSuccess(false), 2500);
     } finally {
@@ -401,14 +471,16 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
         <div>
           <p className="text-sm font-semibold text-[var(--ink-800)] dark:text-[var(--fg-body)] mb-1">ARRT cycle</p>
           <p className="text-xs text-[var(--ink-500)] dark:text-[var(--fg-muted)] mb-3">
-            Your ARRT cycle is anchored to your birth month and runs for 2 years.
+            {arrtMonthNum
+              ? <>Your ARRT cycle starts on the first day of your birth month (<span className="font-semibold">{MONTH_NAMES[arrtMonthNum - 1]}</span>) and runs for 2 years.</>
+              : <>Your ARRT cycle is anchored to your birth month and runs for 2 years.</>}
           </p>
           <div className="flex gap-4 flex-wrap">
             <div className="form-field max-w-60 flex-1">
               <label className="form-label">Year your current ARRT cycle began</label>
               <select className="form-input" value={arrtYear} onChange={e => { setArrtYear(e.target.value); setLicenseErrors(p => ({ ...p, arrtYear: '' })); }}>
                 <option value="">Select year…</option>
-                {yearOptions.map(y => <option key={y} value={String(y)}>{y}</option>)}
+                {arrtYearOptions.map(y => <option key={y} value={String(y)}>{y}</option>)}
               </select>
               {licenseErrors.arrtYear && <p className="text-xs text-red-500 mt-1">{licenseErrors.arrtYear}</p>}
             </div>
@@ -436,7 +508,7 @@ export const ProfilePage = ({ appUser, onAppUserUpdate }: ProfilePageProps) => {
               <label className="form-label">Year your current IEMA cycle began</label>
               <select className="form-input" value={iemaYear} onChange={e => { setIemaYear(e.target.value); setLicenseErrors(p => ({ ...p, iemaYear: '', iemaMonth: '' })); }}>
                 <option value="">Select year…</option>
-                {yearOptions.map(y => <option key={y} value={String(y)}>{y}</option>)}
+                {iemaYearOptions.map(y => <option key={y} value={String(y)}>{y}</option>)}
               </select>
               {licenseErrors.iemaYear && <p className="text-xs text-red-500 mt-1">{licenseErrors.iemaYear}</p>}
             </div>

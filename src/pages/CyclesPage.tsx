@@ -2,7 +2,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } fr
 import { useCertifications } from '../hooks/useCertifications';
 import { useSetupReminder } from '../components/setupReminderContext';
 import { Breadcrumb } from '../components/Breadcrumb';
-import { ArrowLeftIcon, ArrowRightIcon } from '../services/svgIcons';
+import { ArrowLeftIcon, ArrowRightIcon, XIcon } from '../services/svgIcons';
+import {
+  clearCyclesChangedNotice,
+  peekCyclesChangedNotice,
+  type CyclesChangedNotice,
+} from '../utils/cycleChangeNotice';
 import type { AppUser } from '../types/auth';
 import type { Certification, CertificateCategory } from '../types/certification';
 import {
@@ -41,6 +46,12 @@ function dotColor(cycle: CycleSummary): string {
   if (cycle.isCurrent) return 'var(--brand-600)';
   if (cycle.isPast) return 'var(--ink-400)';
   return 'var(--ink-300)';
+}
+
+// Numeral color that stays legible against each dot's fill: white on the dark
+// current-cycle fill, dark ink on the light past/upcoming fills.
+function dotTextColor(cycle: CycleSummary): string {
+  return cycle.isCurrent ? 'var(--paper)' : 'var(--ink-900)';
 }
 
 interface CycleCardProps {
@@ -186,16 +197,17 @@ function CycleTimeline({ cycles, certifications, category, appUser }: CycleTimel
           })}
         </div>
         <div className="relative flex gap-4 items-center h-5 px-1">
-          {cycles.map((cycle) => (
+          {cycles.map((cycle, i) => (
             <div
               key={cycle.startISO}
               className="flex-shrink-0 w-full sm:w-[calc((100%-2*1rem)/3)] flex justify-center relative"
             >
               <span
-                className="w-5 h-5 rounded-full border-[2px] border-[var(--paper)] dark:border-[var(--card-bg)]"
-                style={{ background: dotColor(cycle) }}
-                aria-hidden
-              />
+                className="w-5 h-5 rounded-full border-[2px] border-[var(--paper)] dark:border-[var(--card-bg)] flex items-center justify-center text-[10px] font-semibold leading-none"
+                style={{ background: dotColor(cycle), color: dotTextColor(cycle) }}
+              >
+                {i + 1}
+              </span>
             </div>
           ))}
         </div>
@@ -304,6 +316,16 @@ export default function CyclesPage({ appUser }: CyclesPageProps) {
   const iemaCycles = useMemo(() => listIemaCycles(appUser), [appUser]);
   const arrtCycles = useMemo(() => listArrtCycles(appUser), [appUser]);
 
+  // One-shot banner when a profile cycle edit shifted the grid. Peeked for the
+  // initial state (so it renders immediately) and cleared on mount so it shows
+  // exactly once; ProfilePage sets it (see writeCyclesChangedNotice).
+  const [changeNotice, setChangeNotice] = useState<CyclesChangedNotice | null>(
+    peekCyclesChangedNotice,
+  );
+  useEffect(() => {
+    clearCyclesChangedNotice();
+  }, []);
+
   if (loading) {
     return (
       <main className="min-h-[calc(100vh-6rem)] flex items-center justify-center px-5">
@@ -321,6 +343,33 @@ export default function CyclesPage({ appUser }: CyclesPageProps) {
       <p className="text-sm lg:text-base text-[var(--ink-700)] mb-7">
         Every IEMA and ARRT cycle you&rsquo;ve worked through, with the CE hours that landed in each. New cycles roll forward automatically once the previous one closes.
       </p>
+
+      {changeNotice && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-6 flex items-start justify-between gap-3 rounded-2xl border border-[var(--brand-600)] bg-[var(--brand-50)] dark:bg-[rgba(91,63,228,0.12)] px-4 py-3"
+        >
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-[var(--brand-700)] dark:text-[var(--ink-100)]">
+              Your cycle dates changed
+            </span>
+            <span className="text-xs text-[var(--ink-600)] dark:text-[var(--ink-300)]">
+              {changeNotice.realigned > 0
+                ? `These cards reflect your updated cycles — ${changeNotice.realigned} certificate${changeNotice.realigned === 1 ? '' : 's'} realigned to match.`
+                : 'These cards reflect your updated cycles.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setChangeNotice(null)}
+            aria-label="Dismiss"
+            className="shrink-0 -mr-1 -mt-0.5 grid h-7 w-7 place-items-center rounded-md text-[var(--ink-500)] hover:bg-[var(--ink-100)] hover:text-[var(--ink-800)] dark:hover:bg-[var(--ink-800)] dark:hover:text-[var(--ink-100)] transition-colors"
+          >
+            <XIcon size={16} />
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 lg:gap-5">
         <LicenseHistory

@@ -267,3 +267,88 @@ export function creditsInCycle(
     return sum + (cert.ceCredits || 0);
   }, 0);
 }
+
+export interface AppliedCycleMigration {
+  certId: string;
+  /** Full, updated `appliedCycles` map to write back to the cert document. */
+  appliedCycles: AppliedCycles;
+}
+
+/**
+ * Maps each old cycle's `startISO` to the new cycle that occupies the *same
+ * position relative to the current cycle*. So the current cycle maps to the new
+ * current cycle (offset 0), the one immediately before it to the new one
+ * immediately before it (offset −1), and so on. An old cycle with no
+ * corresponding new cycle (the new timeline doesn't reach that far back/forward)
+ * is omitted, as is any cycle whose `startISO` didn't actually move.
+ */
+function buildCycleStartRemap(
+  oldCycles: CycleSummary[],
+  newCycles: CycleSummary[],
+): Map<string, string> {
+  const map = new Map<string, string>();
+  if (oldCycles.length === 0 || newCycles.length === 0) return map;
+  const oldCur = oldCycles.findIndex((c) => c.isCurrent);
+  const newCur = newCycles.findIndex((c) => c.isCurrent);
+  if (oldCur === -1 || newCur === -1) return map;
+  for (let i = 0; i < oldCycles.length; i++) {
+    const target = newCycles[newCur + (i - oldCur)];
+    if (!target) continue;
+    if (oldCycles[i].startISO !== target.startISO) {
+      map.set(oldCycles[i].startISO, target.startISO);
+    }
+  }
+  return map;
+}
+
+/**
+ * After a user edits the profile fields that anchor their license cycles —
+ * IEMA start year / end month, ARRT start year, or their birthday (the ARRT
+ * cycle is anchored to its birth month) — the computed cycle windows, and
+ * therefore their `startISO`s, can shift. A cert applied to a cycle freezes that
+ * `startISO` into `appliedCycles` (its historical record of when the cycle
+ * began). Without a fixup, the stored value would no longer match any recomputed
+ * cycle, so the cert would read as "spent" in a past cycle (see CycleManager)
+ * and silently drop off both the dashboard donut and its timeline card.
+ *
+ * This returns the per-cert updates needed to re-point every attribution — past,
+ * current, and future — onto the corrected grid, by relative position (see
+ * `buildCycleStartRemap`). Rules:
+ *
+ * - Each license is remapped independently — editing IEMA leaves an ARRT
+ *   attribution on the same cert untouched, and vice-versa.
+ * - Attributions outside the cycle list (older than the anchor, or a stale value
+ *   with no matching old cycle) are left untouched — they have no remap entry.
+ * - Legacy certs (no `appliedCycles`) are skipped: they derive their cycle from
+ *   `completedDate` and recompute automatically against the updated profile.
+ * - A license whose cycle grid didn't move yields an empty remap, so its
+ *   attributions are left alone.
+ */
+export function planAppliedCycleMigrations(
+  certs: Certification[],
+  prevUser: AppUser,
+  nextUser: AppUser,
+): AppliedCycleMigration[] {
+  const remaps: Record<Exclude<CertificateCategory, 'CPR'>, Map<string, string>> = {
+    IEMA: buildCycleStartRemap(listIemaCycles(prevUser), listIemaCycles(nextUser)),
+    ARRT: buildCycleStartRemap(listArrtCycles(prevUser), listArrtCycles(nextUser)),
+  };
+
+  const out: AppliedCycleMigration[] = [];
+  for (const cert of certs) {
+    if (!cert.appliedCycles) continue;
+    let changed = false;
+    const next: AppliedCycles = { ...cert.appliedCycles };
+    for (const lic of ['IEMA', 'ARRT'] as const) {
+      const cur = next[lic];
+      if (!cur) continue;
+      const mapped = remaps[lic].get(cur);
+      if (mapped) {
+        next[lic] = mapped;
+        changed = true;
+      }
+    }
+    if (changed) out.push({ certId: cert.id, appliedCycles: next });
+  }
+  return out;
+}
