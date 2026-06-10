@@ -89,7 +89,7 @@ can see what the app does and what it offers before committing to anything. From
 they can move straight into signing in or creating an account.
 
 <p align="center">
-  <img src="docs/images/landing-page.png" alt="Landing page" width="720">
+  <img width="1461" height="879" alt="Screenshot 2026-06-10 at 6 37 53 PM" src="https://github.com/user-attachments/assets/23f47edd-3ec9-4ec8-b3c8-f3a3c4d833a6" />
 </p>
 
 #### Account Creation
@@ -100,7 +100,7 @@ across visits. After signing up, a user is guided directly into the setup flow s
 can start tracking right away.
 
 <p align="center">
-  <img src="docs/images/account-creation.png" alt="Account creation" width="720">
+  <img width="1460" height="877" alt="Screenshot 2026-06-10 at 6 39 04 PM" src="https://github.com/user-attachments/assets/3e183346-48f1-4bdf-9262-416a11d5d077" />
 </p>
 
 #### Set Up Page
@@ -113,7 +113,7 @@ user skips a field and comes back later. Once finished, the user lands on a full
 personalized dashboard.
 
 <p align="center">
-  <img src="docs/images/account-setup.png" alt="Account setup" width="720">
+<img width="1459" height="879" alt="Screenshot 2026-06-10 at 6 40 01 PM" src="https://github.com/user-attachments/assets/ea0a85c4-684a-4775-bd81-ce0d5b24c9e0" />
 </p>
 
 #### Dashboard
@@ -128,6 +128,10 @@ a user can jump into adding certificates, reviewing cycles, or managing their ac
   <img src="docs/images/dashboard.png" alt="Dashboard" width="720">
 </p>
 
+
+<img width="1460" height="879" alt="Screenshot 2026-06-10 at 6 41 02 PM" src="https://github.com/user-attachments/assets/4deafee0-75eb-4386-8227-0e8664db700a" />
+
+
 #### Add Certificates
 
 Users add a certificate by uploading a photo or PDF, and the app reads it
@@ -138,7 +142,7 @@ falling back to a placeholder without losing any data. Once saved, a certificate
 ready to be applied to the right license later.
 
 <p align="center">
-  <img src="docs/images/add-certificate.png" alt="Add certificate" width="720">
+  <img width="1163" height="836" alt="Screenshot 2026-06-10 at 6 43 32 PM" src="https://github.com/user-attachments/assets/d61dacc7-6b00-4112-92d5-6a8d77088b50" />
 </p>
 
 #### Certificate Reporting
