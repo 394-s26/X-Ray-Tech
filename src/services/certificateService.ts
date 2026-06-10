@@ -9,12 +9,14 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
   type Timestamp,
 } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
 import { auth, db, storage } from './firebase';
 import { getStoredCertificateCount } from './storedCounts';
 import { listScantrons } from './scantronService';
+import { planAppliedCycleMigrations } from '../utils/cycles';
 import {
   STORAGE_LIMITS,
   StorageLimitError,
@@ -23,6 +25,7 @@ import {
   type CertificateInput,
   type Scantron,
 } from '../types/upload';
+import type { AppUser } from '../types/auth';
 import type { AppliedCycles, Certification, CertificateCategory } from '../types/certification';
 
 export type { CertificateCategory };
@@ -226,6 +229,30 @@ export const updateCertificationRecord = async (
   },
 ): Promise<void> => {
   await updateDoc(doc(db, COLLECTION, id), updates);
+};
+
+/**
+ * Re-points certs applied to the user's *active* license cycle when a profile
+ * edit shifts that cycle's window, so each cert's stored `appliedCycles` keeps
+ * reflecting the now-current cycle dates instead of silently reading as spent.
+ * See `planAppliedCycleMigrations`. Reads the user's certs fresh, writes any
+ * updates in a single batch, and no-ops (no reads beyond the list) when nothing
+ * needs migrating. Returns the number of certs updated.
+ */
+export const migrateAppliedCyclesForProfileChange = async (
+  uid: string,
+  prevUser: AppUser,
+  nextUser: AppUser,
+): Promise<number> => {
+  const certs = await listUserCertifications(uid);
+  const migrations = planAppliedCycleMigrations(certs, prevUser, nextUser);
+  if (migrations.length === 0) return 0;
+  const batch = writeBatch(db);
+  for (const m of migrations) {
+    batch.update(doc(db, COLLECTION, m.certId), { appliedCycles: m.appliedCycles });
+  }
+  await batch.commit();
+  return migrations.length;
 };
 
 export const deleteCertificationRecord = async (cert: Certification): Promise<void> => {
