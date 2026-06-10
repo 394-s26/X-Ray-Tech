@@ -83,19 +83,144 @@ University.
 
 ### Key Features
 
-- 📄 **Automatic certificate parsing** — upload a photo or PDF and OCR (Tesseract.js +
-  PDF.js) extracts the course, date, category, and credit value.
-- 🗂️ **Dual-license cycle tracking** — independently tracks ARRT and IEMA cycles with
-  their distinct anchors, deadlines, and crediting rules.
-- ✅ **Category validation** — only counts Category A / A+ certificates toward the
-  24-credit requirement.
-- 🔁 **Double-dip handling** — applies one certificate across one ARRT and one IEMA
-  cycle while enforcing single-use-per-license.
-- 🔔 **Notifications** — in-app and desktop/push notifications for upcoming deadlines.
-- 👥 **Team management** — administrators can manage technologists and view compliance
-  status across a team.
-- 🔐 **Authentication & permissions** — Firebase Auth (email/password + Google Sign-In)
-  with a role-based permissions system.
+#### Landing Page
+
+The landing page introduces X-Ray Tech and explains how it helps Illinois x-ray
+technologists stay compliant with their ARRT and IEMA continuing education. Visitors
+can see what the app does and what it offers before committing to anything. From here
+they can move straight into signing in or creating an account.
+
+<p align="center">
+  <img src="docs/images/landing-page.png" alt="Landing page" width="720">
+</p>
+
+#### Account Creation
+
+New users can create an account with an email and password or sign in with Google.
+Authentication runs through Firebase, so accounts stay secure and sessions persist
+across visits. After signing up, a user is guided directly into the setup flow so they
+can start tracking right away.
+
+<p align="center">
+  <img src="docs/images/account-creation.png" alt="Account creation" width="720">
+</p>
+
+#### Set Up Page
+
+The setup page collects the two details that anchor a technologist's license cycles,
+their birth month and their accreditation date. These values determine when each ARRT
+and IEMA cycle begins and ends, which is essential for crediting certificates
+correctly. Setup runs in a few quick steps, and the app remembers progress even if a
+user skips a field and comes back later. Once finished, the user lands on a fully
+personalized dashboard.
+
+<p align="center">
+  <img src="docs/images/account-setup.png" alt="Account setup" width="720">
+</p>
+
+#### Dashboard
+
+The dashboard is the home base where a technologist sees their overall compliance at a
+glance. It shows progress toward the 24 credit requirement for both ARRT and IEMA,
+along with countdowns to the next cycle deadlines. Visual credit bars and donuts make
+it easy to tell how many credits are still needed and how much time remains. From here
+a user can jump into adding certificates, reviewing cycles, or managing their account.
+
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="Dashboard" width="720">
+</p>
+
+#### Add Certificates
+
+Users add a certificate by uploading a photo or PDF, and the app reads it
+automatically with OCR to pull out the course, date, category, and credit value. The
+extracted details are shown for review so a user can confirm or correct anything before
+saving. Certificates can still be saved when the image upload allowance is reached,
+falling back to a placeholder without losing any data. Once saved, a certificate is
+ready to be applied to the right license later.
+
+<p align="center">
+  <img src="docs/images/add-certificate.png" alt="Add certificate" width="720">
+</p>
+
+#### Certificate Reporting
+
+Certificate reporting is where users apply their saved certificates to the current ARRT
+and IEMA cycles. Each certificate appears as a toggle that counts or uncounts it toward
+a license, making it simple to see exactly what is being credited. The app enforces the
+single use per license rule while still allowing one certificate to count across one
+ARRT and one IEMA cycle. This gives technologists full control over how their credits
+are distributed.
+
+<p align="center">
+  <img src="docs/images/certificate-reporting.png" alt="Certificate reporting" width="720">
+</p>
+
+#### Browse Certificates
+
+The browse page helps technologists discover new certifications they can complete to
+earn more credits. Each option includes a short description so users understand what a
+certification covers before pursuing it. This makes it easier to plan ahead and close
+any remaining gap toward the 24 credit requirement. It turns compliance from a reactive
+chore into something a user can actively work toward.
+
+<p align="center">
+  <img src="docs/images/browse-certifications.png" alt="Browse certifications" width="720">
+</p>
+
+#### View and Manage Team
+
+Team management lets administrators oversee a group of technologists in one place. Users
+can create a team or join an existing one with a shareable team code, and admins can
+regenerate that code when needed. The view shows each member with their combined ARRT
+and IEMA compliance status, so a manager can quickly spot who is falling behind. This
+keeps an entire department on track without checking each person individually.
+
+<p align="center">
+  <img src="docs/images/team-management.png" alt="Team management" width="720">
+</p>
+
+#### Notifications
+
+X-Ray Tech keeps users informed with both in-app and push notifications about upcoming
+deadlines. A notification bell surfaces recent alerts, and desktop or mobile push
+reminders reach users even when the app is closed. Reminders are timed around cycle
+deadlines so a technologist never misses a reporting window. Users stay aware of what
+needs attention without having to log in and check manually.
+
+<p align="center">
+  <img src="docs/images/notifications.png" alt="Notifications" width="720">
+</p>
+
+#### Available Certificates
+
+The available certificates page lets users browse and manage all of their certificates
+organized by issuing agency. From here a technologist can review what they have on file
+and open any certificate to see its full details.
+
+<p align="center">
+  <img src="docs/images/available-certificates.png" alt="Available certificates" width="720">
+</p>
+
+#### Archive
+
+The archive collects certificates that are already used or expired so they stay out of
+the active workflow. Nothing is lost, and a user can revisit past certificates whenever
+they need a complete history.
+
+<p align="center">
+  <img src="docs/images/archive.png" alt="Archive" width="720">
+</p>
+
+#### License Cycles
+
+The license cycles view tracks ARRT and IEMA separately, each with its own anchor,
+deadline, and crediting rules. Users can see exactly where each cycle stands and how
+applied certificates count toward the 24 credit requirement.
+
+<p align="center">
+  <img src="docs/images/license-cycles.png" alt="License cycles" width="720">
+</p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
