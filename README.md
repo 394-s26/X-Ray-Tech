@@ -22,7 +22,7 @@
     Continuing-education credit tracking for Illinois x-ray technologists — automatically reads CE certificates and manages ARRT &amp; IEMA license cycles.
   </br>
   </br>
-    <a href="https://xraytech.web.app">View Demo</a>
+    <a href="https://xraytech.web.app/">View Website</a>
     &middot;
     <a href="https://github.com/394-s26/X-Ray-Tech/issues/new?labels=bug">Report Bug</a>
     &middot;
@@ -74,6 +74,9 @@ of a CE certificate, automatically extracts the relevant details with OCR, valid
 the certificate's category, and applies the credits to the correct ARRT and IEMA
 cycles — including the edge cases around birth-month windows, probation periods, and
 single-use-per-license rules.
+
+The app is live at **[xraytech.web.app](https://xraytech.web.app/)** — create an
+account and start tracking your CE credits in a couple of minutes.
 
 This project was built for **CS 394: Agile Software Engineering** at Northwestern
 University.
@@ -207,7 +210,9 @@ certificate extraction.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-Follow these steps to get a local copy up and running.
+Want to try it first? The hosted app is available at
+[xraytech.web.app](https://xraytech.web.app/) — no setup required. To run a local copy,
+follow these steps.
 
 ### Prerequisites
 
@@ -360,6 +365,8 @@ Built by the CS 394 X-Ray Tech team at Northwestern University:
 - **Azan Malik**
 - **Fiorelli Wong**
 - **Aidan Zea**
+
+Live App: [https://xraytech.web.app/](https://xraytech.web.app/)
 
 Project Link: [https://github.com/394-s26/X-Ray-Tech](https://github.com/394-s26/X-Ray-Tech)
 
