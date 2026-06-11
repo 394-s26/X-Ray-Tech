@@ -88,7 +88,7 @@ can see what the app does and what it offers before committing to anything. From
 they can move straight into signing in or creating an account.
 
 <p align="center">
-  <img width="1461" height="879" alt="Screenshot 2026-06-10 at 6 37 53 PM" src="https://github.com/user-attachments/assets/23f47edd-3ec9-4ec8-b3c8-f3a3c4d833a6" />
+  <img height="380" alt="Screenshot 2026-06-10 at 6 37 53 PM" src="https://github.com/user-attachments/assets/23f47edd-3ec9-4ec8-b3c8-f3a3c4d833a6" />
 </p>
 
 #### Dashboard
@@ -100,7 +100,7 @@ it easy to tell how many credits are still needed and how much time remains. Fro
 a user can jump into adding certificates, reviewing cycles, or managing their account.
 
 <p align="center">
-  <img width="1460" height="879" alt="Screenshot 2026-06-10 at 6 41 02 PM" src="https://github.com/user-attachments/assets/4deafee0-75eb-4386-8227-0e8664db700a" />
+  <img height="380" alt="Screenshot 2026-06-10 at 6 41 02 PM" src="https://github.com/user-attachments/assets/4deafee0-75eb-4386-8227-0e8664db700a" />
 </p>
 
 #### Add Certificates
@@ -113,7 +113,7 @@ falling back to a placeholder without losing any data. Once saved, a certificate
 ready to be applied to the right license later.
 
 <p align="center">
-  <img width="1104" height="850" alt="Screenshot 2026-06-10 at 7 07 44 PM" src="https://github.com/user-attachments/assets/e0d39d64-78e1-4850-a36d-e1b2944a6af7" />
+  <img height="380" alt="Screenshot 2026-06-10 at 7 07 44 PM" src="https://github.com/user-attachments/assets/e0d39d64-78e1-4850-a36d-e1b2944a6af7" />
 </p>
 
 #### Certificate Reporting
@@ -126,7 +126,7 @@ ARRT and one IEMA cycle. This gives technologists full control over how their cr
 are distributed.
 
 <p align="center">
-  <img width="1464" height="879" alt="Screenshot 2026-06-10 at 6 45 01 PM" src="https://github.com/user-attachments/assets/551dae5e-5fd8-4096-9cee-2640254de8ab" />
+  <img height="380" alt="Screenshot 2026-06-10 at 6 45 01 PM" src="https://github.com/user-attachments/assets/551dae5e-5fd8-4096-9cee-2640254de8ab" />
 </p>
 
 #### Browse Certificates
@@ -138,7 +138,7 @@ any remaining gap toward the 24 credit requirement. It turns compliance from a r
 chore into something a user can actively work toward.
 
 <p align="center">
-  <img width="1462" height="881" alt="Screenshot 2026-06-10 at 6 45 31 PM" src="https://github.com/user-attachments/assets/ed243037-e686-4569-adc9-e76836e0ce61" />
+  <img height="380" alt="Screenshot 2026-06-10 at 6 45 31 PM" src="https://github.com/user-attachments/assets/ed243037-e686-4569-adc9-e76836e0ce61" />
 </p>
 
 #### View and Manage Team
@@ -150,7 +150,7 @@ and IEMA compliance status, so a manager can quickly spot who is falling behind.
 keeps an entire department on track without checking each person individually.
 
 <p align="center">
-  <img src="docs/images/team-management.png" alt="Team management" width="720">
+  <img src="docs/images/team-management.png" alt="Team management" height="380">
 </p>
 
 #### Notifications
@@ -162,8 +162,8 @@ deadlines so a technologist never misses a reporting window. Users stay aware of
 needs attention without having to log in and check manually.
 
 <p align="center">
-  <img width="300" height="460" alt="Screenshot 2026-06-10 at 6 49 12 PM" src="https://github.com/user-attachments/assets/97f805bc-c192-41ff-8256-964c6973c01c" />
-  <img width="300" height="460" alt="IMG_1038" src="https://github.com/user-attachments/assets/11694ac8-e80c-4456-b74f-222934b090c2" />
+  <img height="380" alt="Screenshot 2026-06-10 at 6 49 12 PM" src="https://github.com/user-attachments/assets/97f805bc-c192-41ff-8256-964c6973c01c" />
+  <img height="380" alt="IMG_1038" src="https://github.com/user-attachments/assets/11694ac8-e80c-4456-b74f-222934b090c2" />
 </p>
 
 #### Available Certificates
@@ -173,7 +173,7 @@ organized by issuing agency. From here a technologist can review what they have 
 and open any certificate to see its full details.
 
 <p align="center">
-  <img width="1207" height="881" alt="Screenshot 2026-06-10 at 6 55 42 PM" src="https://github.com/user-attachments/assets/ef71c05c-4ca0-4be3-b032-9e6e673492a4" />
+  <img height="380" alt="Screenshot 2026-06-10 at 6 55 42 PM" src="https://github.com/user-attachments/assets/ef71c05c-4ca0-4be3-b032-9e6e673492a4" />
 </p>
 
 #### License Cycles
@@ -183,7 +183,7 @@ deadline, and crediting rules. Users can see exactly where each cycle stands and
 applied certificates count toward the 24 credit requirement.
 
 <p align="center">
-  <img width="1207" height="813" alt="Screenshot 2026-06-10 at 6 59 46 PM" src="https://github.com/user-attachments/assets/12eccdc5-a756-4048-b9ae-7604bd0c030d" />
+  <img height="380" alt="Screenshot 2026-06-10 at 6 59 46 PM" src="https://github.com/user-attachments/assets/12eccdc5-a756-4048-b9ae-7604bd0c030d" />
 </p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
