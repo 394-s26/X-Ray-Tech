@@ -3,11 +3,6 @@
 
 <!-- PROJECT SHIELDS -->
 [![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -19,7 +14,7 @@
 <h3 align="center">X-Ray Tech</h3>
 
   <p align="center">
-    Continuing-education credit tracking for Illinois x-ray technologists — automatically reads CE certificates and manages ARRT &amp; IEMA license cycles.
+    Continuing-education credit tracking for Illinois x-ray technologists. It reads your CE certificates automatically and keeps your ARRT and IEMA license cycles in order.
   </br>
   </br>
     <a href="https://xraytech.web.app/">View Website</a>
@@ -65,20 +60,20 @@
 
 **X-Ray Tech** is a web application that helps Illinois x-ray technologists stay
 compliant with their continuing-education (CE) requirements. Techs in Illinois
-maintain **two separate credentials** — **ARRT** (national) and **IEMA** (state) —
-each requiring **24 CE credits every 2 years**, but with different cycle windows,
+maintain **two separate credentials**, **ARRT** (national) and **IEMA** (state). Each
+one demands **24 CE credits every 2 years**, but they run on different cycle windows,
 deadlines, and crediting rules.
 
 Tracking this by hand is error-prone. X-Ray Tech lets a user upload a photo or PDF
-of a CE certificate, automatically extracts the relevant details with OCR, validates
-the certificate's category, and applies the credits to the correct ARRT and IEMA
-cycles — including the edge cases around birth-month windows, probation periods, and
-single-use-per-license rules.
+of a CE certificate, pulls out the relevant details with OCR, validates the
+certificate's category, and applies the credits to the correct ARRT and IEMA cycles.
+It even handles the tricky edge cases around birth-month windows, probation periods,
+and single-use-per-license rules.
 
-The app is live at **[xraytech.web.app](https://xraytech.web.app/)** — create an
+The app is live at **[xraytech.web.app](https://xraytech.web.app/)**. Create an
 account and start tracking your CE credits in a couple of minutes.
 
-This project was built for **CS 394: Agile Software Engineering** at Northwestern
+This project was built for **CS 394 Agile Software Engineering** at Northwestern
 University.
 
 ### Key Features
@@ -199,9 +194,9 @@ applied certificates count toward the 24 credit requirement.
 * [![Tailwind][Tailwind]][Tailwind-url]
 * [![Firebase][Firebase]][Firebase-url]
 
-Additional libraries: **Tesseract.js** & **PDF.js** (certificate OCR), **GSAP**
-(animations), **React Router**, and **Python Cloud Functions** for server-side
-certificate extraction.
+It also leans on **Tesseract.js** and **PDF.js** for certificate OCR, **GSAP** for
+animations, **React Router** for navigation, and **Python Cloud Functions** for
+server-side certificate extraction.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -211,8 +206,8 @@ certificate extraction.
 ## Getting Started
 
 Want to try it first? The hosted app is available at
-[xraytech.web.app](https://xraytech.web.app/) — no setup required. To run a local copy,
-follow these steps.
+[xraytech.web.app](https://xraytech.web.app/) with no setup required. To run a local
+copy, follow these steps.
 
 ### Prerequisites
 
@@ -239,8 +234,8 @@ follow these steps.
    npm install
    ```
 3. Configure your Firebase environment variables. Copy the example file and fill in
-   the values from your Firebase Console (**Project Settings > General > Your apps >
-   Web app > SDK setup and configuration**):
+   the values from your Firebase Console under **Project Settings > General > Your apps
+   > Web app > SDK setup and configuration**.
    ```sh
    cp .env.example .env
    ```
@@ -264,7 +259,7 @@ follow these steps.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Available npm scripts:
+The project ships with these npm scripts.
 
 | Command | Description |
 |---|---|
@@ -273,11 +268,11 @@ Available npm scripts:
 | `npm run preview` | Preview the production build locally |
 | `npm run lint` | Run ESLint over the project |
 
-**Typical flow:** sign in → complete account setup (birth month + accreditation date,
+**Typical flow.** Sign in → complete account setup (birth month and accreditation date,
 which anchor the ARRT and IEMA cycles) → upload a CE certificate → review the
-OCR-extracted details → save, and the credits are automatically applied to the
-appropriate license cycle(s). The dashboard then shows progress toward the
-24-credit requirement and flags upcoming deadlines.
+OCR-extracted details → save. The credits land in the right license cycle(s)
+automatically, and the dashboard shows progress toward the 24-credit requirement and
+flags upcoming deadlines.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -286,8 +281,8 @@ appropriate license cycle(s). The dashboard then shows progress toward the
 <!-- LICENSE CE LOGIC -->
 ## License CE Logic
 
-The core domain logic — how ARRT and IEMA cycles differ — is documented in
-[license_ce_logic.md](license_ce_logic.md). Key differences at a glance:
+The core domain logic for how ARRT and IEMA cycles differ lives in
+[license_ce_logic.md](license_ce_logic.md). Here are the key differences at a glance.
 
 | Rule | ARRT | IEMA |
 |---|---|---|
@@ -316,14 +311,14 @@ The core domain logic — how ARRT and IEMA cycles differ — is documented in
   /types         # TypeScript types and interfaces
   /utils         # Shared pure functions and helpers
   /styles        # Component- and page-level CSS (Tailwind @apply)
-/functions        # Firebase Cloud Functions (TypeScript — email, FCM, scheduled)
+/functions        # Firebase Cloud Functions (TypeScript, for email, FCM, scheduled)
 /functions-python # Python Cloud Functions (certificate extraction)
 /design-system    # Design tokens and shared UI reference
 /public           # Static assets (favicon, service worker, logos)
 ```
 
 Conventions for this codebase are documented in
-[.github/agent-instructions.md](.github/agent-instructions.md) — all Firebase and
+[.github/agent-instructions.md](.github/agent-instructions.md). All Firebase and
 network calls live in `/src/services/`, components never import the Firebase SDK
 directly, and the app uses a string-based permissions system.
 
@@ -334,7 +329,7 @@ directly, and the app uses a string-based permissions system.
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are welcome. To propose a change:
+Contributions are welcome. To propose a change, follow these steps.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -345,7 +340,7 @@ Contributions are welcome. To propose a change:
 Please make sure your code passes `npm run lint` and `npm run build` before opening a
 PR.
 
-### Top contributors:
+### Top Contributors
 
 <a href="https://github.com/394-s26/X-Ray-Tech/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=394-s26/X-Ray-Tech" alt="contrib.rocks image" />
@@ -358,7 +353,7 @@ PR.
 <!-- TEAM -->
 ## Team
 
-Built by the CS 394 X-Ray Tech team at Northwestern University:
+Built by the CS 394 X-Ray Tech team at Northwestern University.
 
 - **Adnan Alhabian**
 - **Yusuf Ozdemir**
@@ -366,9 +361,9 @@ Built by the CS 394 X-Ray Tech team at Northwestern University:
 - **Fiorelli Wong**
 - **Aidan Zea**
 
-Live App: [https://xraytech.web.app/](https://xraytech.web.app/)
+Try the live app at [https://xraytech.web.app/](https://xraytech.web.app/)
 
-Project Link: [https://github.com/394-s26/X-Ray-Tech](https://github.com/394-s26/X-Ray-Tech)
+Find the source on GitHub at [https://github.com/394-s26/X-Ray-Tech](https://github.com/394-s26/X-Ray-Tech)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -377,9 +372,9 @@ Project Link: [https://github.com/394-s26/X-Ray-Tech](https://github.com/394-s26
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* [CS 394: Agile Software Engineering](https://www.mccormick.northwestern.edu/computer-science/) — Northwestern University
-* [ARRT — American Registry of Radiologic Technologists](https://www.arrt.org)
-* [IEMA — Illinois Emergency Management Agency, Division of Nuclear Safety](https://iema.illinois.gov/)
+* [CS 394 Agile Software Engineering](https://www.mccormick.northwestern.edu/computer-science/) at Northwestern University
+* [ARRT, the American Registry of Radiologic Technologists](https://www.arrt.org)
+* [IEMA, the Illinois Emergency Management Agency, Division of Nuclear Safety](https://iema.illinois.gov/)
 * [Best-README-Template](https://github.com/othneildrew/Best-README-Template)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
