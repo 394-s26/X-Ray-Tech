@@ -60,7 +60,6 @@
 </details>
 
 
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -92,30 +91,6 @@ they can move straight into signing in or creating an account.
   <img width="1461" height="879" alt="Screenshot 2026-06-10 at 6 37 53 PM" src="https://github.com/user-attachments/assets/23f47edd-3ec9-4ec8-b3c8-f3a3c4d833a6" />
 </p>
 
-#### Account Creation
-
-New users can create an account with an email and password or sign in with Google.
-Authentication runs through Firebase, so accounts stay secure and sessions persist
-across visits. After signing up, a user is guided directly into the setup flow so they
-can start tracking right away.
-
-<p align="center">
-  <img width="1460" height="877" alt="Screenshot 2026-06-10 at 6 39 04 PM" src="https://github.com/user-attachments/assets/3e183346-48f1-4bdf-9262-416a11d5d077" />
-</p>
-
-#### Set Up Page
-
-The setup page collects the two details that anchor a technologist's license cycles,
-their birth month and their accreditation date. These values determine when each ARRT
-and IEMA cycle begins and ends, which is essential for crediting certificates
-correctly. Setup runs in a few quick steps, and the app remembers progress even if a
-user skips a field and comes back later. Once finished, the user lands on a fully
-personalized dashboard.
-
-<p align="center">
-<img width="1459" height="879" alt="Screenshot 2026-06-10 at 6 40 01 PM" src="https://github.com/user-attachments/assets/ea0a85c4-684a-4775-bd81-ce0d5b24c9e0" />
-</p>
-
 #### Dashboard
 
 The dashboard is the home base where a technologist sees their overall compliance at a
@@ -125,12 +100,8 @@ it easy to tell how many credits are still needed and how much time remains. Fro
 a user can jump into adding certificates, reviewing cycles, or managing their account.
 
 <p align="center">
-  <img src="docs/images/dashboard.png" alt="Dashboard" width="720">
+  <img width="1460" height="879" alt="Screenshot 2026-06-10 at 6 41 02 PM" src="https://github.com/user-attachments/assets/4deafee0-75eb-4386-8227-0e8664db700a" />
 </p>
-
-
-<img width="1460" height="879" alt="Screenshot 2026-06-10 at 6 41 02 PM" src="https://github.com/user-attachments/assets/4deafee0-75eb-4386-8227-0e8664db700a" />
-
 
 #### Add Certificates
 
@@ -155,7 +126,7 @@ ARRT and one IEMA cycle. This gives technologists full control over how their cr
 are distributed.
 
 <p align="center">
-  <img src="docs/images/certificate-reporting.png" alt="Certificate reporting" width="720">
+  <img width="1464" height="879" alt="Screenshot 2026-06-10 at 6 45 01 PM" src="https://github.com/user-attachments/assets/551dae5e-5fd8-4096-9cee-2640254de8ab" />
 </p>
 
 #### Browse Certificates
@@ -167,7 +138,7 @@ any remaining gap toward the 24 credit requirement. It turns compliance from a r
 chore into something a user can actively work toward.
 
 <p align="center">
-  <img src="docs/images/browse-certifications.png" alt="Browse certifications" width="720">
+  <img width="1462" height="881" alt="Screenshot 2026-06-10 at 6 45 31 PM" src="https://github.com/user-attachments/assets/ed243037-e686-4569-adc9-e76836e0ce61" />
 </p>
 
 #### View and Manage Team
@@ -191,7 +162,7 @@ deadlines so a technologist never misses a reporting window. Users stay aware of
 needs attention without having to log in and check manually.
 
 <p align="center">
-  <img src="docs/images/notifications.png" alt="Notifications" width="720">
+  <img width="387" height="545" alt="Screenshot 2026-06-10 at 6 49 12 PM" src="https://github.com/user-attachments/assets/97f805bc-c192-41ff-8256-964c6973c01c" />
 </p>
 
 #### Available Certificates
@@ -201,17 +172,7 @@ organized by issuing agency. From here a technologist can review what they have 
 and open any certificate to see its full details.
 
 <p align="center">
-  <img src="docs/images/available-certificates.png" alt="Available certificates" width="720">
-</p>
-
-#### Archive
-
-The archive collects certificates that are already used or expired so they stay out of
-the active workflow. Nothing is lost, and a user can revisit past certificates whenever
-they need a complete history.
-
-<p align="center">
-  <img src="docs/images/archive.png" alt="Archive" width="720">
+  <img width="1207" height="881" alt="Screenshot 2026-06-10 at 6 55 42 PM" src="https://github.com/user-attachments/assets/ef71c05c-4ca0-4be3-b032-9e6e673492a4" />
 </p>
 
 #### License Cycles
@@ -221,7 +182,7 @@ deadline, and crediting rules. Users can see exactly where each cycle stands and
 applied certificates count toward the 24 credit requirement.
 
 <p align="center">
-  <img src="docs/images/license-cycles.png" alt="License cycles" width="720">
+  <img width="1207" height="813" alt="Screenshot 2026-06-10 at 6 59 46 PM" src="https://github.com/user-attachments/assets/12eccdc5-a756-4048-b9ae-7604bd0c030d" />
 </p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
