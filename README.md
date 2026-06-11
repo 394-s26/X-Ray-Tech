@@ -64,7 +64,7 @@ maintain **two separate credentials**, **ARRT** (national) and **IEMA** (state).
 one demands **24 CE credits every 2 years**, but they run on different cycle windows,
 deadlines, and crediting rules.
 
-Tracking this by hand is error-prone. X-Ray Tech enables its users to upload their certificate while automatically extracting relevant details with free object capture recognition (OCR). Users can then apply these credits to their intended licenses.
+Tracking this by hand is error-prone. X-Ray Tech enables its users to upload certificates while automatically extracting its relevant details with free object capture recognition (OCR). Users can then apply these credits to their intended licenses.
 X-Ray Tech even handles the tricky edge cases around birth-month windows, probation periods,
 and single-use-per-license rules.
 
