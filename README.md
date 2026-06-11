@@ -189,6 +189,7 @@ applied certificates count toward the 24 credit requirement.
 * [![TypeScript][TypeScript]][TypeScript-url]
 * [![Vite][Vite.js]][Vite-url]
 * [![Tailwind][Tailwind]][Tailwind-url]
+* [![Python][Python]][Python-url]
 * [![Firebase][Firebase]][Firebase-url]
 
 It also leans on **Tesseract.js** and **PDF.js** for certificate OCR, **GSAP** for
@@ -395,5 +396,7 @@ Find the source on GitHub at [https://github.com/394-s26/X-Ray-Tech](https://git
 [Vite-url]: https://vite.dev/
 [Tailwind]: https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white
 [Tailwind-url]: https://tailwindcss.com/
+[Python]: https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54
+[Python-url]: https://www.python.org/
 [Firebase]: https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black
 [Firebase-url]: https://firebase.google.com/
