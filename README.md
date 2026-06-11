@@ -64,15 +64,14 @@ maintain **two separate credentials**, **ARRT** (national) and **IEMA** (state).
 one demands **24 CE credits every 2 years**, but they run on different cycle windows,
 deadlines, and crediting rules.
 
-Tracking this by hand is error-prone. X-Ray Tech lets a user upload images of their CE certificates, automatically extracts relevant details with free object capture recognition (OCR), and apply the credits to the correct ARRT and IEMA cycles.
-It even handles the tricky edge cases around birth-month windows, probation periods,
+Tracking this by hand is error-prone. X-Ray Tech enables its users to upload their certificate while automatically extracting relevant details with free object capture recognition (OCR). Users can then apply these credits to their intended licenses.
+X-Ray Tech even handles the tricky edge cases around birth-month windows, probation periods,
 and single-use-per-license rules.
 
 The app is live at **[xraytech.web.app](https://xraytech.web.app/)**. Create an
-account and start tracking your CE credits in a couple of minutes.
+account to start tracking.
 
-This project was built for **CS 394 Agile Software Engineering** at Northwestern
-University.
+This project was built by Northwestern University students in **CS 394 Agile Software Engineering**.
 
 ### Key Features
 
