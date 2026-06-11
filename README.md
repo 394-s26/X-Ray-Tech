@@ -162,8 +162,8 @@ deadlines so a technologist never misses a reporting window. Users stay aware of
 needs attention without having to log in and check manually.
 
 <p align="center">
-  <img width="387" height="545" alt="Screenshot 2026-06-10 at 6 49 12 PM" src="https://github.com/user-attachments/assets/97f805bc-c192-41ff-8256-964c6973c01c" />
-  <img width="1170" height="1737" alt="IMG_1038" src="https://github.com/user-attachments/assets/11694ac8-e80c-4456-b74f-222934b090c2" />
+  <img width="300" height="460" alt="Screenshot 2026-06-10 at 6 49 12 PM" src="https://github.com/user-attachments/assets/97f805bc-c192-41ff-8256-964c6973c01c" />
+  <img width="300" height="460" alt="IMG_1038" src="https://github.com/user-attachments/assets/11694ac8-e80c-4456-b74f-222934b090c2" />
 </p>
 
 #### Available Certificates
