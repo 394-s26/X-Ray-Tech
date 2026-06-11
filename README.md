@@ -113,7 +113,7 @@ falling back to a placeholder without losing any data. Once saved, a certificate
 ready to be applied to the right license later.
 
 <p align="center">
-  <img width="1163" height="836" alt="Screenshot 2026-06-10 at 6 43 32 PM" src="https://github.com/user-attachments/assets/d61dacc7-6b00-4112-92d5-6a8d77088b50" />
+  <img width="1104" height="850" alt="Screenshot 2026-06-10 at 7 07 44 PM" src="https://github.com/user-attachments/assets/e0d39d64-78e1-4850-a36d-e1b2944a6af7" />
 </p>
 
 #### Certificate Reporting
