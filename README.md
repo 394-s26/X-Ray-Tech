@@ -150,7 +150,7 @@ and IEMA compliance status, so a manager can quickly spot who is falling behind.
 keeps an entire department on track without checking each person individually.
 
 <p align="center">
-  <img src="docs/images/team-management.png" alt="Team management" height="380">
+  <img height="380" alt="PNG image" src="https://github.com/user-attachments/assets/64d8f059-27ab-4399-af61-d384edc7dc54" />
 </p>
 
 #### Notifications
